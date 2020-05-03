@@ -1,0 +1,63 @@
+{
+  "name": "@exceeder/vue-3d-vit",
+  "version": "0.1.0",
+  "description": "Visualizing things in 3D using reactive Vue",
+  "main": "dist/vue-3d-vit.js",
+  "scripts": {
+    "docs": "vue-cli-service serve docs/main.js",
+    "build": "vue-cli-service build",
+    "test:unit": "vue-cli-service test:unit",
+    "lint": "vue-cli-service lint",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exceeder/vue-3d-vit.git"
+  },
+  "keywords": [
+    "vue",
+    "composition",
+    "3d",
+    "threejs",
+    "diargam"
+  ],
+  "author": "Alex Pakka",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/exceeder/vue-3d-vit/issues"
+  },
+  "homepage": "https://github.com/exceeder/vue-3d-vit#readme",
+  "dependencies": {
+    "core-js": "^3.6.4",
+    "vue": "^3.0.0-beta.7"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.3.0",
+    "@vue/cli-plugin-eslint": "~4.3.0",
+    "@vue/cli-service": "~4.3.1",
+    "@vue/compiler-sfc": "^3.0.0-beta.7",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^7.0.0-alpha.1",
+    "vue-cli-plugin-vue-next": "~0.1.2"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
