@@ -1,3 +1,4 @@
 node_packages/
 .idea/
+dist/
 yarn.lock

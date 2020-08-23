@@ -1,9 +1,10 @@
 <template>
   <div>Place for future component {{name}}: '{{msg}}'</div>
 </template>
-<script>
-    import { ref } from 'vue'
-    export default {
+
+<script lang="ts">
+    import { defineComponent, ref } from 'vue'
+    export default defineComponent({
         props: {
             msg: String
         },
@@ -11,5 +12,5 @@
             const name = ref("3D-Vit");
             return {name}
         }
-    }
+    })
 </script>
