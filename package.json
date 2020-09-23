@@ -30,20 +30,25 @@
   },
   "homepage": "https://github.com/exceeder/vue-3d-vit#readme",
   "dependencies": {
-    "core-js": "^3.6.4",
-    "vue": "^3.0.0-beta.7"
+    "@next-vue/runtime-test": "^3.0.0-alpha.8",
+    "core-js": "^3.6.5",
+    "three": "^0.120.1",
+    "vue": "^3.0.0-0",
+    "vue-class-component": "^8.0.0-0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.3.0",
-    "@vue/cli-plugin-eslint": "~4.3.0",
-    "@vue/cli-service": "~4.3.1",
-    "@vue/compiler-sfc": "^3.0.0-beta.7",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-typescript": "^4.5.6",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/compiler-sfc": "^3.0.0-0",
+    "@vue/eslint-config-typescript": "^5.0.2",
     "babel-eslint": "^10.1.0",
     "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^7.0.0-alpha.1",
-    "ts-loader": "^7.0.2",
-    "vue-cli-plugin-vue-next": "~0.1.2",
-    "webpack-cli": "^3.3.11"
+    "eslint-plugin-vue": "^7.0.0-0",
+    "typescript": "~3.9.3"
   },
   "eslintConfig": {
     "root": true,
@@ -52,10 +57,11 @@
     },
     "extends": [
       "plugin:vue/vue3-essential",
-      "eslint:recommended"
+      "eslint:recommended",
+      "@vue/typescript"
     ],
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@typescript-eslint/parser"
     },
     "rules": {}
   },
