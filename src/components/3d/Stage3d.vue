@@ -42,7 +42,7 @@ export default defineComponent({
 
     onMounted(() => {
       console.log('mounted!',canvas3d.value)
-      const stage = new Stage(canvas3d.value);
+      const stage = new Stage(canvas3d.value, {});
       //create stage environment
       stage.mount();
       //start animation

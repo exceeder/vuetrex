@@ -2,7 +2,7 @@ import { createRendererForStage } from "./renderer";
 import {
     defineComponent,
     Fragment,
-    watchEffect,
+    //watchEffect,
     h,
     onMounted,
     Ref,
@@ -11,8 +11,10 @@ import {
     RootRenderFunction,
 } from "@vue/runtime-core";
 import Stage from "../three/stage";
-import { Root } from "./runtime/nodes/Root";
+import { Root } from "./nodes/Root";
 import { nextTick } from "vue";
+
+export type VuetrexStage = Stage; //& {helpers: AnyHelpers}
 
 export const Vuetrex = defineComponent({
     props: {
@@ -25,28 +27,28 @@ export const Vuetrex = defineComponent({
         const maxWidth = ref(4096);
         const maxHeight = ref(4096);
 
-        const vugelComponentInstance = getCurrentInstance()!;
+        const vuetrexComponent = getCurrentInstance()!;
 
         onMounted(() => {
-            let vugelRenderer: RootRenderFunction;
-            let stage: VugelStage;
+            let vuetrexRenderer: RootRenderFunction;
+            let stage: VuetrexStage;
             let stageRoot: Root;
 
             if (elRef.value) {
-                stage = new Stage(elRef.value, { ...props.settings }) as VugelStage;
-                stage.eventHelpers = setupEvents(props.settings?.eventsTarget || elRef.value, stage);
+                stage = new Stage(elRef.value, { ...props.settings }) as VuetrexStage;
+                //stage.eventHelpers = setupEvents(props.settings?.eventsTarget || elRef.value, stage);
 
-                vugelRenderer = createRendererForStage(stage);
+                vuetrexRenderer = createRendererForStage(stage);
                 stageRoot = new Root(stage, stage.root);
 
                 // Auto-inherit dimensions.
-                stageRoot["func-w"] = (w: number) => w;
-                stageRoot["func-h"] = (w: number, h: number) => h;
+                //stageRoot["func-w"] = (w: number) => w;
+                //stageRoot["func-h"] = (w: number, h: number) => h;
 
                 // Keep correct aspect-ratio issues when the page is zoomed out.
-                const maxTextureSize = stage.getMaxTextureSize();
-                maxWidth.value = maxTextureSize / stage.pixelRatio;
-                maxHeight.value = maxTextureSize / stage.pixelRatio;
+                //const maxTextureSize = stage.getMaxTextureSize();
+                //maxWidth.value = maxTextureSize / stage.pixelRatio;
+                //maxHeight.value = maxTextureSize / stage.pixelRatio;
             }
 
             const defaultSlot = setupContext.slots.default;
@@ -54,7 +56,7 @@ export const Vuetrex = defineComponent({
                 // We must wait until nextTick to prevent interference in the effect queue.
                 nextTick().then(() => {
                     const node = h(Connector, defaultSlot);
-                    vugelRenderer(node, stageRoot);
+                    vuetrexRenderer(node, stageRoot);
                 });
             } else {
                 console.warn("No default slot is defined");
@@ -62,8 +64,8 @@ export const Vuetrex = defineComponent({
         });
 
         /**
-         * Since vugel uses its own renderer, the ancestor vue's appContext, root and provides would normally be lost in
-         * the vugel components.
+         * Since vuetrex uses its own renderer, the ancestor vue's appContext, root and provides would normally be lost in
+         * the vuetrex components.
          *
          * We can fix this by overriding the component's parent, root, appContext and provides before rendering the slot
          * contents.
@@ -73,10 +75,10 @@ export const Vuetrex = defineComponent({
                 const instance = getCurrentInstance()!;
 
                 // @see runtime-core createComponentInstance
-                instance.parent = vugelComponentInstance;
-                instance.appContext = vugelComponentInstance.appContext;
-                instance.root = vugelComponentInstance.root;
-                (instance as any).provides = (vugelComponentInstance as any).provides;
+                instance.parent = vuetrexComponent;
+                instance.appContext = vuetrexComponent.appContext;
+                instance.root = vuetrexComponent.root;
+                (instance as any).provides = (vuetrexComponent as any).provides;
 
                 const defaultSlot = setupContext.slots.default!;
                 return () => h(Fragment, defaultSlot());

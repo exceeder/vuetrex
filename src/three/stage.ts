@@ -1,17 +1,20 @@
 import * as THREE from "three";
 import Scene from "./scene";
 import {Geometry, Material, Object3D} from "three";
+import Element3d from "./element3d";
 
 const R = 1.3; //box radius
 const D = 1.5; //box distance
 
 export default class Stage extends Scene {
+    public root: Element3d | null = null;
     private layout: THREE.Mesh<Geometry,Material>[][];
     private subscribers: Function[];
     private labelObject: THREE.Mesh | undefined
 
-    constructor(domParent: HTMLElement) {
+    constructor(domParent: HTMLElement, settings:any) {
         super(domParent);
+        console.log("Settings: "+JSON.stringify(settings))
         this.layout = [];
         this.subscribers = [];
         console.log("Stage Created");
@@ -24,6 +27,11 @@ export default class Stage extends Scene {
 
         this.onAnimate(this.animateCamera());
         this.onAnimate(this.animateMouse());
+    }
+
+    getById(id: string) {
+        //TODO
+        return this.root;
     }
 
     onHighlight(fn: Function) {
