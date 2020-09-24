@@ -1,4 +1,5 @@
 node_packages/
+node_modules/
 .idea/
 dist/
 yarn.lock
