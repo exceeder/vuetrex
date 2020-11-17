@@ -127,12 +127,13 @@ export default class Stage extends Scene {
         this.ensureLayout(i, NBoxes);
         const bMaterial = this.createElementMaterial();
 
-        let box = new THREE.Mesh(new THREE.BoxGeometry(R, R / 2, size), bMaterial);
+        let box = new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
         box.name = "el-" + name;
         this.positionLayoutElement(box, j, i, NBoxes, NLayers);
         box.castShadow = true;
         this.layout[i].push(box);
         scene.add(box);
+        console.log("Scene total now:"+scene.children.length)
         return box;
     }
 

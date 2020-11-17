@@ -1,8 +1,12 @@
 import { Base } from "./Base";
-import Element3d from "@/runtime/nodes/element3d";
+import Element3d from "@/three/element3d";
 
+/**
+ * Named node in the tree hierarchy of Vuetrex renderer.
+ */
 export class Node extends Base {
     public readonly stage: any; //todo fixme
+    public name: string = '';
 
     constructor(stage: any, base?: Element3d) {
         super(base);
@@ -15,5 +19,9 @@ export class Node extends Base {
             current = current.parent;
         }
         return current as Node;
+    }
+
+    setName(name: string) {
+        this.name = name;
     }
 }

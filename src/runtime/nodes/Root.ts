@@ -1,7 +1,12 @@
 import {Node} from './Node';
 import {Base} from './Base';
 
-export class Root extends Node {}
+export class Root extends Node {
+    constructor(stage: any) {
+        super(stage);
+        console.log("Root constructor")
+    }
+}
 
 export class Comment extends Base {
     public readonly text: string;
@@ -13,10 +18,14 @@ export class Comment extends Base {
 }
 
 export class TextNode extends Base {
-    public readonly text: string;
+    public text: string;
 
     constructor(text: string) {
         super(undefined);
+        this.text = text;
+    }
+
+    setElementText(text: string) {
         this.text = text;
     }
 }

@@ -1,6 +1,9 @@
-import Element3d from "./element3d"
+import Element3d from "@/three/element3d"
 import { queuePostFlushCb } from "vue";
 
+/**
+ * Base for render elements of Vuetrex renderer. Handles tree hierarchy: children, siblings, etc.
+ */
 export class Base {
     public element?: Element3d = undefined;
 
@@ -98,6 +101,13 @@ export class Base {
         }
     }
 
+    getIdx() {
+        if (!this.parent) return 0;
+        let idx = 0, i: Base = this;
+        while (i.prevSibling !== null) { idx++; i = i.prevSibling; }
+        return idx;
+    }
+
     syncWithThree() {
         // Ignore.
         this.mustSync = false;
@@ -108,7 +118,8 @@ export class Base {
     }
 }
 
-let pendingSyncBase: Base | undefined = undefined;
+// defer synchronization until after rendering for all nodes to have complete data about parents and children
+let pendingSyncBase: Base | null = null;
 
 const registerUpdatedBase = (base: Base) => {
     if (pendingSyncBase && pendingSyncBase !== base) {
@@ -116,9 +127,7 @@ const registerUpdatedBase = (base: Base) => {
     }
 
     if (!pendingSyncBase) {
-        queuePostFlushCb(() => {
-            flushChanges();
-        });
+        queuePostFlushCb(() => flushChanges());
     }
 
     pendingSyncBase = base;
@@ -128,5 +137,5 @@ const flushChanges = () => {
     if (pendingSyncBase) {
         pendingSyncBase.syncWithThree();
     }
-    pendingSyncBase = undefined;
+    pendingSyncBase = null;
 };

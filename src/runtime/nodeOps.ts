@@ -1,11 +1,13 @@
 import { Base } from "./nodes/Base";
-import { Node } from "./nodes/Node";
 import { Comment, TextNode } from "./nodes/Root";
 import { RendererOptions } from "@vue/runtime-core";
 import { VuetrexStage } from "./index";
+import {types} from "@/runtime/nodes/types";
 
 export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
+
   insert: (child, parent, anchor) => {
+    //console.log("insert ",child,parent)
     if (anchor != null) {
       parent._insertBefore(child, anchor);
     } else {
@@ -20,16 +22,14 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
     }
   },
 
-  //createElement: (tag: keyof typeof types, isSVG) => {
-  createElement: (tag: string, isSVG) => {
-    // let type = types[tag];
-    // if (!type) {
-    //   console.warn(`Unknown native tag: ${tag}`);
-    //   type = types["container"];
-    // }
-    // return new type(stage);
-    console.log("Tag: "+tag+" "+isSVG)
-    return new Node(stage);
+  createElement: (tag: keyof typeof types, isSVG, isCustomizedBuiltIn) => {
+     let type = types[tag];
+     if (!type) {
+       console.warn(`Unknown native tag: ${tag}`);
+       type = types["node"];
+     }
+     //console.log("createElement tag: "+tag,isSVG,isCustomizedBuiltIn)
+     return new type(stage);
   },
 
   createText: (text) => {

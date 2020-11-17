@@ -1,18 +1,23 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
-  <Vit msg="Welcome to Your Vue.js + TypeScript App"/>
+  <Vuetrex >
+<!--  <Vuetrex v-compiler:vuetrex >-->
+    <Boxes/>
+  </Vuetrex>
 </template>
 
 <script lang="ts">
-import Vit from './components/Vit.vue';
+//import Vit from './components/Vit.vue';
+import Vuetrex from '@/runtime';
+import Boxes from '@/components/Boxes.vue';
 import {defineComponent} from "vue";
 
-const App = defineComponent( {
+export default defineComponent( {
   components: {
-    Vit
+    Vuetrex,
+    Boxes
   }
 })
-export default App;
 </script>
 
 <style>
@@ -25,6 +30,6 @@ export default App;
   margin-top: 10px;
 }
 img {
-  height: 1em;
+  width: 7em;
 }
 </style>

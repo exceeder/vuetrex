@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--
+ MIT License
+ composed together by A.P. based on work of inigo quilez - iq/2013
+ and dirkk0
+ ...see  https://www.shadertoy.com/view/ltyXD3 and Co.
+ Raytracer with soft shadows as GLSL shader
+  -->
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js'></script>
+  <style type="text/css">
+      html {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
+      }
+
+      body {
+          padding: 0;
+          background: #aaa;
+      }
+
+      canvas {
+          border: 4px solid #999;
+          margin: 1em;
+          padding: 0.5em;
+      }
+  </style>
+  <title> A demo </title>
+</head>
+
+<body>
+<h1>Shader object demo</h1>
+<div>Demonstrates most basic shader.</div>
+<script id="frag1" type="x-shader/x-fragment">
+  uniform float iTime;
+  uniform vec2 iResolution;
+  uniform vec4 iMouse; //xy - move, zw - click
+  varying vec2 fragCoord;
+
+  void main()
+  {
+    // Normalized pixel coordinates (from 0 to 1)
+    vec2 uv = fragCoord/iResolution.xy;
+
+    // Time varying pixel color
+    //vec3 col = 0.5 + 0.5*sin(iTime + uv.xyx + vec3(0,2,4))*cos(iTime + uv.xyx + vec3(0,2,4));
+    vec3 col = 0.5 + 0.5 * sin(iTime + uv.xyx + vec3(0,4,2)) * cos(iTime + uv.xyx + vec3(0,2,4));
+
+    // Output to screen
+    gl_FragColor = vec4(col,1.0);
+  }
+</script>
+<script id="general" type="x-shader/x-vertex">
+  attribute vec3 in_Position;
+  varying vec2 fragCoord;
+
+  void main()
+  {
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0 );
+    gl_Position = projectionMatrix * mvPosition;
+    fragCoord = position.xy;
+  }
+
+</script>
+<script type='text/javascript'>
+(function () {
+    const context3d = {
+        scene: new THREE.Scene(),
+        camera: new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000),
+        shaderObjects: [],
+        shaderObjectsDict: {},
+        mouse: {x: 0, y: 0, z: 0, w: 0}
+    };
+    (function (context3d) {
+        context3d.camera.position.set(0,0,5);
+        const webgl = new THREE.WebGLRenderer();
+        const scale = 0.5;
+        webgl.setSize(window.innerWidth * scale, window.innerHeight * scale);
+        document.body.appendChild(webgl.domElement);
+        window.addEventListener('resize', () => {
+            context3d.camera.aspect = window.innerWidth / window.innerHeight;
+            context3d.camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth * scale, window.innerHeight * scale);
+        }, false);
+
+        webgl.domElement.addEventListener('mousemove', function (e) {
+            context3d.mouse.x = e.clientX - context3d.mouse.z;
+            context3d.mouse.y = e.clientY - context3d.mouse.w;
+        }, false);
+        webgl.domElement.addEventListener('mousedown', function (e) {
+            context3d.mouse.z = e.clientX;
+            context3d.mouse.w = e.clientY;
+        }, false);
+        webgl.domElement.addEventListener('mouseup', function (e) {
+            context3d.mouse.z = 0;
+            context3d.mouse.w = 0;
+        }, false);
+
+
+        window.renderer = webgl;
+        let counter = 0;
+
+        function render() {
+            context3d.shaderObjects.forEach(function (item) {
+                item.update(counter);
+            });
+            requestAnimationFrame(render);
+            window.renderer.render(context3d.scene, context3d.camera);
+        }
+
+        render();
+    })(context3d);
+
+    class ShaderObject {
+        constructor(name, x, y, z, col, rx, ry) {
+            this.name = name;
+            //parameters, passed to the fragment shader
+            let uniforms = {
+                iTime: {
+                    type: "f",
+                    value: 1.0
+                },
+                iResolution: {
+                    type: "v2",
+                    value: new THREE.Vector2()
+                },
+                iMouse: {
+                    type: "v4",
+                    value: new THREE.Vector4()
+                }
+            };
+            uniforms.iResolution.value.set(1,1);
+
+            this.material = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                side: THREE.DoubleSide,
+                vertexShader: document.getElementById('general').textContent,
+                fragmentShader: document.getElementById('frag1').textContent
+            });
+            this.obj = new THREE.Mesh(new THREE.PlaneGeometry(700, 394, 1, 1), this.material);
+            this.obj.startTime = Date.now();
+            this.obj.uniforms = uniforms;
+            this.rx = rx;
+            this.ry = ry;
+            this.obj.name = name;
+            context3d.scene.add(this.obj);
+            this.obj.position.set(x,y,z);
+            this.vel = [0, 0, 0]
+        }
+        update() {
+            this.obj.uniforms.iTime.value = (Date.now() - this.obj.startTime) / 1000;
+            this.obj.uniforms.iMouse.value.set(
+                context3d.mouse.x / 1000.0, context3d.mouse.y / 1000.0,
+                context3d.mouse.z / 1000.0, context3d.mouse.w / 1000.0);
+        }
+    }
+
+    context3d.shaderObjectsDict.plane1 = context3d.shaderObjects.push(
+      new ShaderObject("plane1", -0.5, -0.3, 4.33, 0x0000ff, 0.0, 0.0)
+    );
+})();
+
+</script>
+</body>
+</html>

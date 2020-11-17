@@ -16,13 +16,14 @@ import { nextTick } from "vue";
 
 export type VuetrexStage = Stage; //& {helpers: AnyHelpers}
 
-export const Vuetrex = defineComponent({
+export default defineComponent({
+    name: "Vuetrex",
     props: {
         settings: { type: Object },
-        position: { type: String, default: "relative" },
+        position: { type: String, default: "static" },
     },
-    setup(props, setupContext) {
-        const elRef: Ref<HTMLCanvasElement | undefined> = ref();
+    setup(props, context) {
+        const elRef: Ref<HTMLDivElement | undefined> = ref();
 
         const maxWidth = ref(4096);
         const maxHeight = ref(4096);
@@ -36,10 +37,16 @@ export const Vuetrex = defineComponent({
 
             if (elRef.value) {
                 stage = new Stage(elRef.value, { ...props.settings }) as VuetrexStage;
+
                 //stage.eventHelpers = setupEvents(props.settings?.eventsTarget || elRef.value, stage);
 
                 vuetrexRenderer = createRendererForStage(stage);
-                stageRoot = new Root(stage, stage.root);
+                stageRoot = new Root(stage);
+
+                //create stage environment
+                stage.mount();
+                //start animation
+                stage.start();
 
                 // Auto-inherit dimensions.
                 //stageRoot["func-w"] = (w: number) => w;
@@ -51,7 +58,7 @@ export const Vuetrex = defineComponent({
                 //maxHeight.value = maxTextureSize / stage.pixelRatio;
             }
 
-            const defaultSlot = setupContext.slots.default;
+            const defaultSlot = context.slots.default;
             if (defaultSlot) {
                 // We must wait until nextTick to prevent interference in the effect queue.
                 nextTick().then(() => {
@@ -91,15 +98,12 @@ export const Vuetrex = defineComponent({
                 "div",
                 {
                     class: "custom-renderer-wrapper",
-                    style: { position: props.position, maxWidth: maxWidth.value, maxHeight: maxHeight.value },
-                },
-                [
-                    h("canvas", {
-                        class: "custom-renderer",
-                        style: { position: "absolute", width: "100%", height: "100%" },
-                        ref: elRef,
-                    }),
-                ],
+                    style: { position: props.position,
+                        height:'50vw',
+                        maxWidth: maxWidth.value,
+                        maxHeight: maxHeight.value },
+                    ref: elRef
+                }
             );
     },
 });
