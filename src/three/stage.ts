@@ -31,6 +31,7 @@ export default class Stage extends Scene {
 
     getById(id: string) {
         //TODO
+        console.log("GetById()",id)
         return this.root;
     }
 
@@ -88,11 +89,18 @@ export default class Stage extends Scene {
         }
     }
 
-    ensureLayout(i: number, NBoxes: number) {
+    ensureLayout(i: number, NBoxes: number, NLayers: number) {
         const scene = this.scene;
-        while (this.layout.length <= i) {
+        while (this.layout.length > NLayers + 1) {
+            let arr = this.layout.pop();
+            if (arr) {
+                arr.forEach(m => scene.remove(m))
+            }
+        }
+        while (this.layout.length <= NLayers) {
             this.layout.push([]);
         }
+
         while (this.layout[i] && this.layout[i].length > NBoxes) {
             const toRemove = <Object3D>this.layout[i].pop();
             scene.remove(toRemove);
@@ -119,12 +127,12 @@ export default class Stage extends Scene {
 
     renderBox(j: number, i: number, NBoxes: number, NLayers: number, name: string, size = R) {
         const scene = this.scene;
-
         const old = scene.getObjectByName("el-" + name);
         if (old) {
+            this.positionLayoutElement(old as THREE.Mesh, j, i, NBoxes, NLayers);
             return old;
         }
-        this.ensureLayout(i, NBoxes);
+        this.ensureLayout(i, NBoxes, NLayers);
         const bMaterial = this.createElementMaterial();
 
         let box = new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
@@ -145,7 +153,7 @@ export default class Stage extends Scene {
             return old;
         }
 
-        this.ensureLayout(i, NBoxes);
+        this.ensureLayout(i, NBoxes, NLayers);
         let bMaterial = this.createElementMaterial();
 
         let cyl = new THREE.Mesh(

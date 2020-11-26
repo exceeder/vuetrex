@@ -21,6 +21,10 @@ export default defineComponent({
     props: {
         settings: { type: Object },
         position: { type: String, default: "static" },
+        items: {
+            type: Array,
+            default: () => ([])
+        }
     },
     setup(props, context) {
         const elRef: Ref<HTMLDivElement | undefined> = ref();
@@ -29,6 +33,28 @@ export default defineComponent({
         const maxHeight = ref(4096);
 
         const vuetrexComponent = getCurrentInstance()!;
+
+        /**
+         * Since Vuetrex uses its own renderer, Vue's `appContext`, `root` and `provides` would normally be lost in
+         * the Vuetrex components.
+         *
+         * We can fix this by overriding the component's parent, root, appContext and provides before rendering the slot
+         * contents.
+         */
+        const Connector = defineComponent({
+            setup(props, setupContext) {
+                const instance = getCurrentInstance()!;
+
+                // @see runtime-core createComponentInstance
+                instance.parent = vuetrexComponent;
+                instance.appContext = vuetrexComponent.appContext;
+                instance.root = vuetrexComponent.root;
+                (instance as any).provides = (vuetrexComponent as any).provides;
+
+                const defaultSlot = setupContext.slots.default!;
+                return () => h(Fragment, defaultSlot());
+            },
+        });
 
         onMounted(() => {
             let vuetrexRenderer: RootRenderFunction;
@@ -70,36 +96,14 @@ export default defineComponent({
             }
         });
 
-        /**
-         * Since vuetrex uses its own renderer, the ancestor vue's appContext, root and provides would normally be lost in
-         * the vuetrex components.
-         *
-         * We can fix this by overriding the component's parent, root, appContext and provides before rendering the slot
-         * contents.
-         */
-        const Connector = defineComponent({
-            setup(props, setupContext) {
-                const instance = getCurrentInstance()!;
-
-                // @see runtime-core createComponentInstance
-                instance.parent = vuetrexComponent;
-                instance.appContext = vuetrexComponent.appContext;
-                instance.root = vuetrexComponent.root;
-                (instance as any).provides = (vuetrexComponent as any).provides;
-
-                const defaultSlot = setupContext.slots.default!;
-                return () => h(Fragment, defaultSlot());
-            },
-        });
-
-        // We need to use a wrapper for flexible size layouting to work with tree2d pixelRatio canvas auto-resizing.
+        // We need to use a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
         return () =>
             h(
                 "div",
                 {
                     class: "custom-renderer-wrapper",
                     style: { position: props.position,
-                        height:'50vw',
+                        height:'50vh',
                         maxWidth: maxWidth.value,
                         maxHeight: maxHeight.value },
                     ref: elRef

@@ -8,24 +8,26 @@ export class Cylinder extends Node {
     }
 
     syncWithThree() {
-        // @ts-ignore
-        const rows = this.parent.parent.children.size;
-        // @ts-ignore
-        const cols = this.parent.children.size;
-        // @ts-ignore
-        const rowIdx = this.parent.getIdx()
-        console.log("cyl syncd [",this.name,"] ",
-            `rows:${rows}`,
-            `cols:${cols}`,
-            `row idx:${rowIdx}`,
-            `box idx:${this.getIdx()}`);
+        setTimeout(()=> {
+            // @ts-ignore
+            const rows = this.parent.parent.renderSize();
+            // @ts-ignore
+            const cols = this.parent.renderSize();
+            // @ts-ignore
+            const rowIdx = this.parent.getIdx()
+            console.log("cyl syncd [",this.name,"] ",
+                `rows:${rows}`,
+                `cols:${cols}`,
+                `rowIdx:${rowIdx}`,
+                `cylIdx:${this.getIdx()}`);
 
-        const s = this.stage as Stage;
-        s.ensureLayout(rowIdx,cols);
-        s.renderCylinder(
-            this.getIdx(), rowIdx, cols, rows,
-            this.name,
-            1.0
-        );
+            const s = this.stage as Stage;
+            s.ensureLayout(rowIdx, cols, rows);
+            s.renderCylinder(
+                this.getIdx(), rowIdx, cols, rows,
+                this.name,
+                1.0
+            );
+        },1);
     }
 }

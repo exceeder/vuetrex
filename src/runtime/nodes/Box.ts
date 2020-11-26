@@ -11,25 +11,27 @@ export class Box extends Node {
     }
 
     syncWithThree() {
-        // @ts-ignore
-        const rows = this.parent.parent.children.size;
-        // @ts-ignore
-        const cols = this.parent.children.size;
-        // @ts-ignore
-        const rowIdx = this.parent.getIdx()
-        console.log("box syncd [",this.name,"] ",
-            `rows:${rows}`,
-            `cols:${cols}`,
-            `row idx:${rowIdx}`,
-            `box idx:${this.getIdx()}`);
+        setTimeout(()=> {
+            // @ts-ignore
+            const rows = this.parent.parent.renderSize();
+            // @ts-ignore
+            const cols = this.parent.renderSize();
+            // @ts-ignore
+            const rowIdx = this.parent.getIdx()
+            console.log("box syncd [",this.name,"] ",
+                `rows:${rows}`,
+                `cols:${cols}`,
+                `rowIdx:${rowIdx}`,
+                `boxIdx:${this.getIdx()}`);
 
-        const s = this.stage as Stage;
-        s.ensureLayout(rowIdx,cols);
-        s.renderBox(
-            this.getIdx(), rowIdx, cols, rows,
-            this.name,
-            this.size
-        );
+            const s = this.stage as Stage;
+            s.ensureLayout(rowIdx, cols, rows);
+            s.renderBox(
+                this.getIdx(), rowIdx, cols, rows,
+                this.name,
+                this.size
+            );
+        }, 1);
     }
 
     setSize(size: number) {

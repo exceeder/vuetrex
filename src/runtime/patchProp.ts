@@ -20,12 +20,17 @@ export function patchProp(
 
 type SetterFunction = (el: Base, value: any) => void;
 
-const obj: Record<string, SetterFunction> = {};
+const setterCache: Record<string, SetterFunction> = {};
 
 const getSetter = (key: string) => {
-  //console.log("setter for ",key)
-  if (!obj[key]) {
-    obj[key] = new Function("el", "value", `el["${key}"] = value`) as SetterFunction;
+  //console.log("patchProp setter for ",key, " in ", setterCache)
+  if (!setterCache[key]) {
+    setterCache[key] = (el, value) => {
+      //console.log(">> pathProp:", key, el);
+      // @ts-ignore
+      el[key] = value
+    }
+        //new Function("el", "value", `console.log("a!a!:", el); el["${key}"] = value`) as SetterFunction;
   }
-  return obj[key];
+  return setterCache[key];
 };
