@@ -1,13 +1,13 @@
 {
   "name": "@exceeder/vuetrex",
   "version": "0.1.0",
-  "description": "Visualizing things in 3D using reactive Vue",
+  "description": "Visualizing things in 3D using Vue 3.0 Composition and Renderer",
   "main": "dist/vuetrex.js",
   "scripts": {
     "docs": "vue-cli-service serve docs/main.js",
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "build-lib": "vue-cli-service build --target lib --name Vue3dVit src/components/Vit.vue",
+    "build-lib": "vue-cli-service build --target lib --name Vuetrex src/runtime/index.ts",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit",
     "dev": "webpack-dev-server"
