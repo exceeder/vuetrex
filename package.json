@@ -1,6 +1,7 @@
 {
   "name": "@exceeder/vuetrex",
   "version": "0.1.0",
+  "private": true,
   "description": "Visualizing things in 3D using Vue 3.0 Composition and Renderer",
   "main": "dist/vuetrex.js",
   "scripts": {
@@ -30,12 +31,12 @@
   },
   "homepage": "https://github.com/exceeder/vuetrex#readme",
   "dependencies": {
-    "@next-vue/runtime-test": "^3.0.0-alpha.8",
     "core-js": "^3.8.0",
     "three": "^0.123.0",
     "vue": "^3.0.3"
   },
   "devDependencies": {
+    "@next-vue/runtime-test": "^3.0.0-alpha.8",
     "@typescript-eslint/eslint-plugin": "^2.34.0",
     "@typescript-eslint/parser": "^2.34.0",
     "@vue/cli-plugin-babel": "~4.5.9",

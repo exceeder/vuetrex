@@ -1,6 +1,6 @@
 import * as THREE from "three";
+import {Reflector} from "three/examples/jsm/objects/Reflector";
 import Scene from "./scene";
-import {Geometry, Material, Object3D} from "three";
 import Element3d from "./element3d";
 
 const R = 1.3; //box radius
@@ -21,6 +21,7 @@ export default class Stage extends Scene {
 
     mount() {
         const scene = this.scene;
+        this.createGroundMirror(scene);
         this.createFloor(scene);
         this.createLights(scene);
 
@@ -42,14 +43,23 @@ export default class Stage extends Scene {
         this.subscribers.push(fn);
     }
 
+    createGroundMirror(scene: THREE.Scene) {
+        const geometry = new THREE.PlaneBufferGeometry(100, 100);
+        const groundMirror = new Reflector(geometry, {
+            clipBias: 0.003,
+            textureWidth: this.width * window.devicePixelRatio,
+            textureHeight: this.height * window.devicePixelRatio,
+            color: new THREE.Color(0x777777)
+        });
+        groundMirror.rotateX(-Math.PI / 2);
+        groundMirror.position.y = -0.49;
+        groundMirror.receiveShadow = false;
+        scene.add(groundMirror);
+    }
+
     createFloor(scene: THREE.Scene) {
         const planeSize = 512;
-
-        let material = new THREE.MeshBasicMaterial({
-            opacity: 1.0,
-            transparent: true
-        });
-
+        let material = new THREE.MeshBasicMaterial({opacity: 1.0, transparent: true});
         let plane = new THREE.Mesh(
             new THREE.PlaneGeometry(planeSize, planeSize),
             material
@@ -82,7 +92,7 @@ export default class Stage extends Scene {
         let bMaterial = new THREE.MeshStandardMaterial();
         bMaterial.roughness = 0.3;
         bMaterial.metalness = 0.1;
-        bMaterial.color.setHSL(0.0, 0.0, 0.3);
+        bMaterial.color.set(this.colorMain);
         return bMaterial;
     }
 

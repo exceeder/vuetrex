@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import LifeCycle from "./lifecycle";
+import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer";
+import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass";
 
 interface MousePosition {
     x: number
@@ -10,8 +12,8 @@ export default class Scene extends LifeCycle {
 
     private domParent: HTMLElement
 
-    private readonly width: number
-    private readonly height: number
+    public readonly width: number
+    public readonly height: number
     private readonly cameraTarget: THREE.Vector3
     private readonly mouse: MousePosition
 
@@ -19,6 +21,12 @@ export default class Scene extends LifeCycle {
     readonly scene: THREE.Scene
     renderer: THREE.WebGLRenderer
     selectedObject: (THREE.Mesh | null) = null
+
+    private composer: EffectComposer;
+    private renderPass: RenderPass;
+
+    public readonly colorMain = new THREE.Color(0x555555);
+    public readonly colorHighlight = new THREE.Color(0x333333);
 
 
 
@@ -43,6 +51,11 @@ export default class Scene extends LifeCycle {
         this.camera.lookAt(this.cameraTarget);
         //scene
         this.scene = this.createScene();
+
+        //composer for mirror and other effects
+        this.composer = new EffectComposer(this.renderer)
+        this.renderPass = new RenderPass(this.scene, this.camera)
+        this.composer.addPass(this.renderPass)
 
         //events
         this.mouse = { x: 0, y: 0 };
@@ -121,7 +134,8 @@ export default class Scene extends LifeCycle {
 
     //--- overrides ---
     render() {
-        this.renderer.render(this.scene, this.camera);
+        //this.renderer.render(this.scene, this.camera);
+        this.composer.render();
     }
 
     //--- events ---
@@ -163,7 +177,7 @@ export default class Scene extends LifeCycle {
                 if (labelObject && labelObject !== this.selectedObject) {
                     if (this.selectedObject) {
                         const m = <THREE.MeshBasicMaterial>this.selectedObject.material;
-                        m.color.setRGB(0.3, 0.3, 0.3);
+                        m.color.set(this.colorMain);
                     }
                     this.selectedObject = labelObject;
                     const m = <THREE.MeshBasicMaterial>labelObject.material;
@@ -171,7 +185,7 @@ export default class Scene extends LifeCycle {
                 }
             }
             if (!found && this.selectedObject) {
-                (<THREE.MeshBasicMaterial>this.selectedObject.material).color.setRGB(0.3, 0.3, 0.3);
+                (<THREE.MeshBasicMaterial>this.selectedObject.material).color.set(this.colorMain);
                 this.selectedObject = null;
             }
         };
@@ -202,6 +216,7 @@ export default class Scene extends LifeCycle {
         camera.position.y = 11 + window.pageYOffset / 1000;
 
         //camera.lookAt(new THREE.Vector3());
-        this.renderer.setSize(width, height);
+        //this.renderer.setSize(width, height);
+        this.composer.setSize( width, height );
     }
 }
