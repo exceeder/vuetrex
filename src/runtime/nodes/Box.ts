@@ -11,30 +11,23 @@ export class Box extends Node {
     }
 
     syncWithThree() {
-        setTimeout(()=> {
-            // @ts-ignore
-            const rows = this.parent.parent.renderSize();
-            // @ts-ignore
-            const cols = this.parent.renderSize();
-            // @ts-ignore
-            const rowIdx = this.parent.getIdx()
-            console.log("box syncd [",this.name,"] ",
-                `rows:${rows}`,
-                `cols:${cols}`,
-                `rowIdx:${rowIdx}`,
-                `boxIdx:${this.getIdx()}`);
-
-            const s = this.stage as Stage;
-            s.ensureLayout(rowIdx, cols, rows);
-            s.renderBox(
-                this.getIdx(), rowIdx, cols, rows,
-                this.name,
-                this.size
-            );
-        }, 1);
+        if (this.element) {
+            this.stage.renderMesh(this.element, this.size, this.stage.meshCreator('box'));
+            if (this.nodeEvents.onClick) {
+                this.element.mesh?.addEventListener('click', ev => {
+                    this.dispatchClick(ev.originalEvent);
+                })
+            }
+        }
     }
 
     setSize(size: number) {
         this.size = size;
+    }
+
+    onRemoved() {
+        if (this.element) {
+            this.stage.removeObject(this.element)
+        }
     }
 }

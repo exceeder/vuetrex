@@ -34,7 +34,7 @@ export default defineComponent( {
   },
 
   setup() {
-    const items = reactive([1,2,3])
+    const items = reactive([1])
     const alt = ref(0.1)
 
     function updateItems(n: number) {

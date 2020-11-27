@@ -7,7 +7,6 @@ import {types} from "@/runtime/nodes/types";
 export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
 
   insert: (child, parent, anchor) => {
-    console.log("insert() ",child,parent)
     if (anchor != null) {
       parent._insertBefore(child, anchor);
     } else {
@@ -16,7 +15,6 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
   },
 
   remove: (child) => {
-    console.log("remove() ",child)
     const parent = child.parent;
     if (parent != null) {
       parent._removeChild(child);
@@ -24,7 +22,6 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
   },
 
   createElement: (tag: keyof typeof types, isSVG, isCustomizedBuiltIn) => {
-     console.log("create() ",tag)
      let type = types[tag];
      if (!type) {
        console.warn(`Unknown native tag: ${tag}`);

@@ -6,18 +6,17 @@ import Element3d from "./element3d";
 const R = 1.3; //box radius
 const D = 1.5; //box distance
 
+/**
+ * Stage keeps top-level structures to draw the tree of runtime nodes.
+ * It replaces browser's drawing of DOM elements.
+ */
 export default class Stage extends Scene {
     public root: Element3d | null = null;
-    private layout: THREE.Mesh<Geometry,Material>[][];
     private subscribers: Function[];
-    private labelObject: THREE.Mesh | undefined
 
     constructor(domParent: HTMLElement, settings:any) {
         super(domParent);
-        console.log("Settings: "+JSON.stringify(settings))
-        this.layout = [];
         this.subscribers = [];
-        console.log("Stage Created");
     }
 
     mount() {
@@ -27,6 +26,10 @@ export default class Stage extends Scene {
 
         this.onAnimate(this.animateCamera());
         this.onAnimate(this.animateMouse());
+    }
+
+    register(el: Element3d) {
+
     }
 
     getById(id: string) {
@@ -75,38 +78,6 @@ export default class Stage extends Scene {
         scene.add(light4);
     }
 
-    adjustRow(i: number, NBoxes:  number) {
-        if (i < this.layout.length && NBoxes !== this.layout[i].length) {
-            //remove extras
-            while (NBoxes < this.layout[i].length) {
-                const toRemove = <Object3D>this.layout[i].pop();
-                this.scene.remove(toRemove);
-            }
-            //rcalculate remaining
-            this.layout[i].forEach((box: THREE.Mesh, j: number) => {
-                box.position.z = (-NBoxes * (R + D)) / 2 + (R + D) * j + (R + D) / 2;
-            });
-        }
-    }
-
-    ensureLayout(i: number, NBoxes: number, NLayers: number) {
-        const scene = this.scene;
-        while (this.layout.length > NLayers + 1) {
-            let arr = this.layout.pop();
-            if (arr) {
-                arr.forEach(m => scene.remove(m))
-            }
-        }
-        while (this.layout.length <= NLayers) {
-            this.layout.push([]);
-        }
-
-        while (this.layout[i] && this.layout[i].length > NBoxes) {
-            const toRemove = <Object3D>this.layout[i].pop();
-            scene.remove(toRemove);
-        }
-    }
-
     createElementMaterial() {
         let bMaterial = new THREE.MeshStandardMaterial();
         bMaterial.roughness = 0.3;
@@ -115,68 +86,81 @@ export default class Stage extends Scene {
         return bMaterial;
     }
 
+    removeObject(el: Element3d) {
+        if (el.mesh) {
+            this.scene.remove(el.mesh);
+            el.mesh = null;
+        }
+    }
+
     positionLayoutElement(el: THREE.Mesh, j: number, i: number, NBoxes: number, NLayers: number) {
         //in WebGL, positive X to the right, Y to the top, Z to the back
         el.position.x = (-NLayers * (R + D)) / 2 + (R + D) * i + (R + D) / 2;
         el.position.y = 0.0;
         el.position.z = (-NBoxes * (R + D)) / 2 + (R + D) * j + (R + D) / 2;
-        if (i === 0 && j === 0) {
-            this.labelObject = el;
+    }
+
+    meshCreator(type: string): (size:number) => THREE.Mesh {
+        switch (type) {
+            case 'box': {
+                return size => {
+                    const bMaterial = this.createElementMaterial();
+                    return new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
+                }
+            }
+            default:
+            case 'cylinder': {
+                return size => {
+                    let bMaterial = this.createElementMaterial();
+                    return new THREE.Mesh(
+                        new THREE.CylinderGeometry(size / 2, R / 2, R / 2, 32),
+                        bMaterial
+                    );
+                }
+            }
         }
     }
 
-    renderBox(j: number, i: number, NBoxes: number, NLayers: number, name: string, size = R) {
-        const scene = this.scene;
-        const old = scene.getObjectByName("el-" + name);
-        if (old) {
-            this.positionLayoutElement(old as THREE.Mesh, j, i, NBoxes, NLayers);
-            return old;
-        }
-        this.ensureLayout(i, NBoxes, NLayers);
-        const bMaterial = this.createElementMaterial();
+    renderMesh(el: Element3d, size: number = R, gen: (size:number) => THREE.Mesh) {
+        const node = el.node;
 
-        let box = new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
-        box.name = "el-" + name;
-        this.positionLayoutElement(box, j, i, NBoxes, NLayers);
-        box.castShadow = true;
-        this.layout[i].push(box);
-        scene.add(box);
-        console.log("Scene total now:"+scene.children.length)
-        return box;
-    }
+        const j = node.getIdx();
+        const i = node.parent?.getIdx() || 0;
+        const cols = node.parent?.renderSize() || 1;
+        const rows = node.parent?.parent?.renderSize() || 1;
 
-    renderCylinder(j: number, i: number, NBoxes: number, NLayers: number, name: string, size = R) {
+        console.log("render [",node.name,"] ",
+            `rows:${rows}`,
+            `cols:${cols}`,
+            `rowIdx:${i}`,
+            `boxIdx:${j}`);
+
         const scene = this.scene;
 
-        const old = scene.getObjectByName("el-" + name);
-        if (old) {
-            return old;
+        if (el.mesh !== null) {
+            this.positionLayoutElement(el.mesh, j, i, cols, rows);
+            return;
         }
 
-        this.ensureLayout(i, NBoxes, NLayers);
-        let bMaterial = this.createElementMaterial();
+        const mesh = gen(size);
+        mesh.name = "el-" + name;
+        mesh.castShadow = true;
+        this.positionLayoutElement(mesh, j, i, cols, rows);
 
-        let cyl = new THREE.Mesh(
-            new THREE.CylinderGeometry(size / 2, R / 2, R / 2, 32),
-            bMaterial
-        );
-        cyl.name = "el-" + name;
-        this.positionLayoutElement(cyl, j, i, NBoxes, NLayers);
-        cyl.castShadow = true;
-
-        this.layout[i].push(cyl);
-        scene.add(cyl);
-        return cyl;
+        scene.add(mesh);
+        el.mesh = mesh;
     }
 
     // --- events ---
 
     onCanvasClick(event: MouseEvent) {
         event.preventDefault();
-        //display info beloa
+        //display info below
         if (this.selectedObject) {
+            this.selectedObject.dispatchEvent({type:'click', originalEvent: event})
             this.onShowAnnotation(this.selectedObject);
         }
+
     }
 
     onShowAnnotation(mesh: THREE.Mesh) {

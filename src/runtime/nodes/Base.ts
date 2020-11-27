@@ -29,7 +29,6 @@ const registerUpdatedBase = (base: Base) => {
  * Base for render elements of Vuetrex renderer. Handles tree hierarchy: children, siblings, etc.
  */
 export class Base {
-    public element?: Element3d = undefined;
 
     protected children: Base[] = [];
 
@@ -41,15 +40,6 @@ export class Base {
     public nextSibling: Base | null = null;
 
     private mustSync = false;
-
-    constructor(element: Element3d | undefined) {
-        this.element = element;
-        // watchEffect(() => {
-        //     if (this.children.length > 0) {
-        //         console.log("Children changed, new len:" + this.children.length, this.children)
-        //     }
-        // })
-    }
 
     _appendChild(child: Base) {
         //console.log("append",child);
@@ -98,6 +88,7 @@ export class Base {
         child.parent = undefined;
         this.children.splice(this.children.indexOf(child),1);
         this.registerSync();
+        child.onRemoved()
     }
 
     _insertBefore(child: Base, anchor: Base) {
@@ -153,5 +144,7 @@ export class Base {
     renderSize() {
         return this.children.filter(el => el instanceof Node).length;
     }
+
+    onRemoved() {}
 }
 

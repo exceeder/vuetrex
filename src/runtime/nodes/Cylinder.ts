@@ -8,26 +8,15 @@ export class Cylinder extends Node {
     }
 
     syncWithThree() {
-        setTimeout(()=> {
-            // @ts-ignore
-            const rows = this.parent.parent.renderSize();
-            // @ts-ignore
-            const cols = this.parent.renderSize();
-            // @ts-ignore
-            const rowIdx = this.parent.getIdx()
-            console.log("cyl syncd [",this.name,"] ",
-                `rows:${rows}`,
-                `cols:${cols}`,
-                `rowIdx:${rowIdx}`,
-                `cylIdx:${this.getIdx()}`);
+        if (this.element) {
+            this.stage.renderMesh(this.element, 1.0, this.stage.meshCreator('cylinder'));
 
-            const s = this.stage as Stage;
-            s.ensureLayout(rowIdx, cols, rows);
-            s.renderCylinder(
-                this.getIdx(), rowIdx, cols, rows,
-                this.name,
-                1.0
-            );
-        },1);
+            if (this.nodeEvents.onClick) {
+                this.element.mesh?.addEventListener('click', ev => {
+                    this.dispatchClick(ev.originalEvent);
+                })
+            }
+        }
     }
+
 }

@@ -12,7 +12,7 @@ export class Comment extends Base {
     public readonly text: string;
 
     constructor(text: string) {
-        super(undefined);
+        super();
         this.text = text;
     }
 }
@@ -21,7 +21,7 @@ export class TextNode extends Base {
     public text: string;
 
     constructor(text: string) {
-        super(undefined);
+        super();
         this.text = text;
     }
 

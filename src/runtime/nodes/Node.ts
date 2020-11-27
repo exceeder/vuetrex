@@ -1,16 +1,36 @@
 import { Base } from "./Base";
 import Element3d from "@/three/element3d";
+import {VuetrexStage} from "@/runtime";
+import Stage from "@/three/stage";
+
+declare type VxEventListener<T extends Event> = (event: T) => any;
+
+type NodeEvents = {
+    onClick?: VxEventListener<Event>;
+}
 
 /**
  * Named node in the tree hierarchy of Vuetrex renderer.
  */
 export class Node extends Base {
-    public readonly stage: any; //todo fixme
+    public element?: Element3d = undefined;
+
+    public readonly stage: VuetrexStage;
     public name: string = '';
 
-    constructor(stage: any, base?: Element3d) {
-        super(base);
+    public _nodeEvents?: NodeEvents = undefined;
+
+    constructor(stage: VuetrexStage) {
+        super();
+        this.element = new Element3d(stage, this);
         this.stage = stage;
+    }
+
+    public get nodeEvents(): NodeEvents {
+        if (!this._nodeEvents) {
+            this._nodeEvents = {};
+        }
+        return this._nodeEvents;
     }
 
     getParentNode(): Node | undefined {
@@ -24,4 +44,19 @@ export class Node extends Base {
     setName(name: string) {
         this.name = name;
     }
+
+    set onClick(e: VxEventListener<Event> | undefined) {
+        this.nodeEvents.onClick = e;
+    }
+
+    dispatchClick(e: MouseEvent) {
+        if (this.nodeEvents.onClick)
+            this.nodeEvents.onClick(e)
+    }
 }
+
+/**
+ * Do not proxify Nodes when using template refs.
+ * See https://github.com/vuejs/vue-next/pull/1060
+ */
+(Node.prototype as any)["__v_skip"] = true;

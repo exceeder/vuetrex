@@ -68,7 +68,7 @@ export const Box = defineComponent({
     return () => {
       console.log('    box '+JSON.stringify(props))
       if (props.idx !== undefined) {
-        const box3d = stage.renderBox(
+        const box3d = stage.renderMesh(
             props.idx, props.row, props.rowSize, props.numRows(),
             props.name,
             props.size

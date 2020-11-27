@@ -1,10 +1,13 @@
-import {Base} from "@/runtime/nodes/Base";
+import {Node} from "@/runtime/nodes/Node";
+import {VuetrexStage} from "@/runtime";
 
 export default class Element3d {
 
-    public data: Base | null = null;
+    public node: Node;
+    public mesh: THREE.Mesh | null = null;
 
-    constructor() {
-        console.log("E3d created");
+    constructor(stage: VuetrexStage, node: Node) {
+        this.node = node;
+        stage.register(this);
     }
 }
