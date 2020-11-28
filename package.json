@@ -1,7 +1,6 @@
 {
   "name": "@exceeder/vuetrex",
   "version": "0.1.0",
-  "private": true,
   "description": "Visualizing things in 3D using Vue 3.0 Composition and Renderer",
   "main": "dist/vuetrex.umd.js",
   "browser": "dist/vuetrex.esm.js",
