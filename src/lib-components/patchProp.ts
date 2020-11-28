@@ -23,14 +23,11 @@ type SetterFunction = (el: Base, value: any) => void;
 const setterCache: Record<string, SetterFunction> = {};
 
 const getSetter = (key: string) => {
-  //console.log("patchProp setter for ",key, " in ", setterCache)
   if (!setterCache[key]) {
     setterCache[key] = (el, value) => {
-      //console.log(">> pathProp:", key, el);
       // @ts-ignore
       el[key] = value
     }
-        //new Function("el", "value", `console.log("a!a!:", el); el["${key}"] = value`) as SetterFunction;
   }
   return setterCache[key];
 };

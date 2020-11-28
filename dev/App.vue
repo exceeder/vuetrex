@@ -1,35 +1,43 @@
 <template>
-  <section>
-    <div><img alt="Vue logo" src="./assets/logo.png"></div>
-    <label>
-      Boxes in the middle row:
-      <input type="range" min="0" max="5" :value="items.length" @input="e => updateItems(e.target.value)">
-    </label>
-    <OneDeep>
-      <TwoDeep :items="items" />
-    </OneDeep>
-    <hr/>
+  <img alt="Vue logo" src="./assets/logo.png" style="float:left; padding:0;margin:0">
+  <tabs>
+    <tab title="Example 1" :selected="true">
+      <section>
+        <h2>Multi-Row Setup</h2>
+        <label>
+          Boxes in the first row ( {{items.length}} ):
+          <input type="range" min="0" max="5" :value="items.length" @input="e => updateItems(e.target.value)">
+        </label>
+        <p/>
+        <vuetrex>
+          <Boxes :items="items" />
+        </vuetrex>
 
-    <Vuetrex>
-      <Boxes :items="items" />
-    </Vuetrex>
+      </section>
+    </tab>
+    <tab title="Example 2">
+      <h1>How much we do it for</h1>
+    </tab>
+    <tab title="Example 3">
+      <h1>Example 3</h1>
+    </tab>
+  </tabs>
 
-  </section>
 </template>
 
 <script lang="ts">
 import {Vuetrex} from '@/lib-components/index';
 import Boxes from './components/Boxes.vue';
-import OneDeep from './components/OneDeep.vue';
-import TwoDeep from './components/TwoDeep.vue';
+import Tabs from './components/Tabs.vue';
+import Tab from './components/Tab.vue';
 import {defineComponent, ref, reactive} from "vue";
 
 export default defineComponent( {
   components: {
     Vuetrex,
     Boxes,
-    OneDeep,
-    TwoDeep
+    Tabs,
+    Tab
   },
 
   setup() {

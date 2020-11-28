@@ -31,8 +31,6 @@ export default {
 
     const counter = ref(0);
 
-    console.log("     context:", context.attrs, context.slots, context.emit);
-
     watchEffect(() => {
       const i = (props as any).items;
       console.log("watchEffect on items:", i.length, i)
