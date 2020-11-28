@@ -1,7 +1,4 @@
-import Element3d from "@/three/element3d"
-import { queuePostFlushCb, reactive, watchEffect } from "vue";
-import {Node} from './Node';
-
+import { queuePostFlushCb } from "vue";
 
 // defer synchronization until after rendering for all nodes to have complete data about parents and children
 let pendingSyncBase: Base | null = null;
@@ -122,15 +119,6 @@ export class Base {
         }
     }
 
-    getIdx() {
-        if (!this.parent) return 0;
-        let idx = 0, i: Base | null = this.prevSibling;
-        while (i !== null) {
-            if (i instanceof Node) idx++;
-            i = i.prevSibling;
-        }
-        return idx;
-    }
 
     syncWithThree() {
         // Ignore.
@@ -141,10 +129,9 @@ export class Base {
         // Default: ignore text.
     }
 
-    renderSize() {
-        return this.children.filter(el => el instanceof Node).length;
-    }
-
     onRemoved() {}
+
+    getIdx() { return 0; }
+    renderSize() { return 0; }
 }
 

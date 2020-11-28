@@ -1,9 +1,9 @@
-import {Node} from './Node';
-import Element3d from "@/three/element3d";
-import Stage from "@/three/stage";
+import {Node} from '@/lib-components/nodes/Node';
+import Element3d from "@/lib-components/three/element3d";
+import VuetrexStage from "@/lib-components/three/stage";
 
 export class Cylinder extends Node {
-    constructor(stage: any, base?: Element3d) {
+    constructor(stage: VuetrexStage, base?: Element3d) {
         super(stage);
     }
 

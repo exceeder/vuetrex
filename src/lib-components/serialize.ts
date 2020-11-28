@@ -1,4 +1,4 @@
-import {
+/*import {
   TestElement,
   TestNode,
   NodeTypes,
@@ -67,3 +67,5 @@ function serializeText(
     (node.type === NodeTypes.COMMENT ? `<!--${node.text}-->` : node.text)
   )
 }
+*/
+export default {}

@@ -1,5 +1,5 @@
-import { ComponentInternalInstance, SuspenseBoundary, VNode } from "@vue/runtime-core";
-import { Base } from "./nodes/Base";
+import { ComponentInternalInstance, SuspenseBoundary, VNode } from "vue";
+import { Base } from "@/lib-components/nodes/Base";
 
 /**
  * Executed when a prop is passed to a custom object

@@ -1,18 +1,17 @@
-import {Node} from './Node';
-import Element3d from "@/three/element3d";
-import Stage from "@/three/stage";
+import {Node} from '@/lib-components/nodes/Node';
+import VuetrexStage from "@/lib-components/three/stage";
 
 export class Box extends Node {
 
     size:number = 1.0;
 
-    constructor(stage: any, base?: Element3d) {
+    constructor(stage: VuetrexStage) {
         super(stage);
     }
 
     syncWithThree() {
         if (this.element) {
-            this.stage.renderMesh(this.element, this.size, this.stage.meshCreator('box'));
+            this.stage.renderMesh(this.element, this.size, this.stage.meshCreator('rbox'));
             if (this.nodeEvents.onClick) {
                 this.element.mesh?.addEventListener('click', ev => {
                     this.dispatchClick(ev.originalEvent);

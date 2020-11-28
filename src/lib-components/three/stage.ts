@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import {Reflector} from "three/examples/jsm/objects/Reflector";
-import Scene from "./scene";
-import Element3d from "./element3d";
+import Scene from "@/lib-components/three/scene";
+import Element3d from "@/lib-components/three/element3d";
+import {RoundedBoxBufferGeometry} from "three/examples/jsm/geometries/RoundedBoxBufferGeometry";
 
 const R = 1.3; //box radius
 const D = 1.5; //box distance
@@ -10,7 +11,7 @@ const D = 1.5; //box distance
  * Stage keeps top-level structures to draw the tree of runtime nodes.
  * It replaces browser's drawing of DOM elements.
  */
-export default class Stage extends Scene {
+export default class VuetrexStage extends Scene {
     public root: Element3d | null = null;
     private subscribers: Function[];
 
@@ -112,13 +113,6 @@ export default class Stage extends Scene {
 
     meshCreator(type: string): (size:number) => THREE.Mesh {
         switch (type) {
-            case 'box': {
-                return size => {
-                    const bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
-                }
-            }
-            default:
             case 'cylinder': {
                 return size => {
                     let bMaterial = this.createElementMaterial();
@@ -126,6 +120,20 @@ export default class Stage extends Scene {
                         new THREE.CylinderGeometry(size / 2, R / 2, R / 2, 32),
                         bMaterial
                     );
+                }
+            }
+            case 'rbox': {
+                return size => {
+                    const bMaterial = this.createElementMaterial();
+                    return new THREE.Mesh(new RoundedBoxBufferGeometry(R, R / 2, R,  5, .1), bMaterial);
+                }
+
+            }
+            default:
+            case 'box': {
+                return size => {
+                    const bMaterial = this.createElementMaterial();
+                    return new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
                 }
             }
         }

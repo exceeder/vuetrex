@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import LifeCycle from "./lifecycle";
+import LifeCycle from "@/lib-components/three/lifecycle";
 import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer";
 import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass";
 

@@ -1,7 +1,6 @@
-import { Base } from "./Base";
-import Element3d from "@/three/element3d";
-import {VuetrexStage} from "@/runtime";
-import Stage from "@/three/stage";
+import { Base } from "@/lib-components/nodes/Base";
+import Element3d from "@/lib-components/three/element3d";
+import VuetrexStage from "@/lib-components/three/stage";
 
 declare type VxEventListener<T extends Event> = (event: T) => any;
 
@@ -39,6 +38,20 @@ export class Node extends Base {
             current = current.parent;
         }
         return current as Node;
+    }
+
+    getIdx() {
+        if (!this.parent) return 0;
+        let idx = 0, i: Base | null = this.prevSibling;
+        while (i !== null) {
+            if (i instanceof Node) idx++;
+            i = i.prevSibling;
+        }
+        return idx;
+    }
+
+    renderSize() {
+        return this.children.filter(el => el instanceof Node).length;
     }
 
     setName(name: string) {

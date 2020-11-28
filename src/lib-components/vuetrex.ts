@@ -1,22 +1,19 @@
-import { createRendererForStage } from "./renderer";
+import { createRendererForStage } from "@/lib-components/renderer";
 import {
     defineComponent,
     Fragment,
-    //watchEffect,
     h,
     onMounted,
     Ref,
     ref,
     getCurrentInstance,
     RootRenderFunction,
-} from "@vue/runtime-core";
-import Stage from "../three/stage";
-import { Root } from "./nodes/Root";
+} from "vue";
+import VuetrexStage from "@/lib-components/three/stage";
+import { Root } from "@/lib-components/nodes/Root";
 import { nextTick } from "vue";
 
-export type VuetrexStage = Stage; //& {helpers: AnyHelpers}
-
-export default defineComponent({
+export default /*#__PURE__*/defineComponent({
     name: "Vuetrex",
     props: {
         settings: { type: Object },
@@ -27,7 +24,7 @@ export default defineComponent({
         }
     },
     setup(props, context) {
-        const elRef: Ref<HTMLDivElement | undefined> = ref();
+        const elRef: Ref<HTMLDivElement | undefined> = ref(undefined);
 
         const maxWidth = ref(4096);
         const maxHeight = ref(4096);
@@ -43,14 +40,14 @@ export default defineComponent({
          */
         const Connector = defineComponent({
             setup(props, setupContext) {
-                const instance = getCurrentInstance()!;
-
-                // @see runtime-core createComponentInstance
-                instance.parent = vuetrexComponent;
-                instance.appContext = vuetrexComponent.appContext;
-                instance.root = vuetrexComponent.root;
-                (instance as any).provides = (vuetrexComponent as any).provides;
-
+                const instance = getCurrentInstance();
+                if (instance != null) {
+                    // @see runtime-core createComponentInstance
+                    instance.parent = vuetrexComponent;
+                    instance.appContext = vuetrexComponent.appContext;
+                    instance.root = vuetrexComponent.root;
+                    (instance as any).provides = (vuetrexComponent as any).provides;
+                }
                 const defaultSlot = setupContext.slots.default!;
                 return () => h(Fragment, defaultSlot());
             },
@@ -62,7 +59,7 @@ export default defineComponent({
             let stageRoot: Root;
 
             if (elRef.value) {
-                stage = new Stage(elRef.value, { ...props.settings }) as VuetrexStage;
+                stage = new VuetrexStage(elRef.value, { ...props.settings }) as VuetrexStage;
 
                 //stage.eventHelpers = setupEvents(props.settings?.eventsTarget || elRef.value, stage);
 

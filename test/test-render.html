@@ -1,32 +1,45 @@
-<!DOCTYPE html>
-<html>
+<html lang="en">
+<meta charset="UTF-8" />
 <head>
-  <title>test-render</title>
-  <script src="https://unpkg.com/vue@next"></script>
-  <script src="https://unpkg.com/vue-next@runtime-test"></script>
+  <title>Vuetrex test</title>
 </head>
 <body>
- <div id="app">hi</div>
- <script type="module">
-     import { h, render, nodeOps, dumpOps } from '@vue/runtime-test'
+<script src="https://unpkg.com/vue@next/dist/vue.global.js"></script>
+<script src="../dist/vuetrex.js"></script>
+<div id="app">
+  <h1>Testing Vuetrex</h1>
+  <span>{{msg}}</span>
+  <Vuetrex>
+    <layer>
+      <row>
+        <box name="a1"/>
+      </row>
+    </layer>
+  </Vuetrex>
+</div>
+<script type="module">
+    const {createApp, ref, onMounted} = Vue;
+    const RootComponent = {
+        setup() {
+            console.log("Vuetrex loaded:",Vuetrex)
 
-     const App = {
-         data () {
-             return {
-                 msg: 'Hello World!'
-             }
-         },
-         render () {
-             return h('div', this.msg)
-         }
-     }
+            const msg = ref("loading")
 
-     // root is of type `TestElement` as defined in src/nodeOps.ts
-     const root = nodeOps.createElement('div')
-     render(h(App), root)
+            function myClick() {
+              msg.value = "clicked";
+            }
 
-     const ops = dumpOps()
-     console.log(ops)
- </script>
+            onMounted(() => {
+                msg.value = 'loaded'
+            })
+
+            return { msg, myClick };
+        }
+    };
+    const app = createApp(RootComponent);
+    Vuetrex(app);
+    app.mount('#app');
+
+</script>
 </body>
 </html>

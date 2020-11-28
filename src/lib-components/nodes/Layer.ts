@@ -1,5 +1,5 @@
-import {Node} from './Node';
-import {VuetrexStage} from "@/runtime";
+import {Node} from '@/lib-components/nodes/Node';
+import VuetrexStage from "@/lib-components/three/stage";
 
 export class Layer extends Node {
 

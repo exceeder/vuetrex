@@ -18,11 +18,10 @@
 </template>
 
 <script lang="ts">
-//import Vit from './components/Vit.vue';
-import Vuetrex from '@/runtime';
-import Boxes from '@/components/Boxes.vue';
-import OneDeep from '@/components/OneDeep.vue';
-import TwoDeep from '@/components/TwoDeep.vue';
+import {Vuetrex} from '@/lib-components/index';
+import Boxes from './components/Boxes.vue';
+import OneDeep from './components/OneDeep.vue';
+import TwoDeep from './components/TwoDeep.vue';
 import {defineComponent, ref, reactive} from "vue";
 
 export default defineComponent( {

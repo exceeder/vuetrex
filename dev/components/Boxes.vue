@@ -18,7 +18,7 @@
 </template>
 
 <script lang="ts">
-import {watchEffect, SetupContext, ref, onMounted} from "vue";
+import {watchEffect, SetupContext, ref} from "vue";
 
 export default {
   props: {

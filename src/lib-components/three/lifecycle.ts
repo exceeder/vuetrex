@@ -2,7 +2,7 @@ export default class LifeCycle {
 
     tweens:Function[]  =  []
 
-    private _timeout: number  = 0
+    private _timeout: any  = 0
 
     lifecycle = {
         paused: false,
