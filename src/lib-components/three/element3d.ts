@@ -8,6 +8,5 @@ export default class Element3d {
 
     constructor(stage: VuetrexStage, node: Node) {
         this.node = node;
-        stage.register(this);
     }
 }

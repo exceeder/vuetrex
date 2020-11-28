@@ -12,7 +12,7 @@
   <Vuetrex>
     <layer>
       <row>
-        <box name="a1"/>
+        <box name="a1" @click="myClick"/>
       </row>
     </layer>
   </Vuetrex>
@@ -24,16 +24,17 @@
             console.log("Vuetrex loaded:",Vuetrex)
 
             const msg = ref("loading")
+            const counter = ref(0)
 
             function myClick() {
-              msg.value = "clicked";
+              msg.value = "clicked " + (++counter.value)
             }
 
             onMounted(() => {
                 msg.value = 'loaded'
             })
 
-            return { msg, myClick };
+            return { msg, myClick }
         }
     };
     const app = createApp(RootComponent);

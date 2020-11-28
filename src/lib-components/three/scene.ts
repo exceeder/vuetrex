@@ -1,7 +1,5 @@
-import * as THREE from "three";
+import * as THREE from "@/lib-components/three/three.imports";
 import LifeCycle from "@/lib-components/three/lifecycle";
-import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer";
-import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass";
 
 interface MousePosition {
     x: number
@@ -22,8 +20,8 @@ export default class Scene extends LifeCycle {
     renderer: THREE.WebGLRenderer
     selectedObject: (THREE.Mesh | null) = null
 
-    private composer: EffectComposer;
-    private renderPass: RenderPass;
+    private composer: THREE.EffectComposer;
+    private renderPass: THREE.RenderPass;
 
     public readonly colorMain = new THREE.Color(0x555555);
     public readonly colorHighlight = new THREE.Color(0x333333);
@@ -53,8 +51,8 @@ export default class Scene extends LifeCycle {
         this.scene = this.createScene();
 
         //composer for mirror and other effects
-        this.composer = new EffectComposer(this.renderer)
-        this.renderPass = new RenderPass(this.scene, this.camera)
+        this.composer = new THREE.EffectComposer(this.renderer)
+        this.renderPass = new THREE.RenderPass(this.scene, this.camera)
         this.composer.addPass(this.renderPass)
 
         //events

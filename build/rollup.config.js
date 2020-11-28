@@ -139,7 +139,7 @@ if (!argv.format || argv.format === 'cjs') {
 }
 
 if (!argv.format || argv.format === 'iife') {
-  const unpkgConfig = {
+  const iifeConfig = {
     ...baseConfig,
     external,
     output: {
@@ -157,12 +157,37 @@ if (!argv.format || argv.format === 'iife') {
       vue(baseConfig.plugins.vue),
       ...baseConfig.plugins.postVue,
       babel(baseConfig.plugins.babel),
+      commonjs()
+    ],
+  };
+  buildFormats.push(iifeConfig);
+}
+
+if (!argv.format || argv.format === 'iife.min') {
+  const unpkgConfig = {
+    ...baseConfig,
+    external,
+    output: {
+      compact: true,
+      file: 'dist/vuetrex.min.js',
+      format: 'iife',
+      name: 'Vuetrex',
+      exports: 'auto',
+      globals,
+    },
+    plugins: [
+      nodeResolve(),
+      replace(baseConfig.plugins.replace),
+      ...baseConfig.plugins.preVue,
+      vue(baseConfig.plugins.vue),
+      ...baseConfig.plugins.postVue,
+      babel(baseConfig.plugins.babel),
       commonjs(),
-      // terser({
-      //   output: {
-      //     ecma: 5,
-      //   },
-      // }),
+      terser({
+        output: {
+          ecma: 5,
+        },
+      }),
     ],
   };
   buildFormats.push(unpkgConfig);

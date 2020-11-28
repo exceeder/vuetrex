@@ -1,8 +1,7 @@
-import * as THREE from "three";
-import {Reflector} from "three/examples/jsm/objects/Reflector";
+// import * as THREE from "three";
+import * as THREE from "@/lib-components/three/three.imports";
 import Scene from "@/lib-components/three/scene";
 import Element3d from "@/lib-components/three/element3d";
-import {RoundedBoxBufferGeometry} from "three/examples/jsm/geometries/RoundedBoxBufferGeometry";
 
 const R = 1.3; //box radius
 const D = 1.5; //box distance
@@ -30,14 +29,8 @@ export default class VuetrexStage extends Scene {
         this.onAnimate(this.animateMouse());
     }
 
-    register(el: Element3d) {
-
-    }
-
     getById(id: string) {
-        //TODO
-        console.log("GetById()",id)
-        return this.root;
+        return this.scene.getObjectByName('el-'+id);
     }
 
     onHighlight(fn: Function) {
@@ -46,7 +39,7 @@ export default class VuetrexStage extends Scene {
 
     createGroundMirror(scene: THREE.Scene) {
         const geometry = new THREE.PlaneBufferGeometry(100, 100);
-        const groundMirror = new Reflector(geometry, {
+        const groundMirror = new THREE.Reflector(geometry, {
             clipBias: 0.003,
             textureWidth: this.width * window.devicePixelRatio,
             textureHeight: this.height * window.devicePixelRatio,
@@ -125,7 +118,7 @@ export default class VuetrexStage extends Scene {
             case 'rbox': {
                 return size => {
                     const bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new RoundedBoxBufferGeometry(R, R / 2, R,  5, .1), bMaterial);
+                    return new THREE.Mesh(new THREE.RoundedBoxBufferGeometry(R, R / 2, R,  5, .1), bMaterial);
                 }
 
             }
