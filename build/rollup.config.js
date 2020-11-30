@@ -10,7 +10,6 @@ import babel from '@rollup/plugin-babel';
 import PostCSS from 'rollup-plugin-postcss';
 import { terser } from 'rollup-plugin-terser';
 import minimist from 'minimist';
-import nodeResolve from "@rollup/plugin-node-resolve"
 
 // Get browserslist config and remove ie from es build targets
 const esbrowserslist = fs.readFileSync('./.browserslistrc')
@@ -68,6 +67,7 @@ const external = [
   // list external dependencies, exactly the way it is written in the import statement.
   // eg. 'jquery'
   'vue',
+  'three'
 ];
 
 // UMD/IIFE shared settings: output.globals
@@ -76,6 +76,7 @@ const globals = {
   // Provide global variable names to replace your external imports
   // eg. jquery: '$'
   vue: 'Vue',
+  three: 'THREE',
 };
 
 // Customize configs for individual targets
@@ -84,14 +85,20 @@ if (!argv.format || argv.format === 'es') {
   const esConfig = {
     ...baseConfig,
     input: 'src/entry.esm.ts',
-    external,
+    external: p => /^three/.test(p) || /^vue/.test(p),
     output: {
       file: 'dist/vuetrex.esm.js',
       format: 'esm',
-      exports: 'named',
+      exports: 'auto',
+      sourcemap: true
     },
+    
     plugins: [
-      nodeResolve(),
+      resolve({
+        browser: true,
+        dedupe: importee =>
+            importee === 'three' || importee.startsWith('three/')
+      }),
       replace(baseConfig.plugins.replace),
       ...baseConfig.plugins.preVue,
       vue(baseConfig.plugins.vue),
@@ -103,12 +110,13 @@ if (!argv.format || argv.format === 'es') {
             '@babel/preset-env',
             {
               targets: esbrowserslist,
-            },
-          ],
-        ],
+              debug: true
+            }
+          ]
+        ]
       }),
-      commonjs(),
-    ],
+      commonjs()
+    ]
   };
   buildFormats.push(esConfig);
 }
@@ -121,12 +129,12 @@ if (!argv.format || argv.format === 'cjs') {
       compact: true,
       file: 'dist/vuetrex.ssr.js',
       format: 'cjs',
-      name: 'Vuetrex',
+      name: 'vuetrex',
       exports: 'auto',
       globals,
     },
     plugins: [
-      nodeResolve(),
+      resolve(),
       replace(baseConfig.plugins.replace),
       ...baseConfig.plugins.preVue,
       vue(baseConfig.plugins.vue),
@@ -146,12 +154,12 @@ if (!argv.format || argv.format === 'iife') {
       compact: true,
       file: 'dist/vuetrex.js',
       format: 'iife',
-      name: 'Vuetrex',
+      name: 'vuetrex',
       exports: 'auto',
       globals,
     },
     plugins: [
-      nodeResolve(),
+      resolve(),
       replace(baseConfig.plugins.replace),
       ...baseConfig.plugins.preVue,
       vue(baseConfig.plugins.vue),
@@ -171,12 +179,12 @@ if (!argv.format || argv.format === 'iife.min') {
       compact: true,
       file: 'dist/vuetrex.min.js',
       format: 'iife',
-      name: 'Vuetrex',
+      name: 'vuetrex',
       exports: 'auto',
       globals,
     },
     plugins: [
-      nodeResolve(),
+      resolve(),
       replace(baseConfig.plugins.replace),
       ...baseConfig.plugins.preVue,
       vue(baseConfig.plugins.vue),

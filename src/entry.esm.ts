@@ -1,13 +1,11 @@
 import { App, Plugin } from 'vue';
 
 // Import vue components
-import * as components from '@/lib-components/index';
+import {Vuetrex} from '@/lib-components/index';
 
 // install function executed by Vue.use()
 const install: Exclude<Plugin['install'], undefined> = function installVuetrex(app: App) {
-  Object.entries(components).forEach(([componentName, component]) => {
-    app.component(componentName, component);
-  });
+    app.component("Vuetrex", Vuetrex);
 };
 
 // Create module definition for Vue.use()

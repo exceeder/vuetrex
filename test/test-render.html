@@ -5,6 +5,7 @@
 </head>
 <body>
 <script src="https://unpkg.com/vue@next/dist/vue.global.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
 <script src="../dist/vuetrex.js"></script>
 <div id="app">
   <h1>Testing Vuetrex</h1>
@@ -14,20 +15,29 @@
       <row>
         <box name="a1" @click="myClick"/>
       </row>
+      <row>
+        <box name="a2" size="2.0"/>
+      </row>
+      <row>
+        <cylinder name="a3" size="2.0"/>
+      </row>
     </layer>
   </Vuetrex>
 </div>
 <script type="module">
     const {createApp, ref, onMounted} = Vue;
     const RootComponent = {
+        components: {
+            Vuetrex: vuetrex.Vuetrex
+        },
         setup() {
-            console.log("Vuetrex loaded:",Vuetrex)
+            console.log("Vuetrex loaded:",vuetrex)
 
             const msg = ref("loading")
             const counter = ref(0)
 
             function myClick() {
-              msg.value = "clicked " + (++counter.value)
+              msg.value = "First box clicked " + (++counter.value)
             }
 
             onMounted(() => {
@@ -38,7 +48,6 @@
         }
     };
     const app = createApp(RootComponent);
-    Vuetrex(app);
     app.mount('#app');
 
 </script>

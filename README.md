@@ -53,6 +53,6 @@ Result:
 
 
 ## TODO
-* Fix window resizing
+* ~~Fix window resizing~~
 * Nesting
 

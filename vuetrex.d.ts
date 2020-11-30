@@ -1,7 +1,7 @@
 import { DefineComponent, Plugin } from 'vue';
 
 
-declare const Vuetrex: Exclude<Plugin['install'], undefined>;
-export default Vuetrex;
+declare const vuetrex: Exclude<Plugin['install'], undefined>;
+export default vuetrex;
 
-export const VuetrexSample: DefineComponent;
+export const Vuetrex: DefineComponent;

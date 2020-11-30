@@ -1,5 +1,5 @@
-// import * as THREE from "three";
-import * as THREE from "@/lib-components/three/three.imports";
+import * as THREE from "three";
+import * as THREEx from "@/lib-components/three/three.imports";
 import Scene from "@/lib-components/three/scene";
 import Element3d from "@/lib-components/three/element3d";
 
@@ -39,7 +39,7 @@ export default class VuetrexStage extends Scene {
 
     createGroundMirror(scene: THREE.Scene) {
         const geometry = new THREE.PlaneBufferGeometry(100, 100);
-        const groundMirror = new THREE.Reflector(geometry, {
+        const groundMirror = new THREEx.Reflector(geometry, {
             clipBias: 0.003,
             textureWidth: this.width * window.devicePixelRatio,
             textureHeight: this.height * window.devicePixelRatio,
@@ -118,7 +118,7 @@ export default class VuetrexStage extends Scene {
             case 'rbox': {
                 return size => {
                     const bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new THREE.RoundedBoxBufferGeometry(R, R / 2, R,  5, .1), bMaterial);
+                    return new THREE.Mesh(new THREEx.RoundedBoxBufferGeometry(R, R / 2, size,  5, .1), bMaterial);
                 }
 
             }

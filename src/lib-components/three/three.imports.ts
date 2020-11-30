@@ -1,13 +1,11 @@
 /*
-* This is a helper to handle Three.js dependencies in one place.
-* It also allows to prefix all three.js classes with THREE.*
+* This is a helper to handle Three.js non-standard dependencies in one place.
+* It also allows to prefix all three.js classes with THREEx.*
 */
-
-export * from "three";
-export {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer";
-export {RenderPass} from "three/examples/jsm/postprocessing/RenderPass";
-export {Reflector} from "three/examples/jsm/objects/Reflector";
-export {RoundedBoxBufferGeometry} from "three/examples/jsm/geometries/RoundedBoxBufferGeometry";
+export {EffectComposer} from "./external/EffectComposer";
+export {RenderPass} from "./external/RenderPass";
+export {Reflector} from "./external/Reflector";
+export {RoundedBoxBufferGeometry} from "./external/RoundedBoxBufferGeometry";
 
 /* ---
 

@@ -1,4 +1,5 @@
-import * as THREE from "@/lib-components/three/three.imports";
+import * as THREE from "three";
+import * as THREEx from "@/lib-components/three/three.imports";
 import LifeCycle from "@/lib-components/three/lifecycle";
 
 interface MousePosition {
@@ -20,8 +21,8 @@ export default class Scene extends LifeCycle {
     renderer: THREE.WebGLRenderer
     selectedObject: (THREE.Mesh | null) = null
 
-    private composer: THREE.EffectComposer;
-    private renderPass: THREE.RenderPass;
+    private composer: THREEx.EffectComposer;
+    private renderPass: THREEx.RenderPass;
 
     public readonly colorMain = new THREE.Color(0x555555);
     public readonly colorHighlight = new THREE.Color(0x333333);
@@ -51,8 +52,8 @@ export default class Scene extends LifeCycle {
         this.scene = this.createScene();
 
         //composer for mirror and other effects
-        this.composer = new THREE.EffectComposer(this.renderer)
-        this.renderPass = new THREE.RenderPass(this.scene, this.camera)
+        this.composer = new THREEx.EffectComposer(this.renderer)
+        this.renderPass = new THREEx.RenderPass(this.scene, this.camera)
         this.composer.addPass(this.renderPass)
 
         //events
@@ -209,12 +210,12 @@ export default class Scene extends LifeCycle {
         const camera = this.camera;
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        //parallax
-        camera.position.x = -window.pageYOffset / 500;
-        camera.position.y = 11 + window.pageYOffset / 1000;
+        //TODO parallax support
+        //camera.position.x = -window.pageYOffset / 500;
+        //camera.position.y = 11 + window.pageYOffset / 1000;
 
         //camera.lookAt(new THREE.Vector3());
-        //this.renderer.setSize(width, height);
+        this.renderer.setSize(width, height);
         this.composer.setSize( width, height );
     }
 }

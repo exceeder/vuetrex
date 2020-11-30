@@ -12,8 +12,9 @@ import {
 import VuetrexStage from "@/lib-components/three/stage";
 import { Root } from "@/lib-components/nodes/Root";
 import { nextTick } from "vue";
+import {ComponentInternalInstance} from "@vue/runtime-core";
 
-export default /*#__PURE__*/defineComponent({
+export default defineComponent({
     name: "Vuetrex",
     props: {
         settings: { type: Object },
@@ -29,7 +30,13 @@ export default /*#__PURE__*/defineComponent({
         const maxWidth = ref(4096);
         const maxHeight = ref(4096);
 
-        const vuetrexComponent = getCurrentInstance()!;
+        const vuetrexComponent = getCurrentInstance();
+        if (vuetrexComponent == null) {
+            const err = "Vue's getCurrentInstance() returned null in Vuetrex setup(). It likely means" +
+            " your app is misconfigured";
+            console.error(err)
+            return () => h("div",err);
+        }
 
         /**
          * Since Vuetrex uses its own renderer, Vue's `appContext`, `root` and `provides` would normally be lost in
@@ -40,13 +47,16 @@ export default /*#__PURE__*/defineComponent({
          */
         const Connector = defineComponent({
             setup(props, setupContext) {
-                const instance = getCurrentInstance();
+                const instance: ComponentInternalInstance | null = getCurrentInstance();
                 if (instance != null) {
                     // @see runtime-core createComponentInstance
                     instance.parent = vuetrexComponent;
                     instance.appContext = vuetrexComponent.appContext;
                     instance.root = vuetrexComponent.root;
                     (instance as any).provides = (vuetrexComponent as any).provides;
+                } else {
+                    console.error("Vue's getCurrentInstance() returned null in Connector component. It likely means" +
+                        " your app is misconfigured")
                 }
                 const defaultSlot = setupContext.slots.default!;
                 return () => h(Fragment, defaultSlot());
