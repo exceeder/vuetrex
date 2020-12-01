@@ -110,7 +110,8 @@ if (!argv.format || argv.format === 'es') {
             '@babel/preset-env',
             {
               targets: esbrowserslist,
-              debug: true
+              debug: true,
+              useBuiltIns: "usage"
             }
           ]
         ]

@@ -9,18 +9,22 @@ Note: currently in development.
 ## For development:
 
 1.  `yarn serve` for development
-2.  `yarn build` to rebuild  the library
+2.  `yarn build` to rebuild the library
 
 ## Usage Example
+
+Use [Vue CLI](https://github.com/vuejs/vue-cli) to set up your project with Vue 3. 
+Note: Vuetrex requires Vue 3.0.3 or better.
 
 Setup:
 ```
 npm install @exceeder/vuetrex
+npm install three
 ```
 
 In script:
 ```
-import {Vuetrex} from Vuetrex;
+import {Vuetrex} from "@exceeder/vuetrex";
 ```
 
 Vue Template (Vue reactive features are fully supported):
@@ -47,7 +51,7 @@ Vue Template (Vue reactive features are fully supported):
 </template>
 ```
 
-Result:
+Rendering example:
 
 ![image](docs/screenshot.png)
 

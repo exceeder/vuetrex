@@ -10,7 +10,7 @@ export class Row extends Node {
     syncWithThree() {
         super.syncWithThree();
         setTimeout(()=> {
-            console.log("row syncd", this.children)
+            //console.log("row syncd", this.children)
             this.children.forEach(b => b.syncWithThree())
         },1)
     }

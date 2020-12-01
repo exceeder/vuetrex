@@ -140,11 +140,11 @@ export default class VuetrexStage extends Scene {
         const cols = node.parent?.renderSize() || 1;
         const rows = node.parent?.parent?.renderSize() || 1;
 
-        console.log("render [",node.name,"] ",
-            `rows:${rows}`,
-            `cols:${cols}`,
-            `rowIdx:${i}`,
-            `boxIdx:${j}`);
+        // console.log("render [",node.name,"] ",
+        //     `rows:${rows}`,
+        //     `cols:${cols}`,
+        //     `rowIdx:${i}`,
+        //     `boxIdx:${j}`);
 
         const scene = this.scene;
 

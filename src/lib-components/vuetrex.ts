@@ -19,6 +19,7 @@ export default defineComponent({
     props: {
         settings: { type: Object },
         position: { type: String, default: "static" },
+        play: { type: Boolean, default: true },
         items: {
             type: Array,
             default: () => ([])
@@ -79,11 +80,9 @@ export default defineComponent({
                 //create stage environment
                 stage.mount();
                 //start animation
-                stage.start();
-
-                // Auto-inherit dimensions.
-                //stageRoot["func-w"] = (w: number) => w;
-                //stageRoot["func-h"] = (w: number, h: number) => h;
+                if (props.play) {
+                    stage.start();
+                }
 
                 // Keep correct aspect-ratio issues when the page is zoomed out.
                 //const maxTextureSize = stage.getMaxTextureSize();

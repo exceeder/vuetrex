@@ -1,10 +1,10 @@
-{
+{ /* note, this config in only used with tsc; rollup uses own presets */
     "compilerOptions": {
         "target": "ES2016" /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019' or 'ESNEXT'. */,
         "module": "ESNext" /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */,
         "strict": true,
         "declaration": true /* Generates corresponding '.d.ts' file. */,
-        "declarationMap": true /* Generates a sourcemap for each corresponding '.d.ts' file. */,
+        "declarationMap": false /* Generates a sourcemap for each corresponding '.d.ts' file. */,
         "declarationDir": "dist/types",
         "noUnusedLocals": true,
         "noUnusedParameters": false,
@@ -23,8 +23,10 @@
         "sourceMap": true,
         "baseUrl": ".",
         "types": [
+            "webpack-env",
             "node",
-            "vue"
+            "vue",
+            "jest"
         ],
         "paths": {
             "@/*": [
@@ -38,8 +40,13 @@
             "scripthost"
         ]
     },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.vue"
+    ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "dev"
     ]
 }

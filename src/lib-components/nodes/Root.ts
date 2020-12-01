@@ -4,7 +4,7 @@ import {Base} from '@/lib-components/nodes/Base';
 export class Root extends Node {
     constructor(stage: any) {
         super(stage);
-        console.log("Root constructor")
+        //console.log("Root constructor")
     }
 }
 
