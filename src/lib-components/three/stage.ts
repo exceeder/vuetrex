@@ -13,6 +13,14 @@ const D = 1.5; //box distance
 export default class VuetrexStage extends Scene {
     public root: Element3d | null = null;
     private subscribers: Function[];
+    private caps: { repeats: number; size: number; planeSize: number; updateFn: () => void; texture: THREEx.DynamicTexture | null } = {
+        planeSize: 512,
+        size: 2048,
+        repeats: 17,
+        texture: null,
+        updateFn: () => {}
+    }
+    private captions: Array<{x:number, y:number, text:string}> = []
 
     constructor(domParent: HTMLElement, settings:any) {
         super(domParent);
@@ -43,42 +51,71 @@ export default class VuetrexStage extends Scene {
             clipBias: 0.003,
             textureWidth: this.width * window.devicePixelRatio,
             textureHeight: this.height * window.devicePixelRatio,
-            color: new THREE.Color(0x777777)
+            color: new THREE.Color(0x333333)
         });
         groundMirror.rotateX(-Math.PI / 2);
-        groundMirror.position.y = -0.49;
+        groundMirror.position.y = -0.5;
         groundMirror.receiveShadow = false;
         scene.add(groundMirror);
     }
 
     createFloor(scene: THREE.Scene) {
+        const caps = this.caps;
+        const textureOffset = Math.floor(caps.repeats/2);
+        //overlay plane
+        const texture = new THREEx.DynamicTexture(caps.size, caps.size)
+        caps.texture = texture
+        texture.texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+        texture.texture.repeat.set(caps.repeats, caps.repeats)
+        texture.texture.offset.set(-textureOffset, -textureOffset)
+
         const planeSize = 512;
-        let material = new THREE.MeshBasicMaterial({opacity: 1.0, transparent: true});
-        let plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(planeSize, planeSize),
-            material
-        );
+        this.repaintTitles(planeSize)
+        caps.updateFn = () => this.repaintTitles(planeSize)
+
+        let material = new THREE.MeshBasicMaterial({opacity: 1.0, transparent: true, map: texture.texture});
+        let plane = new THREE.Mesh(new THREE.PlaneGeometry(planeSize, planeSize), material);
         plane.rotation.x = -Math.PI / 2.0;
-        plane.position.y = -0.5;
+        plane.position.y = -0.499;
         scene.add(plane);
+    }
+
+    repaintTitles(mirrorSize: number) {
+        const caps = this.caps;
+        const textureSize = caps.size;
+        const textureRepeats = caps.repeats;
+        const texture = caps.texture!
+        texture.clear(undefined)
+        texture.clear('#3f3f3fc0')
+
+        texture.context.font = "bold "+Math.floor(textureSize/128)+"px Helvetica"
+        const scale = textureSize / mirrorSize * textureRepeats;
+        this.captions.forEach(c => {
+            const w = texture.context.measureText(c.text).width
+
+            const x = c.x * scale
+            const y = c.y * scale
+            texture.drawText(c.text, x + textureSize / 2 - w/2.0, y + textureSize / 2 + R/5*scale, '#eeffff')
+        })
+
     }
 
     createLights(scene: THREE.Scene) {
         let light = new THREE.PointLight(0xbbbbff, 0.8);
-        light.position.set(-10, 30, 10);
+        light.position.set(-10, 20, 50);
         light.castShadow = false;
         scene.add(light);
 
         let light2 = new THREE.SpotLight(0xffffff, 0.7);
-        light2.position.set(1, 30, 15);
+        light2.position.set(-20, 20, 15);
         scene.add(light2);
 
-        let light3 = new THREE.PointLight(0xbbbbff, 0.1);
-        light3.position.set(10, 30, 10);
+        let light3 = new THREE.PointLight(0xeebbff, 0.2);
+        light3.position.set(10, 30, -10);
         scene.add(light3);
 
-        let light4 = new THREE.AmbientLight(0xffffff, 0.1);
-        light3.position.y = 10;
+        let light4 = new THREE.AmbientLight(0xffffff, 0.3);
+        light4.position.y = 10;
         scene.add(light4);
     }
 
@@ -93,6 +130,11 @@ export default class VuetrexStage extends Scene {
     removeObject(el: Element3d) {
         if (el.mesh) {
             this.scene.remove(el.mesh);
+            const c = (el.mesh as any).caption
+            if (c) {
+                this.captions.splice(this.captions.indexOf(c),1)
+                this.caps.updateFn();
+            }
             el.mesh = null;
         }
     }
@@ -132,6 +174,17 @@ export default class VuetrexStage extends Scene {
         }
     }
 
+    addCaption(el: THREE.Mesh, size: number, caption: string) {
+        const c = {
+            x: el.position.x,
+            y: el.position.z + size / 2.0,
+            text: caption
+        }
+        this.captions.push(c);
+        (el as any).caption = c;
+        this.caps.updateFn();
+    }
+
     renderMesh(el: Element3d, size: number = R, gen: (size:number) => THREE.Mesh) {
         const node = el.node;
 
@@ -154,10 +207,10 @@ export default class VuetrexStage extends Scene {
         }
 
         const mesh = gen(size);
-        mesh.name = "el-" + name;
+        mesh.name = "el-" + node.name;
         mesh.castShadow = true;
         this.positionLayoutElement(mesh, j, i, cols, rows);
-
+        this.addCaption(mesh, size, node.name)
         scene.add(mesh);
         el.mesh = mesh;
     }

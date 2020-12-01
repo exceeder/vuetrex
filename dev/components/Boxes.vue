@@ -1,7 +1,7 @@
 <template>
     <layer>
       <row v-if="items.length > 0">
-        <box v-for="(el,i) in items" :key="i" :name="'a'+el"/>
+        <box v-for="(el,i) in items" :key="i" :name="'dynamic '+el"/>
       </row>
       <row>
         <box name="b1" size="2"/>
