@@ -1,6 +1,6 @@
 {
   "name": "@exceeder/vuetrex",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "WebGL animated diagram visualizations in 3D for Vue 3",
   "main": "dist/vuetrex.umd.js",
   "browser": "dist/vuetrex.esm.js",
