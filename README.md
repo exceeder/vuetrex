@@ -4,7 +4,7 @@ WebGL animated diagram visualizations in 3D for Vue 3.x
  
 Utilizes [Vue Custom Renderer API](https://v3.vuejs.org/api/global-api.html#createrenderer) and [Three.js](https://threejs.org/)
     
-Note: currently in development.
+Note: the project is in early alpha stage and is currently in development.
 
 ## For development:
 
@@ -13,21 +13,31 @@ Note: currently in development.
 
 ## Usage Example
 
+### ES Module Browser build
+For an example using in-browser ES6 modules, see the [tests](tests/iife).
+
+### Using in Vue Project
 Use [Vue CLI](https://github.com/vuejs/vue-cli) to set up your project with Vue 3. 
-Note: Vuetrex requires Vue 3.0.3 or better.
 
-Setup:
+Note: Vuetrex requires Vue 3.0.3 or better and ThreeJS r117+, which is not bundled for convenience.
+
+#### Setup
+Install ThreeJS and Vuetrex:
 ```
-npm install @exceeder/vuetrex
-npm install three
+npm install three @exceeder/vuetrex
 ```
 
-In script:
+#### Usage
+In the script section of your .vue component:
 ```
 import {Vuetrex} from "@exceeder/vuetrex";
+...
+components: {
+ Vuetrex
+}
 ```
 
-Vue Template (Vue reactive features are fully supported):
+Vue template example with reactive features fully supported:
 ```
 <template>
  <Vuetrex>
