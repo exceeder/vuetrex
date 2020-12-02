@@ -6,6 +6,7 @@
       <row>
         <box name="b1" size="2"/>
         <box name="b2"/>
+        <box name="b3"/>
       </row>
       <row>
         <box name="c1"/>

@@ -2,21 +2,25 @@
   <img alt="Vue logo" src="./assets/logo.png" style="float:left; padding:0;margin:0">
   <tabs>
     <tab title="Example 1" :selected="true">
-      <section>
         <h2>Multi-Row Setup</h2>
-        <label>
-          Boxes in the first row ( {{items.length}} ):
-          <input type="range" min="0" max="5" :value="items.length" @input="e => updateItems(e.target.value)">
-        </label>
-        <p/>
-        <vuetrex>
-          <Boxes :items="items" />
-        </vuetrex>
-
-      </section>
+        <section>
+          <label>
+            Boxes in the first row ( {{items.length}} ):
+            <input type="range" min="0" max="5" :value="items.length" @input="e => updateItems(e.target.value)">
+          </label>
+          <p/>
+          <vuetrex>
+            <TabA :items="items" />
+          </vuetrex>
+        </section>
     </tab>
     <tab title="Example 2">
-      <h1>How much we do it for</h1>
+      <h1>Nested setup</h1>
+      <section>
+        <vuetrex>
+          <TabB :items="items" />
+        </vuetrex>
+      </section>
     </tab>
     <tab title="Example 3">
       <h1>Example 3</h1>
@@ -27,7 +31,8 @@
 
 <script lang="ts">
 import {Vuetrex} from '@/lib-components/index';
-import Boxes from './components/Boxes.vue';
+import TabA from './components/TabA.vue';
+import TabB from './components/TabB.vue';
 import Tabs from './components/Tabs.vue';
 import Tab from './components/Tab.vue';
 import {defineComponent, ref, reactive} from "vue";
@@ -35,7 +40,8 @@ import {defineComponent, ref, reactive} from "vue";
 export default defineComponent( {
   components: {
     Vuetrex,
-    Boxes,
+    TabA,
+    TabB,
     Tabs,
     Tab
   },

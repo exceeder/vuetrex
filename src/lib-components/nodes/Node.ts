@@ -12,7 +12,7 @@ type NodeEvents = {
  * Named node in the tree hierarchy of Vuetrex renderer.
  */
 export class Node extends Base {
-    public element?: Element3d = undefined;
+    public element?: Element3d;
 
     public readonly stage: VuetrexStage;
     public name: string = '';
@@ -32,12 +32,16 @@ export class Node extends Base {
         return this._nodeEvents;
     }
 
-    getParentNode(): Node | undefined {
-        let current = this.parent;
-        while (current && !(current as any).el) {
-            current = current.parent;
-        }
-        return current as Node;
+    getLayer(): Node | undefined {
+        return this.parent?.parent as Node;
+    }
+
+    getRow(): Node | undefined {
+        return this.parent as Node;
+    }
+
+    getScale(): number {
+        return (this.getLayer() as any).scale || 1;
     }
 
     getIdx() {

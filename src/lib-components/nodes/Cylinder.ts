@@ -9,7 +9,7 @@ export class Cylinder extends Node {
 
     syncWithThree() {
         if (this.element) {
-            this.stage.renderMesh(this.element, 1.0, this.stage.meshCreator('cylinder'));
+            this.stage.renderMesh(this.element, 1.0, this.stage.meshCreator('cylinder-shape'));
 
             if (this.nodeEvents.onClick) {
                 this.element.mesh?.addEventListener('click', ev => {

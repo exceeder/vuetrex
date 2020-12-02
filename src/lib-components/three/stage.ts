@@ -54,7 +54,7 @@ export default class VuetrexStage extends Scene {
             color: new THREE.Color(0x333333)
         });
         groundMirror.rotateX(-Math.PI / 2);
-        groundMirror.position.y = -0.5;
+        groundMirror.position.y = -0.35;
         groundMirror.receiveShadow = false;
         scene.add(groundMirror);
     }
@@ -76,7 +76,7 @@ export default class VuetrexStage extends Scene {
         let material = new THREE.MeshBasicMaterial({opacity: 1.0, transparent: true, map: texture.texture});
         let plane = new THREE.Mesh(new THREE.PlaneGeometry(planeSize, planeSize), material);
         plane.rotation.x = -Math.PI / 2.0;
-        plane.position.y = -0.499;
+        plane.position.y = -0.349;
         scene.add(plane);
     }
 
@@ -95,7 +95,7 @@ export default class VuetrexStage extends Scene {
 
             const x = c.x * scale
             const y = c.y * scale
-            texture.drawText(c.text, x + textureSize / 2 - w/2.0, y + textureSize / 2 + R/5*scale, '#eeffff')
+            texture.drawText(c.text, x + textureSize / 2 - w/2.0, y + textureSize / 2 + R/4*scale, '#eeffff')
         })
 
     }
@@ -123,6 +123,7 @@ export default class VuetrexStage extends Scene {
         let bMaterial = new THREE.MeshStandardMaterial();
         bMaterial.roughness = 0.3;
         bMaterial.metalness = 0.1;
+        bMaterial.flatShading = false;
         bMaterial.color.set(this.colorMain);
         return bMaterial;
     }
@@ -139,27 +140,96 @@ export default class VuetrexStage extends Scene {
         }
     }
 
-    positionLayoutElement(el: THREE.Mesh, j: number, i: number, NBoxes: number, NLayers: number) {
+    positionLayoutElement(el: Element3d) : THREE.Vector3 {
+        const node = el.node;
+        const scale = node.getScale();
+
+        const colIdx = node.getIdx();
+        const rowIdx = node.getRow()?.getIdx() || 0;
+        const cols = node.getRow()?.renderSize() || 1;
+        const rows = node.getLayer()?.renderSize() || 1;
+        const layerPos = node.getLayer()?.element?.pos;
+        const offX =  layerPos?.x || 0.0;
+        const offZ = layerPos?.z || 0.0;
+
         //in WebGL, positive X to the right, Y to the top, Z to the back
-        el.position.x = (-NLayers * (R + D)) / 2 + (R + D) * i + (R + D) / 2;
-        el.position.y = 0.0;
-        el.position.z = (-NBoxes * (R + D)) / 2 + (R + D) * j + (R + D) / 2;
+        return new THREE.Vector3(
+         (-rows * (R + D)) / 2 / scale + (R + D) * rowIdx / scale + (R + D) / 2 / scale + offX,
+            0.0,
+         (-cols * (R + D)) / 2 / scale + (R + D) * colIdx / scale + (R + D) / 2 / scale + offZ);
     }
 
     meshCreator(type: string): (size:number) => THREE.Mesh {
+        let bMaterial = this.createElementMaterial();
         switch (type) {
             case 'cylinder': {
                 return size => {
-                    let bMaterial = this.createElementMaterial();
                     return new THREE.Mesh(
-                        new THREE.CylinderGeometry(size / 2, R / 2, R / 2, 32),
+                        new THREE.CylinderGeometry(size / 2, size / 2 * 1.05, R / 2, 32),
                         bMaterial
                     );
                 }
             }
+            case 'cylinder-shape': {
+                return size => {
+                    const width = size/2 || 1.0;
+                    const r = width;
+
+                    const shape = new THREE.Shape();
+                    shape.moveTo(r, 0);
+                    shape.absarc(0,0, width, 0, Math.PI/2, false);
+                    shape.absarc(0,0, width, Math.PI/2, Math.PI, false);
+                    shape.absarc(0,0, width, Math.PI, Math.PI*3/2, false);
+                    shape.absarc(0,0, width, Math.PI*3/2, Math.PI*1.99, false);
+                    shape.closePath();
+
+                    const extrudeSettings = {
+                        steps: 1,
+                        depth: R/4,
+                        bevelEnabled: true,
+                        bevelThickness: 0.07,
+                        bevelSize: 0.07,
+                        bevelOffset: 0,
+                        bevelSegments: 5
+                    };
+
+                    const geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
+                    geometry.rotateX(Math.PI/2)
+                    geometry.translate(0,0.07,0)
+                    return new THREE.Mesh(geometry, bMaterial);
+                };
+            }
+            case 'rbox-shape': {
+                return size => {
+                    const width = size;
+                    const length = R * 0.9;
+
+                    const shape = new THREE.Shape();
+                    shape.moveTo(-length/2, -width/2);
+                    shape.lineTo(-length/2, width/2);
+                    shape.lineTo(length/2, width/2);
+                    shape.lineTo(length/2, -width/2);
+                    shape.lineTo(-length/2, -width/2);
+
+                    const extrudeSettings = {
+                        steps: 1,
+                        depth: R/2,
+                        bevelEnabled: true,
+                        bevelThickness: 0.1,
+                        bevelSize: 0.1,
+                        bevelOffset: 0,
+                        bevelSegments: 3
+                    };
+
+                    const geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
+                    geometry.rotateX(Math.PI/2)
+                    geometry.translate(0,R/4,0)
+                    return new THREE.Mesh(geometry, bMaterial);
+                }
+
+            }
             case 'rbox': {
                 return size => {
-                    const bMaterial = this.createElementMaterial();
                     return new THREE.Mesh(new THREEx.RoundedBoxBufferGeometry(R, R / 2, size,  5, .1), bMaterial);
                 }
 
@@ -167,7 +237,6 @@ export default class VuetrexStage extends Scene {
             default:
             case 'box': {
                 return size => {
-                    const bMaterial = this.createElementMaterial();
                     return new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
                 }
             }
@@ -186,12 +255,6 @@ export default class VuetrexStage extends Scene {
     }
 
     renderMesh(el: Element3d, size: number = R, gen: (size:number) => THREE.Mesh) {
-        const node = el.node;
-
-        const j = node.getIdx();
-        const i = node.parent?.getIdx() || 0;
-        const cols = node.parent?.renderSize() || 1;
-        const rows = node.parent?.parent?.renderSize() || 1;
 
         // console.log("render [",node.name,"] ",
         //     `rows:${rows}`,
@@ -202,15 +265,19 @@ export default class VuetrexStage extends Scene {
         const scene = this.scene;
 
         if (el.mesh !== null) {
-            this.positionLayoutElement(el.mesh, j, i, cols, rows);
+            el.mesh.position.copy(this.positionLayoutElement(el))
+            this.positionLayoutElement(el);
             return;
         }
 
         const mesh = gen(size);
-        mesh.name = "el-" + node.name;
+        const scale = el.node.getScale();
+        mesh.scale.set(1/scale, 1/scale, 1/scale);
+        mesh.geometry.translate(0,0.5-scale/2,0)
+        mesh.name = "el-" + el.node.name;
         mesh.castShadow = true;
-        this.positionLayoutElement(mesh, j, i, cols, rows);
-        this.addCaption(mesh, size, node.name)
+        mesh.position.copy(this.positionLayoutElement(el));
+        this.addCaption(mesh, size/scale, el.node.name)
         scene.add(mesh);
         el.mesh = mesh;
     }

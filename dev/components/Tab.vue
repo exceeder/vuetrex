@@ -1,5 +1,5 @@
 <template>
-  <div v-show="isActive"><slot></slot></div>
+  <div v-if="isActive"><slot></slot></div>
 </template>
 <script type="ts">
 import {defineComponent, inject, onBeforeMount, onBeforeUnmount, ref, watch} from "vue";
