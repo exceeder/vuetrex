@@ -3,27 +3,7 @@
       <row>
         <box name="a1"/>
         <box name="a2"/>
-        <layer>
-          <row>
-            <box name="a3-a1"/>
-          </row>
-          <row>
-            <box name="a3-b1"/>
-            <layer>
-              <row>
-                <box name="a3-b1-1"/>
-              </row>
-              <row>
-                <box name="a3-b1-2"/>
-                <box name="a3-b1-3"/>
-              </row>
-            </layer>
-          </row>
-        </layer>
-      </row>
-      <row>
-        <box name="c1"/>
-        <cylinder name="c2" @click="cylClick"/>
+        <box name="a3"/>
       </row>
     </layer>
 </template>

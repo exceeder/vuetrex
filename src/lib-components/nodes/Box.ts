@@ -4,6 +4,7 @@ import VuetrexStage from "@/lib-components/three/stage";
 export class Box extends Node {
 
     size:number = 1.0;
+    connection: string | null = null;
 
     constructor(stage: VuetrexStage) {
         super(stage);
@@ -16,6 +17,9 @@ export class Box extends Node {
                 this.element.mesh?.addEventListener('click', ev => {
                     this.dispatchClick(ev.originalEvent);
                 })
+            }
+            if (this.connection) {
+                this.stage.connect(this.element, this.stage.getById(this.connection))
             }
         }
     }

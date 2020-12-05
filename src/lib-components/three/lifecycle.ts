@@ -50,7 +50,6 @@ export default class LifeCycle {
             this.tweens.forEach(fn =>
                 fn(timer.current, this.lifecycle.tick)
             );
-            this.render();
         }
     }
 

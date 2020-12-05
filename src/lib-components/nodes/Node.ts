@@ -16,6 +16,7 @@ export class Node extends Base {
 
     public readonly stage: VuetrexStage;
     public name: string = '';
+    public text: string = '';
 
     public _nodeEvents?: NodeEvents = undefined;
 
@@ -41,7 +42,8 @@ export class Node extends Base {
     }
 
     getScale(): number {
-        return (this.getLayer() as any).scale || 1;
+        if (this.getLayer() === undefined) return 1.0;
+        return (this.getLayer() as any).scale || 1.0;
     }
 
     getIdx() {

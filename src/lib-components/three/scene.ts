@@ -133,7 +133,7 @@ export default class Scene extends LifeCycle {
 
     //--- overrides ---
     render() {
-        //this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.scene, this.camera);
         this.composer.render();
     }
 
@@ -201,6 +201,7 @@ export default class Scene extends LifeCycle {
                 2 * Math.sin(Math.PI / 2 + Math.sin(timer * 0.0001));
             this.camera.position.y = 9 + 0.5 * Math.sin(timer * 0.0001); // + timer*0.0001;
             this.camera.lookAt(this.cameraTarget);
+            this.render();
         };
     }
 
