@@ -4,16 +4,16 @@
         <box v-for="(el,i) in items" :key="i" :name="'dynamic '+el" size="1"/>
       </row>
       <row>
-        <box name="b1" size="2"/>
-        <box name="b2"/>
+        <box name="b1" size="1"/>
+        <box name="b2" connection="dynamic 1"/>
         <box name="b3"/>
       </row>
       <row>
         <box name="c1" connection="b1"/>
-        <cylinder name="c2" :text="' ' + counter" @click="cylClick"/>
+        <cylinder name="c2" :text="' ' + counter" @click="cylClick" connection="c1"/>
       </row>
       <row>
-        <box name="d1" size="4" connection="c2"/>
+        <box name="d1" size="1" connection="b3"/>
       </row>
     </layer>
 </template>

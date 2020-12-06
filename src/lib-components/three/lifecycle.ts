@@ -46,10 +46,11 @@ export default class LifeCycle {
         } else {
             timer.current += t - timer.last;
             timer.last = t;
-            this.lifecycle.tick++;
+            if (++this.lifecycle.tick < 0) this.lifecycle.tick = 0;
             this.tweens.forEach(fn =>
                 fn(timer.current, this.lifecycle.tick)
             );
+            this.render();
         }
     }
 

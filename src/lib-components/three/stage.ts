@@ -8,16 +8,15 @@ import {Vector3} from "three";
 const R = 1.3; //box radius
 const D = 1.5; //box distance
 
-let tick = 0;
 const options: ParticleOptions = {
     position: new THREE.Vector3(-2.5, 0.2, -0.5),
     positionRandomness: 1.95,
     velocity: new THREE.Vector3(0.1,0,0),
-    velocityRandomness: 0.005,
-    color: 0x20ffff,
+    minMax: new THREE.Vector2(-5.0, 5.0),
+    velocityRandomness: 0.001,
+    color: 0xa0ffff,
     colorRandomness: 0.1,
-    turbulence: .001,
-    lifetime: 30,
+    lifetime: 70,
     size: 0.9,
     sizeRandomness: 0.3
 };
@@ -27,8 +26,8 @@ const spawnerOptions = {
     horizontalSpeed: 0.2,
     verticalSpeed: 0.1,
     timeScale: 1.0,
-    maxParticles: 20000,
-    containerCount: 10
+    maxParticles: 5000,
+    containerCount: 1
 };
 
 /**
@@ -68,6 +67,7 @@ export default class VuetrexStage extends Scene {
 
         this.onAnimate(this.animateCamera());
         this.onAnimate(this.animateMouse());
+        this.onAnimate(this.animateParticles());
     }
 
     getById(id: string): Element3d {
@@ -155,6 +155,8 @@ export default class VuetrexStage extends Scene {
     createElementMaterial() {
         let bMaterial = new THREE.MeshStandardMaterial();
         bMaterial.roughness = 0.3;
+        // bMaterial.transparent = true;
+        // bMaterial.opacity = 0.3;
         bMaterial.metalness = 0.1;
         bMaterial.flatShading = false;
         bMaterial.color.set(this.colorMain);
@@ -352,47 +354,54 @@ export default class VuetrexStage extends Scene {
 
         const midy = ( sy + ty ) / 2;
 
-        if( midy != sy && midy != ty ) {
+        if( Math.abs(sy-ty) < 0.01 ) {
+            this.hSegments.push(new THREE.Vector3(sy, sx, tx))
+        } else if( Math.abs(sx-tx) < 0.01 ) {
+            this.vSegments.push(new THREE.Vector3(sx, sy, ty))
+        } else {
             this.vSegments.push(new THREE.Vector3(sx,sy,midy))
             this.hSegments.push(new THREE.Vector3(midy,sx,tx))
-            this.vSegments.push(new THREE.Vector3(tx,midy,tx))
+            this.vSegments.push(new THREE.Vector3(tx,midy,ty))
         }
+        // this.vSegments.forEach(s => {
+        //     console.log("v "+s.x+' E ('+options.minMax.x+","+options.minMax.y+')');
+        // })
+        // this.hSegments.forEach(s => {
+        //     console.log("h "+s.x+' E ('+options.minMax.x+","+options.minMax.y+')');
+        // })
     }
 
-    render() {
-        super.render();
+    animateParticles() {
+        return (timer: number, tick: number) => {
+            if (!this.particleSystem) return;
+            const particles = this.particleSystem;
 
-        //particle system
-        //let delta = clock.getDelta() * spawnerOptions.timeScale;
-        let delta = 1 * spawnerOptions.timeScale;
-        tick += delta;
-        if (tick < 0) tick = 0;
-        if (delta > 0) {
-            //options.position.copy(this.ways(tick, timer))
-            const rnd = Math.random()
-            if (rnd < 0.5)
-            {
-                const seg = Math.floor(rnd * 1000) % this.hSegments.length
-                const v3 = isNaN(seg) ? new Vector3(- 3.5, 0 ,0) : this.hSegments[seg];
-                options.position.set(Math.min(v3.y, v3.z) + rnd * 2, -0.35, v3.x)
-                options.velocity.set(0.1 + rnd / 5, 0, 0);
-                // options.position.set(3.5 - rnd * 2, -0.35, -5 + Math.floor(rnd * 10))
-                // options.velocity.set(-0.1 - rnd / 5, 0, 0);
-            } else {
-
-                const seg = Math.floor(rnd * 1000) % this.vSegments.length
-                const v3 = isNaN(seg) ? new Vector3(- 3.5, 0 ,0) : this.vSegments[seg];
-                options.position.set(v3.x, -0.35, Math.min(v3.y, v3.z))
-                options.velocity.set(0, 0, -0.1 - rnd / 5);
-            }
-
-            for (let x = 0; x < spawnerOptions.spawnRate * delta; x++) {
+            for (let x = 0; x < spawnerOptions.spawnRate; x++) {
+                const rnd = particles.random()+0.5;
+                const rnd2 = particles.random();
+                if (rnd < 0.5)
+                {
+                    //horizontal
+                    const seg = Math.floor(rnd * 1024) % this.hSegments.length
+                    const v3 = isNaN(seg) ? new Vector3(0, -3. ,3.) : this.hSegments[seg];
+                    if (rnd2 > -2.0) { const t = v3.y; v3.y=v3.z; v3.z = t; }
+                    options.minMax.set(Math.min(v3.y, v3.z), Math.max(v3.y, v3.z))
+                    options.position.set(v3.y + (v3.z-v3.y)*rnd/2, -0.25, v3.x)
+                    options.velocity.set((v3.z-v3.y)*rnd/70, 0, 0);
+                } else {
+                    //vertical
+                    const seg = Math.floor(rnd * 1024) % this.vSegments.length
+                    const v3 = isNaN(seg) ? new Vector3(0, -.3 ,3.) : this.vSegments[seg];
+                    if (rnd2 > -2.) { const t = v3.y; v3.y=v3.z; v3.z = t; }
+                    options.position.set(v3.x, -0.25, v3.y + (v3.z-v3.y)*rnd/2)
+                    options.velocity.set(0, 0, (v3.z-v3.y)*rnd/70);
+                    options.minMax.set(Math.min(v3.y, v3.z), Math.max(v3.y, v3.z))
+                }
                 // Yep, that's really it.	Spawning particles is super cheap, and once you spawn them, the rest of
                 // their lifecycle is handled entirely on the GPU, driven by a time uniform updated below
-                this.particleSystem?.spawnParticle(options);
+                particles.spawnParticle(options);
             }
+            particles.update(tick);
         }
-        this.particleSystem?.update(tick);
-
     }
 }
