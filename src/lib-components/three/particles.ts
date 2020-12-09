@@ -123,7 +123,6 @@ export class VuetrexParticles extends Object3D implements FastRandom {
 
     constructor(options: ParticleSystemOptions) {
         super();
-        console.log("Particle constructor", options)
 
         options = options || {};
 

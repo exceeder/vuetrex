@@ -10,6 +10,8 @@ beforeEach(() => {
         texParameteri() { return [] },
         texImage2D() { return [] },
         clearColor() { },
+        clearRect() { },
+        fillRect() { },
         clearDepth() { },
         clearStencil() { },
         depthFunc() { },

@@ -7,7 +7,7 @@ import {
     Ref,
     ref,
     getCurrentInstance,
-    RootRenderFunction,
+    RootRenderFunction
 } from "vue";
 import VuetrexStage from "@/lib-components/three/stage";
 import { Root } from "@/lib-components/nodes/Root";
