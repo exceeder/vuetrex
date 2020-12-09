@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as THREEx from "@/lib-components/three/three.imports";
 import Scene from "@/lib-components/three/scene";
 import Element3d from "@/lib-components/three/element3d";
+import {Connectors} from "@/lib-components/three/connectors";
 
 const R = 1.3; //box radius
 const D = 1.5; //box distance
@@ -13,6 +14,7 @@ const D = 1.5; //box distance
 export default class VuetrexStage extends Scene {
     public root: Element3d | null = null;
     private subscribers: Function[];
+    private connectors: Connectors |  null = null;
     private caps: { repeats: number; size: number; planeSize: number; updateFn: () => void; texture: THREEx.DynamicTexture | null } = {
         planeSize: 512,
         size: 2048,
@@ -33,12 +35,14 @@ export default class VuetrexStage extends Scene {
         this.createFloor(scene);
         this.createLights(scene);
 
+        this.connectors = new Connectors(this);
+
         this.onAnimate(this.animateCamera());
         this.onAnimate(this.animateMouse());
     }
 
-    getById(id: string) {
-        return this.scene.getObjectByName('el-'+id);
+    getById(id: string): Element3d {
+        return (this.scene.getObjectByName('el-'+id) as THREE.Mesh).userData.el;
     }
 
     onHighlight(fn: Function) {
@@ -110,7 +114,7 @@ export default class VuetrexStage extends Scene {
         light2.position.set(-20, 20, 15);
         scene.add(light2);
 
-        let light3 = new THREE.PointLight(0xeebbff, 0.2);
+        let light3 = new THREE.PointLight(0xbbeeff, 0.2);
         light3.position.set(10, 30, -10);
         scene.add(light3);
 
@@ -122,6 +126,8 @@ export default class VuetrexStage extends Scene {
     createElementMaterial() {
         let bMaterial = new THREE.MeshStandardMaterial();
         bMaterial.roughness = 0.3;
+        // bMaterial.transparent = true;
+        // bMaterial.opacity = 0.3;
         bMaterial.metalness = 0.1;
         bMaterial.flatShading = false;
         bMaterial.color.set(this.colorMain);
@@ -131,7 +137,8 @@ export default class VuetrexStage extends Scene {
     removeObject(el: Element3d) {
         if (el.mesh) {
             this.scene.remove(el.mesh);
-            const c = (el.mesh as any).caption
+            this.connectors?.remove(el);
+            const c = el.mesh.userData.caption
             if (c) {
                 this.captions.splice(this.captions.indexOf(c),1)
                 this.caps.updateFn();
@@ -250,8 +257,9 @@ export default class VuetrexStage extends Scene {
             text: caption
         }
         this.captions.push(c);
-        (el as any).caption = c;
+        el.userData.caption = c;
         this.caps.updateFn();
+        return c;
     }
 
     renderMesh(el: Element3d, size: number = R, gen: (size:number) => THREE.Mesh) {
@@ -266,7 +274,13 @@ export default class VuetrexStage extends Scene {
 
         if (el.mesh !== null) {
             el.mesh.position.copy(this.positionLayoutElement(el))
+            //(el as any).caption.text = el.node.name;
             this.positionLayoutElement(el);
+            this.connectors?.update(el);
+            el.mesh.userData.caption.x = el.mesh.position.x
+            el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0
+            el.mesh.userData.caption.text = el.getCaption()
+            this.caps.updateFn();
             return;
         }
 
@@ -277,9 +291,14 @@ export default class VuetrexStage extends Scene {
         mesh.name = "el-" + el.node.name;
         mesh.castShadow = true;
         mesh.position.copy(this.positionLayoutElement(el));
-        this.addCaption(mesh, size/scale, el.node.name)
+        mesh.userData.caption = this.addCaption(mesh, size/scale, el.getCaption())
         scene.add(mesh);
         el.mesh = mesh;
+        mesh.userData.el = el;
+    }
+
+    connect(el1: Element3d, el2: Element3d) {
+        this.connectors?.connect(el1,el2);
     }
 
     // --- events ---
@@ -289,7 +308,7 @@ export default class VuetrexStage extends Scene {
         //display info below
         if (this.selectedObject) {
             this.selectedObject.dispatchEvent({type:'click', originalEvent: event})
-            this.onShowAnnotation(this.selectedObject);
+            //this.onShowAnnotation(this.selectedObject);
         }
 
     }
@@ -299,9 +318,5 @@ export default class VuetrexStage extends Scene {
 
         const vector = this.toScreenPosition(mesh, this.camera);
         this.subscribers.forEach(fn => fn(mesh.name, vector));
-    }
-
-    render() {
-        super.render();
     }
 }

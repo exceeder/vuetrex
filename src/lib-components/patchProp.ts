@@ -27,6 +27,9 @@ const getSetter = (key: string) => {
     setterCache[key] = (el, value) => {
       // @ts-ignore
       el[key] = value
+      if (key === 'text' && (el as any).element?.mesh) {
+        el.syncWithThree();
+      }
     }
   }
   return setterCache[key];

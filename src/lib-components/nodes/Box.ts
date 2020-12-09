@@ -4,6 +4,7 @@ import VuetrexStage from "@/lib-components/three/stage";
 export class Box extends Node {
 
     size:number = 1.0;
+    connection: string | null = null;
 
     constructor(stage: VuetrexStage) {
         super(stage);
@@ -16,6 +17,16 @@ export class Box extends Node {
                 this.element.mesh?.addEventListener('click', ev => {
                     this.dispatchClick(ev.originalEvent);
                 })
+            }
+            if (this.connection) {
+                setTimeout(() => {  //todo fixme, there should be a better way
+                    const otherEnd = this.stage.getById(this.connection || "");
+                    if (this.element && otherEnd) {
+                        this.stage.connect(this.element, otherEnd)
+                    } else {
+                        console.warn("Invalid connection from "+this.name+" to "+this.connection)
+                    }
+                },10);
             }
         }
     }

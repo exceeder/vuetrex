@@ -13,7 +13,9 @@ export default class Scene extends LifeCycle {
 
     public readonly width: number
     public readonly height: number
-    private readonly cameraTarget: THREE.Vector3
+    private readonly cameraTarget: THREE.Vector3 = new THREE.Vector3(0.0, 0.0, 1.5);
+    private cameraBase: THREE.Vector3 = new THREE.Vector3(0.0, 12.0, 7.0);
+    //private cameraBase: THREE.Vector3 = new THREE.Vector3(0.0, 4.0, 1.725);
     private readonly mouse: MousePosition
 
     readonly camera: THREE.PerspectiveCamera
@@ -46,7 +48,6 @@ export default class Scene extends LifeCycle {
         this.domParent.appendChild(this.renderer.domElement);
         //camera
         this.camera = this.createCamera();
-        this.cameraTarget = new THREE.Vector3(0.0, 0.0, 1.5);
         this.camera.lookAt(this.cameraTarget);
         //scene
         this.scene = this.createScene();
@@ -67,6 +68,7 @@ export default class Scene extends LifeCycle {
             this.onCanvasMouseMove(e)
         );
         domParent.addEventListener("mousedown", e => this.onCanvasClick(e));
+        window.addEventListener('wheel', e => this.onMouseWheel(e), false);
     }
 
     start() {
@@ -133,7 +135,6 @@ export default class Scene extends LifeCycle {
 
     //--- overrides ---
     render() {
-        //this.renderer.render(this.scene, this.camera);
         this.composer.render();
     }
 
@@ -149,6 +150,21 @@ export default class Scene extends LifeCycle {
 
     onCanvasClick(event: MouseEvent) {
         //todo
+    }
+
+    onMouseWheel(event: WheelEvent) {
+        //event.preventDefault();
+
+        const dir = this.cameraTarget.clone().sub(this.camera.position).normalize();
+        //dir.divideScalar(10);
+        const x = this.cameraBase.x + event.deltaY / 300 * dir.x;
+        const y = this.cameraBase.y + event.deltaY / 300 * dir.y;
+        const z = this.cameraBase.z + event.deltaY / 300 * dir.z;
+        if (y>0.9 && z>0.9 && y<14 && z<14) {
+            this.cameraBase.x = x;
+            this.cameraBase.y = y;
+            this.cameraBase.z = z;
+        }
     }
 
 
@@ -192,14 +208,12 @@ export default class Scene extends LifeCycle {
 
     animateCamera() {
         return (timer:number, tick:number) => {
-            this.camera.position.x =
-                this.cameraTarget.x +
-                3 * Math.cos(Math.PI / 2 + Math.sin(timer * 0.0001));
-            this.camera.position.z =
-                this.cameraTarget.z +
-                9 +
-                2 * Math.sin(Math.PI / 2 + Math.sin(timer * 0.0001));
-            this.camera.position.y = 9 + 0.5 * Math.sin(timer * 0.0001); // + timer*0.0001;
+            const phi = Math.PI / 2 + Math.sin(timer / 20000);
+            this.camera.position.x = this.cameraBase.x + this.cameraTarget.x + 0.5 * Math.cos(phi);
+            this.camera.position.y = this.cameraBase.y
+                //+ 0.1 * Math.sin(timer * 0.001); // + timer*0.0001;
+            this.camera.position.z = this.cameraBase.z + this.cameraTarget.z + 0.5 * Math.sin(phi);
+
             this.camera.lookAt(this.cameraTarget);
         };
     }
