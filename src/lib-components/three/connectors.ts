@@ -1,394 +1,159 @@
-/*
- * Linear Particle System
- *
- *
- *
- * Credits:
- * Shader and javascript code derived from several Stack Overflow examples and some work of
- *  Charlie Hoey - http://charliehoey.com
- */
-
+import VuetrexStage from "./stage";
+import {VuetrexParticles, ParticleOptions} from "@/lib-components/three/particles";
 import * as THREE from "three"
-import {Object3D} from "three";
+import Element3d from "@/lib-components/three/element3d";
 
-export interface ParticleOptions {
-    position: THREE.Vector3
-    positionRandomness: number
-    minMax: THREE.Vector2
-    velocity: THREE.Vector3
-    velocityRandomness: number
-    color: number,
-    colorRandomness: number,
-    lifetime: number,
-    size: number,
-    sizeRandomness: number
+const options: ParticleOptions = {
+    position: new THREE.Vector3(-2.5, 0.2, -0.5),
+    positionRandomness: 1.95,
+    velocity: new THREE.Vector3(0.1,0,0),
+    minMax: new THREE.Vector2(-5.0, 5.0),
+    velocityRandomness: 0.001,
+    color: 0xa0ffff,
+    colorRandomness: 0.1,
+    lifetime: 30,
+    size: 0.9,
+    sizeRandomness: 0.3
+};
+
+const spawnerOptions = {
+    spawnRate: 50,
+    horizontalSpeed: 0.2,
+    verticalSpeed: 0.1,
+    timeScale: 1.0,
+    maxParticles: 5000,
+    containerCount: 1
+};
+
+
+// class Connector {
+//     sEl: Element3d
+//     tEl: Element3d
+//     isVertical: boolean
+//     mid: number
+//     s: number
+//     t: number
+// }
+
+class Segment {
+    horizontal: boolean
+    mid: number
+    s: number
+    t: number
+    len: number
+    sEl: Element3d
+    tEl: Element3d
+    constructor(horizontal: boolean, mid: number, s: number, t: number, sEl: Element3d, tEl: Element3d) {
+        this.horizontal = horizontal;
+        this.mid = mid
+        this.s = s
+        this.t = t
+        this.len = Math.abs(t-s);
+        this.sEl = sEl;
+        this.tEl = tEl;
+    }
 }
 
-export interface ParticleSystemOptions {
-    maxParticles?: number
-    containerCount?: number
-}
+export class Connectors {
 
-interface FastRandom {
-    random: () => number
-}
+    stage: VuetrexStage;
+    private particleSystem: VuetrexParticles | null = null
+    private segments: Segment[] = []
+    //private dangling: Segment[] = []
 
-// custom vertex and fragment shaders
-// language=GLSL
-const vertexShader = `    
-uniform float uTime;
-uniform float uScale;
+    constructor(stage: VuetrexStage) {
+        this.stage = stage;
 
-attribute vec3 velocity;
-attribute vec3 color;
-attribute vec2 minMax;
-attribute float startTime;
-attribute float size;
-attribute float lifeTime;
-
-varying vec4 vColor;
-varying float lifeLeft;
-
-void main() {
-
-    vec3 pos;
-    vColor = vec4( color, 1.0 );
-    float timeElapsed = uTime - startTime;
-    lifeLeft = 1.0 - ( timeElapsed / lifeTime );
-
-    gl_PointSize = uScale * size * lifeLeft;
-    pos = position + velocity * timeElapsed;
-
-    vec3 cpos = pos;
-    if (velocity.z > -0.001 && velocity.z < 0.001) {
-        cpos.x = clamp(cpos.x, minMax.x, minMax.y);
-    } else {
-        cpos.z = clamp(cpos.z, minMax.x, minMax.y);
+        //particles
+        this.particleSystem = new VuetrexParticles( {
+            maxParticles: spawnerOptions.maxParticles,
+            containerCount: spawnerOptions.containerCount
+        } );
+        this.stage.scene.add( this.particleSystem );
+        this.stage.onAnimate(this.animateParticles());
     }
 
-    if( timeElapsed > 0.0 ) {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( cpos, 1.0 );
-    } else {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        lifeLeft = 0.0;
-        gl_PointSize = 0.1;
-    }
-}`;
-
-// language=GLSL
-const fragmentShader = `
-float scaleLinear( float value, vec2 valueDomain ) {
-    return ( value - valueDomain.x ) / ( valueDomain.y - valueDomain.x );
-}
-
-float scaleLinear( float value, vec2 valueDomain, vec2 valueRange ) {
-    return mix( valueRange.x, valueRange.y, scaleLinear( value, valueDomain ) );
-}
-
-varying vec4 vColor;
-varying float lifeLeft;
-
-void main() {
-    float alpha = 0.3;
-    if( lifeLeft > 0.95 ) {
-        alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
-    } else {
-        alpha = lifeLeft * 0.55;
-    }
-    
-    float lum = 0.7; //luminosity
-    gl_FragColor = vec4(0.3) + vec4( vColor.rgb * lum, alpha * lum );
-}`
-
-export class VuetrexParticles extends Object3D implements FastRandom {
-    private PARTICLE_COUNT: number;
-    private PARTICLE_CONTAINERS: number;
-    private PARTICLES_PER_CONTAINER: number;
-    private PARTICLE_CURSOR: number;
-    private particleContainers: GPUParticleContainer[];
-    private rand: number[];
-
-    particleShaderMat: THREE.ShaderMaterial;
-    random: () => number;
-    time: number;
 
 
-    constructor(options: ParticleSystemOptions) {
-        super();
-        console.log("Particle constructor", options)
+    connect(el1: Element3d, el2: Element3d) {
 
-        options = options || {};
+        const snap = (a:number) => Math.round(a/0.5)*0.5;
 
-        // parse options and use defaults
+        const sx = snap(el1.mesh?.position.x || 0)
+        const sy = snap(el1.mesh?.position.z || 0)
+        const tx = snap(el2.mesh?.position.x || 0)
+        const ty = snap(el2.mesh?.position.z || 0)
 
-        this.PARTICLE_COUNT = options.maxParticles || 1000000;
-        this.PARTICLE_CONTAINERS = options.containerCount || 1;
+        if( Math.abs(sy-ty) < 0.01 ) {
+            //single horizontal line
+            this.segments.push(new Segment(true, sy, sx, tx, el1, el2))
+        } else if( Math.abs(sx-tx) < 0.01 ) {
+            //single vertical line
+            this.segments.push(new Segment(false, sx, sy, ty, el1, el2))
+        } else if (Math.abs(tx-sx) > Math.abs(ty-sy)) {
+            //zig-zag
+            let midy = snap(( sy + ty ) / 2);
+            if (midy > 0) midy += 0.5; else midy -= 0.5;
 
-        this.PARTICLES_PER_CONTAINER = Math.ceil(this.PARTICLE_COUNT / this.PARTICLE_CONTAINERS);
-        this.PARTICLE_CURSOR = 0;
-        this.time = 0;
-        this.particleContainers = [];
-        this.rand = [];
+            this.segments.push(new Segment(false, sx, sy, midy, el1, el2))
+            this.segments.push(new Segment(true, midy, sx, tx, el1, el2))
+            this.segments.push(new Segment(false, tx, midy, ty, el1, el2))
+        } else {
+            let midx = snap(( sx + tx ) / 2);
+            //if (midx > 0) midx += 0.5; else midx -= 0.5;
 
-
-        // preload a million random numbers
-        let i = 0;
-        for (i = 16384; i >= 0; i--) {
-            this.rand.push(Math.random() - 0.5);
+            this.segments.push(new Segment(true, sy, sx, midx, el1, el2))
+            this.segments.push(new Segment(false, midx, sy, ty, el1, el2))
+            this.segments.push(new Segment(true, ty, midx, tx, el1, el2))
         }
-        this.random = () => ++i >= this.rand.length ? this.rand[i = 0] : this.rand[i];
+    }
 
-        this.particleShaderMat = new THREE.ShaderMaterial({
-            transparent: true,
-            depthWrite: false,
-            uniforms: {
-                'uTime': {
-                    value: 0.0
-                },
-                'uScale': {
-                    value: 1.0
+    update(el: Element3d) {
+        const rem = this.remove(el);
+        rem.forEach(s => {
+            this.connect(s.sEl, s.tEl);
+        })
+    }
+
+    remove(el: Element3d): Segment[] {
+        const removed = this.segments.filter(s => s.sEl === el && s.tEl === el);
+        this.segments = this.segments.filter(s => s.sEl !== el && s.tEl !== el);
+        return removed;
+    }
+
+    // updateDangling(el: Element3d) {
+    //     this.dangling.forEach((s,idx) => {
+    //
+    //     })
+    // }
+
+    animateParticles() {
+        return (timer: number, tick: number) => {
+            if (!this.particleSystem) return;
+            const particles = this.particleSystem;
+
+            for (let x = 0; x < spawnerOptions.spawnRate; x++) {
+                if (this.segments.length == 0) continue;
+                const rnd = particles.random() + 0.5;
+                const seg = Math.floor(rnd * 16384) % this.segments.length
+                const s = this.segments[seg];
+                const mid = s.mid;
+                let start = s.s;
+                let end = s.t;
+                //if (particles.random() > -2.0) {const t = start;start = end;end = t;}
+                options.minMax.set(Math.min(start, end), Math.max(start, end))
+                if (s.horizontal) {
+                    options.position.set(start + (end - start) * rnd * rnd, -0.25, mid)
+                    options.velocity.set((end - start) * (rnd/2+0.5) / 70, 0, 0);
+                } else {
+                    //vertical
+                    options.position.set(mid, -0.25, start + (end - start) * rnd * rnd)
+                    options.velocity.set(0, 0, (end - start) * rnd / 70);
                 }
-            },
-            blending: THREE.NormalBlending,
-            vertexShader: vertexShader,
-            fragmentShader: fragmentShader
-        });
-
-        this.init();
-    }
-
-    init() {
-        for (let i = 0; i < this.PARTICLE_CONTAINERS; i++) {
-            const c = new GPUParticleContainer(this.PARTICLES_PER_CONTAINER, this);
-            this.particleContainers.push(c);
-            this.add(c); //Object3D.add()
-        }
-    }
-
-    spawnParticle(options: ParticleOptions) {
-        //console.log("spawn", this.PARTICLE_CURSOR)
-        this.PARTICLE_CURSOR++;
-
-        if (this.PARTICLE_CURSOR >= this.PARTICLE_COUNT) {
-            this.PARTICLE_CURSOR = 1;
-        }
-
-        const currentContainer = this.particleContainers[Math.floor(this.PARTICLE_CURSOR / this.PARTICLES_PER_CONTAINER)];
-        currentContainer.spawnParticle(options);
-    }
-
-    update(time: number) {
-        for (let i = 0; i < this.PARTICLE_CONTAINERS; i++) {
-            this.particleContainers[i].update(time);
-        }
-    }
-
-    dispose() {
-        this.particleShaderMat.dispose();
-        for (let i = 0; i < this.PARTICLE_CONTAINERS; i++) {
-            this.particleContainers[i].dispose();
-        }
-    }
-}
-
-//runners to avoid object creation for each particle
-const position = new THREE.Vector3();
-const minMax = new THREE.Vector2();
-const velocity = new THREE.Vector3();
-const color = new THREE.Color();
-
-// Subclass for particle containers, allows for very large arrays to be spread out
-
-class GPUParticleContainer extends THREE.Object3D {
-    private PARTICLE_COUNT: number;
-    private PARTICLE_CURSOR: number = 0;
-    private time: number = 0;
-    private offset: number = 0;
-    private count: number = 0;
-    private DPR: number;
-    private gen: FastRandom;
-    private particleUpdate: boolean;
-    private particleShaderGeo: THREE.BufferGeometry;
-    private particleSystem: THREE.Points<THREE.BufferGeometry, any>;
-    private particleShaderMat: THREE.ShaderMaterial;
-
-    constructor(maxParticles: number, particleSystem: VuetrexParticles) {
-        super();
-
-        this.PARTICLE_COUNT = maxParticles || 100000;
-        this.DPR = window.devicePixelRatio;
-        this.particleUpdate = false;
-        this.gen = particleSystem; //todo extract randomizer
-
-        this.particleShaderMat = particleSystem.particleShaderMat;
-
-        // geometry
-
-        this.particleShaderGeo = new THREE.BufferGeometry();
-
-
-        this.particleShaderGeo.setAttribute('position', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 3, 3).setUsage(THREE.DynamicDrawUsage));
-        this.particleShaderGeo.setAttribute('velocity', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 3, 3).setUsage(THREE.DynamicDrawUsage));
-        this.particleShaderGeo.setAttribute('color', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 3, 3).setUsage(THREE.DynamicDrawUsage));
-
-        this.particleShaderGeo.setAttribute('minMax', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 2, 2).setUsage(THREE.DynamicDrawUsage));
-
-        this.particleShaderGeo.setAttribute('startTime', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT, 1).setUsage(THREE.DynamicDrawUsage));
-        this.particleShaderGeo.setAttribute('lifeTime', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT, 1).setUsage(THREE.DynamicDrawUsage));
-        this.particleShaderGeo.setAttribute('size', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT, 1).setUsage(THREE.DynamicDrawUsage));
-
-        // material
-        this.particleSystem = new THREE.Points(this.particleShaderGeo, particleSystem.particleShaderMat)
-        this.particleSystem.frustumCulled = false;
-        this.add(this.particleSystem);
-    }
-
-    spawnParticle(options: ParticleOptions) {
-        const positionAttribute = this.particleShaderGeo.getAttribute('position');
-        const minMaxAttribute = this.particleShaderGeo.getAttribute('minMax');
-        const startTimeAttribute = this.particleShaderGeo.getAttribute('startTime');
-        const velocityAttribute = this.particleShaderGeo.getAttribute('velocity');
-        const colorAttribute = this.particleShaderGeo.getAttribute('color');
-        const sizeAttribute = this.particleShaderGeo.getAttribute('size');
-        const lifeTimeAttribute = this.particleShaderGeo.getAttribute('lifeTime');
-        const gen = this.gen;
-
-        options = options || {};
-
-        // setup reasonable default values for all arguments
-
-        options.position !== undefined ? position.copy(options.position) : position.set(0, 0, 0);
-        options.minMax !== undefined ? minMax.copy(options.minMax) : minMax.set(-10., 10.);
-        options.velocity !== undefined ? velocity.copy(options.velocity) : velocity.set(0, 0, 0);
-        options.color !== undefined ? color.set(options.color) : color.set(0xffffff);
-
-        //const positionRandomness = options.positionRandomness !== undefined ? options.positionRandomness : 0;
-        const velocityRandomness = options.velocityRandomness !== undefined ? options.velocityRandomness : 0;
-        const colorRandomness = options.colorRandomness !== undefined ? options.colorRandomness : 1;
-        const lifetime = options.lifetime !== undefined ? options.lifetime : 5;
-        let size = options.size !== undefined ? options.size : 10;
-        const sizeRandomness = options.sizeRandomness !== undefined ? options.sizeRandomness : 0;
-        //const smoothPosition = false; //todo check options.smoothPosition !== undefined ? options.smoothPosition : false;
-
-        if (this.DPR !== undefined) size *= this.DPR;
-
-        const i = this.PARTICLE_CURSOR;
-
-        // position
-        positionAttribute.setXYZ(i,
-            position.x + gen.random() * 0.005,
-            position.y + gen.random() * 0.005,
-            position.z + gen.random() * 0.005);
-
-        minMaxAttribute.setXY(i, minMax.x, minMax.y);
-
-        // if (smoothPosition) {
-        //     startPosArr[i * 3    ] += -(velocity.x * gen.random());
-        //     startPosArr[i * 3 + 1] += -(velocity.y * gen.random());
-        //     startPosArr[i * 3 + 2] += -(velocity.z * gen.random());
-        // }
-
-        // velocity
-        let velX = velocity.x + gen.random() * velocityRandomness;
-        let velY = velocity.y + gen.random() * velocityRandomness;
-        let velZ = velocity.z + gen.random() * velocityRandomness;
-
-        // const maxVel = 2;
-        // velX = THREE.MathUtils.clamp((velX - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        // velY = THREE.MathUtils.clamp((velY - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        // velZ = THREE.MathUtils.clamp((velZ - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        velocityAttribute.setXYZ(i,velX,velY,velZ)
-
-        // color
-        color.r = THREE.MathUtils.clamp(color.r + gen.random() * colorRandomness, 0, 1);
-        color.g = THREE.MathUtils.clamp(color.g + gen.random() * colorRandomness, 0, 1);
-        color.b = THREE.MathUtils.clamp(color.b + gen.random() * colorRandomness, 0, 1);
-        colorAttribute.setXYZ(i, color.r, color.g, color.b)
-
-        // size, lifetime and startTime
-        sizeAttribute.setX(i, size + gen.random() * sizeRandomness);
-        lifeTimeAttribute.setX(i,  lifetime);
-        startTimeAttribute.setX(i, this.time);
-
-        // offset
-
-        if (this.offset === 0) {
-            this.offset = this.PARTICLE_CURSOR;
-        }
-
-        // counter and cursor
-
-        this.count++;
-        this.PARTICLE_CURSOR++;
-
-        if (this.PARTICLE_CURSOR >= this.PARTICLE_COUNT) {
-            this.PARTICLE_CURSOR = 0;
-        }
-        this.particleUpdate = true;
-    }
-
-
-    update(time: number) {
-        this.time = time;
-        this.particleShaderMat.uniforms.uTime.value = time;
-        this.geometryUpdate();
-    }
-
-    geometryUpdate() {
-
-        if (this.particleUpdate) {
-
-            this.particleUpdate = false;
-
-            const positionAttribute = this.particleShaderGeo.getAttribute('position') as THREE.BufferAttribute;
-            const startTimeAttribute = this.particleShaderGeo.getAttribute('startTime') as THREE.BufferAttribute;
-            const minMaxAttribute = this.particleShaderGeo.getAttribute('minMax') as THREE.BufferAttribute;
-            const velocityAttribute = this.particleShaderGeo.getAttribute('velocity') as THREE.BufferAttribute;
-            const colorAttribute = this.particleShaderGeo.getAttribute('color') as THREE.BufferAttribute;
-            const sizeAttribute = this.particleShaderGeo.getAttribute('size') as THREE.BufferAttribute;
-            const lifeTimeAttribute = this.particleShaderGeo.getAttribute('lifeTime') as THREE.BufferAttribute;
-
-            const updateCountsOffsets = (...attrs: THREE.BufferAttribute[]) => {
-                attrs.forEach(attr => {
-                    attr.updateRange.offset = this.offset * attr.itemSize
-                    attr.updateRange.count = this.count * attr.itemSize
-                    attr.needsUpdate = true;
-                });
+                particles.spawnParticle(options);
             }
-
-            const resetCountsOffsets = (...attrs: THREE.BufferAttribute[]) => {
-                attrs.forEach(attr => {
-                    attr.updateRange.offset = 0
-                    attr.updateRange.count = -1
-                    attr.needsUpdate = true;
-                });
-            }
-
-            if (this.offset + this.count < this.PARTICLE_COUNT) {
-                updateCountsOffsets(positionAttribute,
-                    startTimeAttribute,
-                    minMaxAttribute,
-                    velocityAttribute,
-                    colorAttribute,
-                    sizeAttribute,
-                    lifeTimeAttribute)
-            } else {
-                resetCountsOffsets(positionAttribute,
-                    startTimeAttribute,
-                    minMaxAttribute,
-                    velocityAttribute,
-                    colorAttribute,
-                    sizeAttribute,
-                    lifeTimeAttribute)
-            }
-
-            this.offset = 0;
-            this.count = 0;
+            particles.update(tick);
         }
-
     }
 
-    dispose() {
-        this.particleShaderGeo.dispose();
-    }
 }

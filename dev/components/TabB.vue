@@ -1,37 +1,43 @@
 <template>
+  <vuetrex>
     <layer>
       <row>
-        <box name="a1"/>
-        <box name="a2"/>
+        <box text="a1"/>
+        <box text="a2"/>
         <layer>
           <row>
-            <box name="a3-a1"/>
+            <box text="a3-a1"/>
           </row>
           <row>
-            <box name="a3-b1"/>
+            <box text="a3-b1"/>
             <layer>
               <row>
-                <box name="a3-b1-1"/>
+                <box text="a3-b1-1"/>
               </row>
               <row>
-                <box name="a3-b1-2"/>
-                <box name="a3-b1-3"/>
+                <box text="a3-b1-2"/>
+                <box text="a3-b1-3"/>
               </row>
             </layer>
           </row>
         </layer>
       </row>
       <row>
-        <box name="c1"/>
-        <cylinder name="c2" @click="cylClick"/>
+        <box text="c1"/>
+        <cylinder text="c2" @click="cylClick"/>
       </row>
     </layer>
+  </vuetrex>
 </template>
 
 <script lang="ts">
-import {watchEffect, SetupContext, ref} from "vue";
+import {SetupContext, ref} from "vue";
+import {Vuetrex} from '@/lib-components/index';
 
 export default {
+  components: {
+    Vuetrex
+  },
   props: {
     items: {
       type: Array,

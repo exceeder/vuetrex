@@ -155,9 +155,13 @@ export default class Scene extends LifeCycle {
     onMouseWheel(event: WheelEvent) {
         //event.preventDefault();
 
-        const y = this.cameraBase.y + event.deltaY / 500;
-        const z = this.cameraBase.z + event.deltaY / 500;
-        if (y>0.3 && z>0.3 && y<14 && z<14) {
+        const dir = this.cameraTarget.clone().sub(this.camera.position).normalize();
+        //dir.divideScalar(10);
+        const x = this.cameraBase.x + event.deltaY / 300 * dir.x;
+        const y = this.cameraBase.y + event.deltaY / 300 * dir.y;
+        const z = this.cameraBase.z + event.deltaY / 300 * dir.z;
+        if (y>0.9 && z>0.9 && y<14 && z<14) {
+            this.cameraBase.x = x;
             this.cameraBase.y = y;
             this.cameraBase.z = z;
         }
@@ -205,14 +209,10 @@ export default class Scene extends LifeCycle {
     animateCamera() {
         return (timer:number, tick:number) => {
             const phi = Math.PI / 2 + Math.sin(timer / 20000);
-            this.camera.position.x = this.cameraBase.x +
-                this.cameraTarget.x +
-                2 * Math.cos(phi);
+            this.camera.position.x = this.cameraBase.x + this.cameraTarget.x + 0.5 * Math.cos(phi);
             this.camera.position.y = this.cameraBase.y
                 //+ 0.1 * Math.sin(timer * 0.001); // + timer*0.0001;
-            this.camera.position.z = this.cameraBase.z +
-                this.cameraTarget.z +
-                2 * Math.sin(phi);
+            this.camera.position.z = this.cameraBase.z + this.cameraTarget.z + 0.5 * Math.sin(phi);
 
             this.camera.lookAt(this.cameraTarget);
         };

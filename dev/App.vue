@@ -9,25 +9,19 @@
             <input type="range" min="0" max="5" :value="items.length" @input="e => updateItems(e.target.value)">
           </label>
           <p/>
-          <vuetrex>
             <TabA :items="items" />
-          </vuetrex>
         </section>
     </tab>
     <tab title="Example 2">
       <h1>Nested layers</h1>
       <section>
-        <vuetrex>
-          <TabB :items="items" />
-        </vuetrex>
+        <TabB :items="items" />
       </section>
     </tab>
     <tab title="Example 3">
       <h1>Stacks and Connectors</h1>
       <section>
-        <vuetrex>
-          <TabC />
-        </vuetrex>
+        <TabC />
       </section>
     </tab>
   </tabs>
@@ -35,7 +29,6 @@
 </template>
 
 <script lang="ts">
-import {Vuetrex} from '@/lib-components/index';
 import TabA from './components/TabA.vue';
 import TabB from './components/TabB.vue';
 import TabC from './components/TabC.vue';
@@ -45,7 +38,6 @@ import {defineComponent, ref, reactive} from "vue";
 
 export default defineComponent( {
   components: {
-    Vuetrex,
     TabA,
     TabB,
     TabC,

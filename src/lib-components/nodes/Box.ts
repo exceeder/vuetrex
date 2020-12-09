@@ -19,7 +19,14 @@ export class Box extends Node {
                 })
             }
             if (this.connection) {
-                this.stage.connect(this.element, this.stage.getById(this.connection))
+                setTimeout(() => {  //todo fixme, there should be a better way
+                    const otherEnd = this.stage.getById(this.connection || "");
+                    if (this.element && otherEnd) {
+                        this.stage.connect(this.element, otherEnd)
+                    } else {
+                        console.warn("Invalid connection from "+this.name+" to "+this.connection)
+                    }
+                },10);
             }
         }
     }

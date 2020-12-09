@@ -10,4 +10,8 @@ export default class Element3d {
     constructor(stage: VuetrexStage, node: Node) {
         this.node = node;
     }
+
+    getCaption() {
+        return this.node.text ? this.node.text : "";
+    }
 }

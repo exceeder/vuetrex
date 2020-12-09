@@ -2,33 +2,10 @@ import * as THREE from "three";
 import * as THREEx from "@/lib-components/three/three.imports";
 import Scene from "@/lib-components/three/scene";
 import Element3d from "@/lib-components/three/element3d";
-import {VuetrexParticles, ParticleOptions} from "@/lib-components/three/connectors";
-import {Vector3} from "three";
+import {Connectors} from "@/lib-components/three/connectors";
 
 const R = 1.3; //box radius
 const D = 1.5; //box distance
-
-const options: ParticleOptions = {
-    position: new THREE.Vector3(-2.5, 0.2, -0.5),
-    positionRandomness: 1.95,
-    velocity: new THREE.Vector3(0.1,0,0),
-    minMax: new THREE.Vector2(-5.0, 5.0),
-    velocityRandomness: 0.001,
-    color: 0xa0ffff,
-    colorRandomness: 0.1,
-    lifetime: 70,
-    size: 0.9,
-    sizeRandomness: 0.3
-};
-
-const spawnerOptions = {
-    spawnRate: 50,
-    horizontalSpeed: 0.2,
-    verticalSpeed: 0.1,
-    timeScale: 1.0,
-    maxParticles: 5000,
-    containerCount: 1
-};
 
 /**
  * Stage keeps top-level structures to draw the tree of runtime nodes.
@@ -37,7 +14,7 @@ const spawnerOptions = {
 export default class VuetrexStage extends Scene {
     public root: Element3d | null = null;
     private subscribers: Function[];
-    private particleSystem: VuetrexParticles | null = null
+    private connectors: Connectors |  null = null;
     private caps: { repeats: number; size: number; planeSize: number; updateFn: () => void; texture: THREEx.DynamicTexture | null } = {
         planeSize: 512,
         size: 2048,
@@ -58,16 +35,10 @@ export default class VuetrexStage extends Scene {
         this.createFloor(scene);
         this.createLights(scene);
 
-        //particles
-        this.particleSystem = new VuetrexParticles( {
-            maxParticles: spawnerOptions.maxParticles,
-            containerCount: spawnerOptions.containerCount
-        } );
-        scene.add( this.particleSystem );
+        this.connectors = new Connectors(this);
 
         this.onAnimate(this.animateCamera());
         this.onAnimate(this.animateMouse());
-        this.onAnimate(this.animateParticles());
     }
 
     getById(id: string): Element3d {
@@ -143,7 +114,7 @@ export default class VuetrexStage extends Scene {
         light2.position.set(-20, 20, 15);
         scene.add(light2);
 
-        let light3 = new THREE.PointLight(0xeebbff, 0.2);
+        let light3 = new THREE.PointLight(0xbbeeff, 0.2);
         light3.position.set(10, 30, -10);
         scene.add(light3);
 
@@ -166,6 +137,7 @@ export default class VuetrexStage extends Scene {
     removeObject(el: Element3d) {
         if (el.mesh) {
             this.scene.remove(el.mesh);
+            this.connectors?.remove(el);
             const c = el.mesh.userData.caption
             if (c) {
                 this.captions.splice(this.captions.indexOf(c),1)
@@ -304,9 +276,10 @@ export default class VuetrexStage extends Scene {
             el.mesh.position.copy(this.positionLayoutElement(el))
             //(el as any).caption.text = el.node.name;
             this.positionLayoutElement(el);
+            this.connectors?.update(el);
             el.mesh.userData.caption.x = el.mesh.position.x
-            el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0,
-            el.mesh.userData.caption.text = el.node.name + el.node.text
+            el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0
+            el.mesh.userData.caption.text = el.getCaption()
             this.caps.updateFn();
             return;
         }
@@ -318,10 +291,14 @@ export default class VuetrexStage extends Scene {
         mesh.name = "el-" + el.node.name;
         mesh.castShadow = true;
         mesh.position.copy(this.positionLayoutElement(el));
-        mesh.userData.caption = this.addCaption(mesh, size/scale, el.node.name + el.node.text)
+        mesh.userData.caption = this.addCaption(mesh, size/scale, el.getCaption())
         scene.add(mesh);
         el.mesh = mesh;
         mesh.userData.el = el;
+    }
+
+    connect(el1: Element3d, el2: Element3d) {
+        this.connectors?.connect(el1,el2);
     }
 
     // --- events ---
@@ -341,67 +318,5 @@ export default class VuetrexStage extends Scene {
 
         const vector = this.toScreenPosition(mesh, this.camera);
         this.subscribers.forEach(fn => fn(mesh.name, vector));
-    }
-
-    hSegments : THREE.Vector3[] = []; //
-    vSegments : THREE.Vector3[] = []; //
-
-    connect(el1: Element3d, el2: Element3d) {
-        const sx = el1.mesh?.position.x || 0
-        const sy = el1.mesh?.position.z || 0
-        const tx = el2.mesh?.position.x || 0
-        const ty = el2.mesh?.position.z || 0
-
-        const midy = ( sy + ty ) / 2;
-
-        if( Math.abs(sy-ty) < 0.01 ) {
-            this.hSegments.push(new THREE.Vector3(sy, sx, tx))
-        } else if( Math.abs(sx-tx) < 0.01 ) {
-            this.vSegments.push(new THREE.Vector3(sx, sy, ty))
-        } else {
-            this.vSegments.push(new THREE.Vector3(sx,sy,midy))
-            this.hSegments.push(new THREE.Vector3(midy,sx,tx))
-            this.vSegments.push(new THREE.Vector3(tx,midy,ty))
-        }
-        // this.vSegments.forEach(s => {
-        //     console.log("v "+s.x+' E ('+options.minMax.x+","+options.minMax.y+')');
-        // })
-        // this.hSegments.forEach(s => {
-        //     console.log("h "+s.x+' E ('+options.minMax.x+","+options.minMax.y+')');
-        // })
-    }
-
-    animateParticles() {
-        return (timer: number, tick: number) => {
-            if (!this.particleSystem) return;
-            const particles = this.particleSystem;
-
-            for (let x = 0; x < spawnerOptions.spawnRate; x++) {
-                const rnd = particles.random()+0.5;
-                const rnd2 = particles.random();
-                if (rnd < 0.5)
-                {
-                    //horizontal
-                    const seg = Math.floor(rnd * 1024) % this.hSegments.length
-                    const v3 = isNaN(seg) ? new Vector3(0, -3. ,3.) : this.hSegments[seg];
-                    if (rnd2 > -2.0) { const t = v3.y; v3.y=v3.z; v3.z = t; }
-                    options.minMax.set(Math.min(v3.y, v3.z), Math.max(v3.y, v3.z))
-                    options.position.set(v3.y + (v3.z-v3.y)*rnd/2, -0.25, v3.x)
-                    options.velocity.set((v3.z-v3.y)*rnd/70, 0, 0);
-                } else {
-                    //vertical
-                    const seg = Math.floor(rnd * 1024) % this.vSegments.length
-                    const v3 = isNaN(seg) ? new Vector3(0, -.3 ,3.) : this.vSegments[seg];
-                    if (rnd2 > -2.) { const t = v3.y; v3.y=v3.z; v3.z = t; }
-                    options.position.set(v3.x, -0.25, v3.y + (v3.z-v3.y)*rnd/2)
-                    options.velocity.set(0, 0, (v3.z-v3.y)*rnd/70);
-                    options.minMax.set(Math.min(v3.y, v3.z), Math.max(v3.y, v3.z))
-                }
-                // Yep, that's really it.	Spawning particles is super cheap, and once you spawn them, the rest of
-                // their lifecycle is handled entirely on the GPU, driven by a time uniform updated below
-                particles.spawnParticle(options);
-            }
-            particles.update(tick);
-        }
     }
 }

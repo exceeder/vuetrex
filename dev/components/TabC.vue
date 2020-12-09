@@ -1,17 +1,23 @@
 <template>
+  <vuetrex>
     <layer>
       <row>
-        <box name="a1"/>
-        <box name="a2"/>
-        <box name="a3"/>
+        <box name="a1" />
+        <box name="a2" connection="a1"/>
+        <box name="a3" connection="a2"/>
       </row>
     </layer>
+  </vuetrex>
 </template>
 
 <script lang="ts">
-import {watchEffect, SetupContext, ref} from "vue";
+import {SetupContext, ref} from "vue";
+import {Vuetrex} from '@/lib-components/index';
 
 export default {
+  components: {
+    Vuetrex
+  },
   props: {
     items: {
       type: Array,

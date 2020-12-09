@@ -1,27 +1,34 @@
 <template>
+  <vuetrex>
     <layer>
       <row v-if="items.length > 0">
-        <box v-for="(el,i) in items" :key="i" :name="'dynamic '+el" size="1"/>
+        <box v-for="(el,i) in items" :key="i" :text="'dynamic '+el" connection="b2"/>
       </row>
       <row>
         <box name="b1" size="1"/>
-        <box name="b2" connection="dynamic 1"/>
+        <box name="b2" />
         <box name="b3"/>
+        <box name="b4"/>
       </row>
       <row>
         <box name="c1" connection="b1"/>
-        <cylinder name="c2" :text="' ' + counter" @click="cylClick" connection="c1"/>
+        <cylinder name="c2" :text="'clicks: ' + counter" @click="cylClick" connection="b3"/>
       </row>
       <row>
-        <box name="d1" size="1" connection="b3"/>
+        <box name="d1" size="3" connection="b4"/>
       </row>
     </layer>
+  </vuetrex>
 </template>
 
 <script lang="ts">
-import {watchEffect, SetupContext, ref} from "vue";
+import {SetupContext, ref} from "vue";
+import {Vuetrex} from '@/lib-components/index';
 
 export default {
+  components: {
+    Vuetrex
+  },
   props: {
     items: {
       type: Array,
@@ -31,11 +38,6 @@ export default {
   setup(props: object, context: SetupContext) {
 
     const counter = ref(0);
-
-    // watchEffect(() => {
-    //   const i = (props as any).items;
-    //   console.log("watchEffect on items:", i.length, i)
-    // });
 
     function cylClick(ev:any) {
       counter.value++;
