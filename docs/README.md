@@ -58,7 +58,7 @@ export default {
 </script> 
 ```
 Run `npm run serve`, open your browser to the suggested url and that's it, you got your first 3d world running.
-For a full example, take a look at [this test component](tests/esm-module/TestApp.vue).
+For a full example, take a look at [this test component](../tests/esm-module/TestApp.vue).
 
 ## Layouting
 

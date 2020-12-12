@@ -61,10 +61,10 @@ Vue template example with reactive features fully supported:
 </template>
 ```
 
-Rendering example:
+More examples are in [Documentation](docs/README.md).
 
+Rendering example:
 ![image](docs/screenshot.png)
 
-## [Documentation](docs/README.md)
 
 
