@@ -32,7 +32,7 @@
 
 <script lang="ts">
 import {SetupContext, ref} from "vue";
-import {Vuetrex} from '@/lib-components/index';
+import {Vuetrex, VxSettings} from '@/lib-components/index';
 
 export default {
   components: {
@@ -46,12 +46,16 @@ export default {
   },
   setup(props: object, context: SetupContext) {
     const counter = ref(0);
+    const settings: VxSettings = {
+        particleVolume: 5
+    }
 
     function cylClick(ev:any) {
       console.log("Cylinder Click!",ev)
     }
 
     return {
+      settings,
       counter,
       cylClick
     }

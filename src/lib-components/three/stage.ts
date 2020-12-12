@@ -82,7 +82,7 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     getById(id: string): Element3d {
-        return (this.scene.getObjectByName('el-'+id) as THREE.Mesh).userData.el;
+        return (this.scene.getObjectByName('el-'+id) as THREE.Mesh)?.userData.el;
     }
 
     onHighlight(fn: Function) {
