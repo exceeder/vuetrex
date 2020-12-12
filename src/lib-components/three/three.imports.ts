@@ -30,14 +30,4 @@ export * from 'three/src/cameras/Camera'
 export * from 'three/src/core/Raycaster'
 export {Object3D} from 'three/src/core/Object3D'
 
-// export * from 'three/src/constants';
-// export { BufferGeometry } from 'three/src/core/BufferGeometry';
-// export * from 'three/src/core/BufferAttribute';
-// export { TextureLoader } from 'three/src/loaders/TextureLoader';
-// export { LoadingManager } from 'three/src/loaders/LoadingManager';
-// export { FontLoader } from 'three/src/loaders/FontLoader';
-// export { Cache } from 'three/src/loaders/Cache';
-// export { MathUtils } from 'three/src/math/MathUtils';
-// export { Vector2 } from 'three/src/math/Vector2';
-
 --- */

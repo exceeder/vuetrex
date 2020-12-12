@@ -4,29 +4,68 @@ import Scene from "@/lib-components/three/scene";
 import Element3d from "@/lib-components/three/element3d";
 import {Connectors} from "@/lib-components/three/connectors";
 
-const R = 1.3; //box radius
-const D = 1.5; //box distance
+export interface VxStage {
+    getScene(): THREE.Scene
+    onEachFrame(fn: (time: number, tick:number) => void): void
+}
+
+export interface VxSettings {
+    color?: number
+    mirrorOpacity?: number
+    floorColor?: number
+    highlightColor?: number
+    particleColor?: number
+    captionColor?: number
+
+    lightColor1?: number
+    lightColor2?: number
+    lightColor3?: number
+
+    particleSpread?: number
+    particleVolume?: number
+
+    unit?: number
+    distance?: number
+}
+
+let R = 1.3; //box radius
+let D = 1.5; //box distance
 
 /**
  * Stage keeps top-level structures to draw the tree of runtime nodes.
  * It replaces browser's drawing of DOM elements.
  */
-export default class VuetrexStage extends Scene {
+export class VuetrexStage extends Scene implements VxStage {
     public root: Element3d | null = null;
     private subscribers: Function[];
     private connectors: Connectors |  null = null;
+    settings: VxSettings
     private caps: { repeats: number; size: number; planeSize: number; updateFn: () => void; texture: THREEx.DynamicTexture | null } = {
         planeSize: 512,
         size: 2048,
-        repeats: 17,
+        repeats: 31,
         texture: null,
         updateFn: () => {}
     }
     private captions: Array<{x:number, y:number, text:string}> = []
 
-    constructor(domParent: HTMLElement, settings:any) {
-        super(domParent);
-        this.subscribers = [];
+    constructor(domParent: HTMLElement, settings:VxSettings) {
+        super(domParent)
+        this.subscribers = []
+        this.settings = settings
+
+        R = settings.unit || R
+        D = settings.distance || D
+        this.colorMain = new THREE.Color(settings.color || 0x555555);
+        this.colorHighlight = new THREE.Color(settings.highlightColor || 0x4c7fb2);
+    }
+
+    getScene(): THREE.Scene {
+        return this.scene;
+    }
+
+    onEachFrame(fn: (time: number, tick:number) => void): void {
+        this.tweens.push(fn);
     }
 
     mount() {
@@ -35,6 +74,7 @@ export default class VuetrexStage extends Scene {
         this.createFloor(scene);
         this.createLights(scene);
 
+        //particle system
         this.connectors = new Connectors(this);
 
         this.onAnimate(this.animateCamera());
@@ -53,9 +93,9 @@ export default class VuetrexStage extends Scene {
         const geometry = new THREE.PlaneBufferGeometry(100, 100);
         const groundMirror = new THREEx.Reflector(geometry, {
             clipBias: 0.003,
-            textureWidth: this.width * window.devicePixelRatio,
-            textureHeight: this.height * window.devicePixelRatio,
-            color: new THREE.Color(0x333333)
+            textureWidth: this.width * window.devicePixelRatio * 2,
+            textureHeight: this.height * window.devicePixelRatio * 2,
+            color: new THREE.Color(this.settings.floorColor || 0x777777)
         });
         groundMirror.rotateX(-Math.PI / 2);
         groundMirror.position.y = -0.35;
@@ -73,12 +113,14 @@ export default class VuetrexStage extends Scene {
         texture.texture.repeat.set(caps.repeats, caps.repeats)
         texture.texture.offset.set(-textureOffset, -textureOffset)
 
-        const planeSize = 512;
-        this.repaintTitles(planeSize)
-        caps.updateFn = () => this.repaintTitles(planeSize)
+        this.repaintTitles(caps.planeSize)
+        caps.updateFn = () => this.repaintTitles(caps.planeSize)
 
-        let material = new THREE.MeshBasicMaterial({opacity: 1.0, transparent: true, map: texture.texture});
-        let plane = new THREE.Mesh(new THREE.PlaneGeometry(planeSize, planeSize), material);
+        let material = new THREE.MeshBasicMaterial({
+            opacity: 1.0,
+            transparent: true, map: texture.texture
+        });
+        let plane = new THREE.Mesh(new THREE.PlaneGeometry(caps.planeSize, caps.planeSize), material);
         plane.rotation.x = -Math.PI / 2.0;
         plane.position.y = -0.349;
         scene.add(plane);
@@ -90,35 +132,38 @@ export default class VuetrexStage extends Scene {
         const textureRepeats = caps.repeats;
         const texture = caps.texture!
         texture.clear(undefined)
-        texture.clear('#3f3f3fc0')
+        texture.clear('#' + ( this.settings.floorColor || 0x3f3f3f).toString(16) +
+            Math.floor((this.settings.mirrorOpacity || 0.85)*256).toString(16) //opacity
+        );
 
-        texture.context.font = "bold "+Math.floor(textureSize/128)+"px Helvetica"
+        texture.context.font = "bold "+Math.floor(textureSize/72)+"px Helvetica"
         const scale = textureSize / mirrorSize * textureRepeats;
         this.captions.forEach(c => {
             const w = texture.context.measureText(c.text).width
 
             const x = c.x * scale
             const y = c.y * scale
-            texture.drawText(c.text, x + textureSize / 2 - w/2.0, y + textureSize / 2 + R/4*scale, '#eeffff')
+            texture.drawText(c.text, x + textureSize / 2 - w / 2, y + textureSize / 2 + R/4*scale,
+                '#'+(this.settings.captionColor || 0xeeffff).toString(16))
         })
 
     }
 
     createLights(scene: THREE.Scene) {
-        let light = new THREE.PointLight(0xbbbbff, 0.8);
-        light.position.set(-10, 20, 50);
+        let light = new THREE.PointLight(this.settings.lightColor1 || 0xbbbbff, 0.8);
+        light.position.set(-10, 30, 10);
         light.castShadow = false;
         scene.add(light);
 
-        let light2 = new THREE.SpotLight(0xffffff, 0.7);
-        light2.position.set(-20, 20, 15);
+        let light2 = new THREE.SpotLight(this.settings.lightColor2 || 0xffffff, 0.7);
+        light2.position.set(1, 30, 15);
         scene.add(light2);
 
-        let light3 = new THREE.PointLight(0xbbeeff, 0.2);
-        light3.position.set(10, 30, -10);
+        let light3 = new THREE.PointLight(this.settings.lightColor1 || 0xbbbbff, 0.2);
+        light3.position.set(10, 30, 10);
         scene.add(light3);
 
-        let light4 = new THREE.AmbientLight(0xffffff, 0.3);
+        let light4 = new THREE.AmbientLight(this.settings.lightColor3 || 0xffffff, 0.3);
         light4.position.y = 10;
         scene.add(light4);
     }
@@ -158,6 +203,8 @@ export default class VuetrexStage extends Scene {
         const layerPos = node.getLayer()?.element?.pos;
         const offX =  layerPos?.x || 0.0;
         const offZ = layerPos?.z || 0.0;
+
+        //console.log(rows, cols, rowIdx, colIdx, offX, offZ, el.mesh?.uuid)
 
         //in WebGL, positive X to the right, Y to the top, Z to the back
         return new THREE.Vector3(
@@ -263,19 +310,10 @@ export default class VuetrexStage extends Scene {
     }
 
     renderMesh(el: Element3d, size: number = R, gen: (size:number) => THREE.Mesh) {
-
-        // console.log("render [",node.name,"] ",
-        //     `rows:${rows}`,
-        //     `cols:${cols}`,
-        //     `rowIdx:${i}`,
-        //     `boxIdx:${j}`);
-
         const scene = this.scene;
 
         if (el.mesh !== null) {
             el.mesh.position.copy(this.positionLayoutElement(el))
-            //(el as any).caption.text = el.node.name;
-            this.positionLayoutElement(el);
             this.connectors?.update(el);
             el.mesh.userData.caption.x = el.mesh.position.x
             el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0

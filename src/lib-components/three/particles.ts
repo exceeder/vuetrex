@@ -14,6 +14,7 @@ import {Object3D} from "three";
 export interface ParticleOptions {
     position: THREE.Vector3
     positionRandomness: number
+    particleSpread: number
     minMax: THREE.Vector2
     velocity: THREE.Vector3
     velocityRandomness: number
@@ -173,7 +174,6 @@ export class VuetrexParticles extends Object3D implements FastRandom {
     }
 
     spawnParticle(options: ParticleOptions) {
-        //console.log("spawn", this.PARTICLE_CURSOR)
         this.PARTICLE_CURSOR++;
 
         if (this.PARTICLE_CURSOR >= this.PARTICLE_COUNT) {
@@ -282,9 +282,9 @@ class GPUParticleContainer extends THREE.Object3D {
 
         // position
         positionAttribute.setXYZ(i,
-            position.x + gen.random() * 0.035,
-            position.y + gen.random() * 0.035,
-            position.z + gen.random() * 0.035);
+            position.x + gen.random() * options.particleSpread,
+            position.y + gen.random() * options.particleSpread,
+            position.z + gen.random() * options.particleSpread);
 
         minMaxAttribute.setXY(i, minMax.x, minMax.y);
 

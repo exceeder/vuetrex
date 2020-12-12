@@ -1,5 +1,5 @@
 import {Node} from '@/lib-components/nodes/Node';
-import VuetrexStage from "@/lib-components/three/stage";
+import {VuetrexStage} from "@/lib-components/three/stage";
 
 export class Row extends Node {
 
@@ -9,10 +9,7 @@ export class Row extends Node {
 
     syncWithThree() {
         super.syncWithThree();
-        setTimeout(()=> {
-            //console.log("row syncd", this.children)
-            this.children.forEach(b => b.syncWithThree())
-        },1)
+        this.children.forEach(b => b.syncWithThree())
     }
 
     onRemoved() {

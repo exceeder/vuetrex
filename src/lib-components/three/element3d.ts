@@ -1,5 +1,5 @@
 import {Node} from "@/lib-components/nodes/Node";
-import VuetrexStage from "./stage";
+import {VuetrexStage} from "./stage";
 
 export default class Element3d {
 

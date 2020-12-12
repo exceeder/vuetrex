@@ -20,19 +20,24 @@ interface TabProps {
   href: string;
 }
 
+const TAB_KEY = "vuetrex.storage.tab";
+
 export default defineComponent({
   name: 'Tabs',
   setup(_, {slots}) {
 
     const state = reactive({
-      selectedIndex: 0,
+      selectedIndex: -1,
       tabs: [] as VNode<TabProps>[],
       count: 0
     });
 
     provide("TabsProvider", state);
 
-    const selectTab = (i: number) => { state.selectedIndex = i }
+    const selectTab = (i: number) => {
+      state.selectedIndex = i
+      localStorage.setItem(TAB_KEY, i.toString());
+    }
 
     watch(
         () => state.count,
@@ -43,7 +48,7 @@ export default defineComponent({
         }
     )
 
-    onMounted(() => { selectTab(0) })
+    onMounted(() => { selectTab(parseInt(localStorage.getItem(TAB_KEY)) || 0 ) })
 
     return {
       ...toRefs(state),

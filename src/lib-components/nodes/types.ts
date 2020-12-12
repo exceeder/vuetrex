@@ -1,4 +1,4 @@
-import VuetrexStage from "@/lib-components/three/stage";
+import {VuetrexStage} from "@/lib-components/three/stage";
 import {Base} from "@/lib-components/nodes/Base";
 import {Box} from "@/lib-components/nodes/Box";
 import {Node} from "@/lib-components/nodes/Node";

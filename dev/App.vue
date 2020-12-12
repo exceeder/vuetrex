@@ -1,7 +1,7 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png" style="float:left; padding:0;margin:0">
   <tabs>
-    <tab title="Example 1" :selected="true">
+    <tab title="Example 1">
         <h2>Multi-Row Setup</h2>
         <section>
           <label>

@@ -1,32 +1,36 @@
 import { createRendererForStage } from "@/lib-components/renderer";
-import {
-    defineComponent,
-    Fragment,
-    h,
-    onMounted,
-    Ref,
-    ref,
-    getCurrentInstance,
-    RootRenderFunction
-} from "vue";
-import VuetrexStage from "@/lib-components/three/stage";
+import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, ref, PropType, watch } from "vue";
 import { Root } from "@/lib-components/nodes/Root";
-import { nextTick } from "vue";
-import {ComponentInternalInstance} from "@vue/runtime-core";
+import {VuetrexStage, VxSettings} from "@/lib-components/three/stage";
 
+
+export { VxStage, VxSettings }  from "@/lib-components/three/stage";
+
+/**
+ * Vuetrex is a container that wrapps everything in 3D scene.
+ * It uses Vue Custom Renderer to provide reactivity.
+ * @vue-prop settings {VxSettings} - vuetrex settings (TBD)
+ * @vue-prop position {String} - container div CSS position, static: absolute, relative
+ * @vue-prop play {String} - whether to animate the scene from the start, "false" keeps it still until changed
+ */
 export default defineComponent({
     name: "Vuetrex",
     props: {
-        settings: { type: Object },
+        settings: { type: Object as PropType<VxSettings>, default: {} },
         position: { type: String, default: "static" },
-        play: { type: Boolean, default: true },
+        height: { type: String, default: "50vh" },
+        width: { type: String, default: "100%" },
+        stopped: { type: Boolean, default: false },
         items: {
             type: Array,
             default: () => ([])
         }
     },
-    setup(props, context) {
-        const elRef: Ref<HTMLDivElement | undefined> = ref(undefined);
+    emits: {
+        ready: null
+    },
+    setup(props, {slots, emit}) {
+        const elRef = ref(undefined);
 
         const maxWidth = ref(4096);
         const maxHeight = ref(4096);
@@ -48,7 +52,7 @@ export default defineComponent({
          */
         const Connector = defineComponent({
             setup(props, setupContext) {
-                const instance: ComponentInternalInstance | null = getCurrentInstance();
+                const instance = getCurrentInstance();
                 if (instance != null) {
                     // @see runtime-core createComponentInstance
                     instance.parent = vuetrexComponent;
@@ -65,33 +69,27 @@ export default defineComponent({
         });
 
         onMounted(() => {
-            let vuetrexRenderer: RootRenderFunction;
-            let stage: VuetrexStage;
-            let stageRoot: Root;
-
-            if (elRef.value) {
-                stage = new VuetrexStage(elRef.value, { ...props.settings }) as VuetrexStage;
-
-                //stage.eventHelpers = setupEvents(props.settings?.eventsTarget || elRef.value, stage);
-
-                vuetrexRenderer = createRendererForStage(stage);
-                stageRoot = new Root(stage);
-
+            const defaultSlot = slots.default;
+            if (defaultSlot && elRef.value) {
+                const stage = new VuetrexStage(elRef.value as any, { ...props.settings }) as VuetrexStage;
+                const vuetrexRenderer = createRendererForStage(stage);
+                const stageRoot = new Root(stage);
                 //create stage environment
                 stage.mount();
+                emit('ready', stage);
                 //start animation
-                if (props.play) {
-                    stage.start();
+                if (!props.stopped) {
+                    stage?.start();
                 }
+                watch(() => props.stopped,
+                    (stopped) => {
+                        if (stopped) {
+                            stage.pause()
+                        } else {
+                            stage.unpause();
+                        }
+                    })
 
-                // Keep correct aspect-ratio issues when the page is zoomed out.
-                //const maxTextureSize = stage.getMaxTextureSize();
-                //maxWidth.value = maxTextureSize / stage.pixelRatio;
-                //maxHeight.value = maxTextureSize / stage.pixelRatio;
-            }
-
-            const defaultSlot = context.slots.default;
-            if (defaultSlot) {
                 // We must wait until nextTick to prevent interference in the effect queue.
                 nextTick().then(() => {
                     const node = h(Connector, defaultSlot);
@@ -109,7 +107,8 @@ export default defineComponent({
                 {
                     class: "custom-renderer-wrapper",
                     style: { position: props.position,
-                        height:'50vh',
+                        height: props.height,
+                        width: props.width,
                         maxWidth: maxWidth.value,
                         maxHeight: maxHeight.value },
                     ref: elRef

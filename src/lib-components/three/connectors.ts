@@ -1,4 +1,4 @@
-import VuetrexStage from "./stage";
+import {VuetrexStage} from "./stage";
 import {VuetrexParticles, ParticleOptions} from "@/lib-components/three/particles";
 import * as THREE from "three"
 import Element3d from "@/lib-components/three/element3d";
@@ -9,6 +9,7 @@ const options: ParticleOptions = {
     velocity: new THREE.Vector3(0.1,0,0),
     minMax: new THREE.Vector2(-5.0, 5.0),
     velocityRandomness: 0.001,
+    particleSpread: 0.035,
     color: 0xa0ffff,
     colorRandomness: 0.1,
     lifetime: 30,
@@ -71,6 +72,9 @@ export class Connectors {
         } );
         this.stage.scene.add( this.particleSystem );
         this.stage.onAnimate(this.animateParticles());
+        options.color = stage.settings.particleColor || 0xa0ffff;
+        if (stage.settings.particleSpread) options.particleSpread  = stage.settings.particleSpread;
+        if (stage.settings.particleVolume) spawnerOptions.spawnRate  = stage.settings.particleVolume;
     }
 
 

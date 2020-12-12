@@ -26,8 +26,8 @@ export default class Scene extends LifeCycle {
     private composer: THREEx.EffectComposer;
     private renderPass: THREEx.RenderPass;
 
-    public readonly colorMain = new THREE.Color(0x555555);
-    public readonly colorHighlight = new THREE.Color(0x333333);
+    public colorMain = new THREE.Color(0x555555);
+    public colorHighlight = new THREE.Color(0x3377bb);
 
 
 
@@ -196,7 +196,7 @@ export default class Scene extends LifeCycle {
                     }
                     this.selectedObject = labelObject;
                     const m = <THREE.MeshBasicMaterial>labelObject.material;
-                    m.color.setRGB(0.3, 0.5, 0.7);
+                    m.color.setHex(this.colorHighlight.getHex());
                 }
             }
             if (!found && this.selectedObject) {
@@ -208,7 +208,7 @@ export default class Scene extends LifeCycle {
 
     animateCamera() {
         return (timer:number, tick:number) => {
-            const phi = Math.PI / 2 + Math.sin(timer / 20000);
+            const phi = Math.PI / 2 + Math.sin(timer / 2000);
             this.camera.position.x = this.cameraBase.x + this.cameraTarget.x + 0.5 * Math.cos(phi);
             this.camera.position.y = this.cameraBase.y
                 //+ 0.1 * Math.sin(timer * 0.001); // + timer*0.0001;

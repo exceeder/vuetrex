@@ -4,7 +4,7 @@ WebGL animated diagram visualizations in 3D for Vue 3.x
  
 Utilizes [Vue Custom Renderer API](https://v3.vuejs.org/api/global-api.html#createrenderer) and [Three.js](https://threejs.org/)
     
-Note: the project is in early alpha stage and is currently in development.
+Note: the project is in alpha stage and there could be some changes to the interface.
 
 ## For development:
 
@@ -65,8 +65,6 @@ Rendering example:
 
 ![image](docs/screenshot.png)
 
+## [Documentation](docs/README.md)
 
-## TODO
-* ~~Fix window resizing~~
-* Nesting
 

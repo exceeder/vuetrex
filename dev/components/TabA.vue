@@ -1,6 +1,6 @@
 <template>
   <vuetrex>
-    <layer>
+    <layer key="tabA">
       <row v-if="items.length > 0">
         <box v-for="(el,i) in items" :key="i" :text="'dynamic '+el" connection="b2"/>
       </row>
@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import {SetupContext, ref} from "vue";
+import {ref} from "vue";
 import {Vuetrex} from '@/lib-components/index';
 
 export default {
@@ -35,8 +35,7 @@ export default {
       default: () => ([])
     }
   },
-  setup(props: object, context: SetupContext) {
-
+  setup() {
     const counter = ref(0);
 
     function cylClick(ev:any) {

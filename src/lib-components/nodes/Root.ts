@@ -4,7 +4,12 @@ import {Base} from '@/lib-components/nodes/Base';
 export class Root extends Node {
     constructor(stage: any) {
         super(stage);
-        //console.log("Root constructor")
+    }
+
+    syncWithThree() {
+        super.syncWithThree();
+        //update non-containers
+        this.children.filter(c => c.firstChild == null).forEach(b => b.syncWithThree())
     }
 }
 

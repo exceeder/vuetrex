@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isActive"><slot></slot></div>
+  <section  v-if="isActive"><slot></slot></section>
 </template>
 <script type="ts">
 import {defineComponent, inject, onBeforeMount, onBeforeUnmount, ref, watch} from "vue";
@@ -15,9 +15,7 @@ export default defineComponent({
 
     watch(
         () => tabs.selectedIndex,
-        () => {
-          isActive.value = index.value === tabs.selectedIndex;
-        }
+        () => isActive.value = index.value === tabs.selectedIndex
     );
 
     onBeforeMount(() => {

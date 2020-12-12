@@ -45,7 +45,6 @@ export default {
     }
   },
   setup(props: object, context: SetupContext) {
-
     const counter = ref(0);
 
     function cylClick(ev:any) {

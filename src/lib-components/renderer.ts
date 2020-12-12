@@ -1,7 +1,7 @@
 import { createRenderer, RootRenderFunction } from "vue";
 import { nodeOps } from "@/lib-components/nodeOps";
 import { patchProp } from "@/lib-components/patchProp";
-import VuetrexStage from "@/lib-components/three/stage";
+import {VuetrexStage} from "@/lib-components/three/stage";
 
 /**
  * Effectively Vue's custom Renderer needs to implement

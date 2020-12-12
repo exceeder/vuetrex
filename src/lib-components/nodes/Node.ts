@@ -1,6 +1,6 @@
 import { Base } from "@/lib-components/nodes/Base";
 import Element3d from "@/lib-components/three/element3d";
-import VuetrexStage from "@/lib-components/three/stage";
+import {VuetrexStage} from "@/lib-components/three/stage";
 
 declare type VxEventListener<T extends Event> = (event: T) => any;
 

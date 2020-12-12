@@ -1,29 +1,25 @@
 import { queuePostFlushCb } from "vue";
 
 // defer synchronization until after rendering for all nodes to have complete data about parents and children
-let pendingSyncBase: Base | null = null;
+const pendingSyncBase: Base[] = [];
+let pending = false;
 
 const flushChanges = () => {
-    if (pendingSyncBase) {
-        pendingSyncBase.syncWithThree();
-    }
-    pendingSyncBase = null;
+    pendingSyncBase.forEach(b => b.syncWithThree())
+    pendingSyncBase.length = 0
+    pending = false
 };
 
 const registerUpdatedBase = (base: Base) => {
-    if (pendingSyncBase && pendingSyncBase !== base) {
-        pendingSyncBase.syncWithThree();
+    pendingSyncBase.push(base)
+    if (!pending) {
+        queuePostFlushCb(() => flushChanges())
+        pending = true
     }
-
-    if (!pendingSyncBase) {
-        queuePostFlushCb(() => flushChanges());
-    }
-
-    pendingSyncBase = base;
 };
 
 /**
- * Base for render elements of Vuetrex renderer. Handles tree hierarchy: children, siblings, etc.
+ * Base class of render elements of Vuetrex renderer. Handles tree hierarchy: children, siblings, etc.
  */
 export class Base {
 
@@ -39,8 +35,6 @@ export class Base {
     private mustSync = false;
 
     _appendChild(child: Base) {
-        //console.log("append",child);
-
         child.unlinkSiblings();
 
         child.parent = this;
@@ -55,7 +49,6 @@ export class Base {
             this.lastChild.nextSibling = child;
         }
         this.lastChild = child;
-
         this.registerSync();
     }
 
@@ -89,8 +82,6 @@ export class Base {
     }
 
     _insertBefore(child: Base, anchor: Base) {
-        //console.log("insert",child);
-
         child.unlinkSiblings();
 
         child.parent = this;
@@ -108,7 +99,6 @@ export class Base {
         }
 
         this.children.push(child);
-
         this.registerSync();
     }
 
@@ -121,7 +111,6 @@ export class Base {
 
 
     syncWithThree() {
-        // Ignore.
         this.mustSync = false;
     }
 
