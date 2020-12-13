@@ -1,10 +1,10 @@
 import { createRendererForStage } from "@/lib-components/renderer";
 import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, ref, PropType, watch } from "vue";
 import { Root } from "@/lib-components/nodes/Root";
-import {VuetrexStage, VxSettings} from "@/lib-components/three/stage";
+import {VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings} from "@/lib-components/three/stage";
 
-
-export { VxStage, VxSettings }  from "@/lib-components/three/stage";
+export type VxStage = _VxStage;
+export type VxSettings = _VxSettings;
 
 /**
  * Vuetrex is a container that wrapps everything in 3D scene.
