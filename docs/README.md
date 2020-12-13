@@ -148,7 +148,7 @@ export default {
 }
 </script> 
 ```
-
+![Example](zoom.gif)
 ## Customization
 
 If you need to dive deeper, you have access to the ThreeJS scene like this:
