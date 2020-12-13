@@ -1,8 +1,8 @@
 <template>
-  <vuetrex>
-    <layer key="tabA">
-      <row v-if="items.length > 0">
-        <box v-for="(el,i) in items" :key="i" :text="'dynamic '+el" connection="b2"/>
+  <vuetrex :camera="camera" height="75vh">
+    <layer>
+      <row>
+        <box v-for="(el,i) in items" :key="i" :text="'dynamic '+el" connection="b2" @click="dBoxClick"/>
       </row>
       <row>
         <box name="b1" size="1"/>
@@ -12,7 +12,7 @@
       </row>
       <row>
         <box name="c1" connection="b1"/>
-        <cylinder name="c2" :text="'clicks: ' + counter" @click="cylClick" connection="b3"/>
+        <cylinder name="c2" :text="'clicks: ' + counter" @click="cylinderClick" connection="b3"/>
       </row>
       <row>
         <box name="d1" size="3" connection="b4"/>
@@ -37,14 +37,21 @@ export default {
   },
   setup() {
     const counter = ref(0);
+    const camera = ref("scene"); //initially point camera to the overview
 
-    function cylClick(ev:any) {
+    function cylinderClick(ev:any) {
       counter.value++;
     }
 
+    function dBoxClick(ev:any) {
+      camera.value === ev.vxNode.name ? camera.value = "scene" : camera.value = ev.vxNode.name;
+    }
+
     return {
+      camera,
       counter,
-      cylClick
+      cylinderClick,
+      dBoxClick
     }
   }
 }

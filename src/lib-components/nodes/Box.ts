@@ -5,22 +5,14 @@ export class Box extends Node {
 
     size:number = 1.0;
     connection: string | null = null;
-    subscribed: boolean = false
 
     constructor(stage: VuetrexStage) {
         super(stage);
     }
 
     syncWithThree() {
-        super.syncWithThree();
         if (this.element) {
             this.stage.renderMesh(this.element, this.size, this.stage.meshCreator('rbox'));
-            if (this.nodeEvents.onClick && !this.subscribed) {
-                this.element.mesh?.addEventListener('click', ev => {
-                    this.dispatchClick(ev.originalEvent);
-                })
-                this.subscribed = true
-            }
             if (this.connection) {
                 setTimeout(() => {  //todo fixme, there should be a better way
                     const otherEnd = this.stage.getById(this.connection || "");
@@ -31,6 +23,7 @@ export class Box extends Node {
                     }
                 },10);
             }
+            super.syncWithThree();
         }
     }
 
@@ -40,6 +33,9 @@ export class Box extends Node {
 
     onRemoved() {
         if (this.element) {
+            if (this.subscribed) {
+                this.element.mesh?.removeEventListener("click", this.clickListener)
+            }
             this.stage.removeObject(this.element)
         }
     }

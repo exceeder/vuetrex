@@ -345,10 +345,11 @@ export class VuetrexStage extends Scene implements VxStage {
         event.preventDefault();
         //display info below
         if (this.selectedObject) {
-            this.selectedObject.dispatchEvent({type:'click', originalEvent: event})
-            //this.onShowAnnotation(this.selectedObject);
+            const el3d = this.selectedObject.userData.el as Element3d;
+            (event as any).vxNode = el3d.node;
+            (event as any).vxPosition = el3d.mesh?.position.clone();
+            this.selectedObject.dispatchEvent({type:'click', originalEvent: event })
         }
-
     }
 
     onShowAnnotation(mesh: THREE.Mesh) {
@@ -356,5 +357,21 @@ export class VuetrexStage extends Scene implements VxStage {
 
         const vector = this.toScreenPosition(mesh, this.camera);
         this.subscribers.forEach(fn => fn(mesh.name, vector));
+    }
+
+    sendCameraTo(camera: string) {
+        switch (camera) {
+            case "scene": {
+                this.cameraMotion.set(0.25, 0.0, 0.25);
+                this.retargetCamera(new THREE.Vector3(0.0, 0.0, 1.5), new THREE.Vector3(0.0, 13.0, 8.0))
+            } break;
+            default: {
+                const el = this.scene.getObjectByName('el-'+camera);
+                if (el) {
+                    this.cameraMotion.set(0.0, 0.0, 0.0);
+                    this.retargetCamera(el.position,  new THREE.Vector3(el.position.x, el.position.y + 4.0, el.position.z + 4.2))
+                }
+            }
+        }
     }
 }

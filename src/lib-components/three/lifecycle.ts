@@ -1,14 +1,25 @@
+export interface Tween {
+    target: object
+    duration: number
+    start: { [key: string]: any }
+    end: { [key: string]: any }
+    fn: (timer: number, ticks: number) => void
+}
+
 export default class LifeCycle {
 
+    /**
+     * array of functions called on each animation frame
+     */
     tweens:Function[]  =  []
 
     private _timeout: any  = 0
 
     lifecycle = {
         paused: false,
-        tick: 0,
+        tick: 0, //ongoing counter of frames rendered excluding pauses
         timer: {
-            current: 0,
+            current: 0, //total time in ms since animation started, excluding pauses
             last: performance.now()
         },
 
@@ -46,7 +57,7 @@ export default class LifeCycle {
         } else {
             timer.current += t - timer.last;
             timer.last = t;
-            if (++this.lifecycle.tick < 0) this.lifecycle.tick = 0;
+            this.lifecycle.tick++;
             this.tweens.forEach(fn =>
                 fn(timer.current, this.lifecycle.tick)
             );

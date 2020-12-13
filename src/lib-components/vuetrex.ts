@@ -21,6 +21,7 @@ export default defineComponent({
         height: { type: String, default: "50vh" },
         width: { type: String, default: "100%" },
         stopped: { type: Boolean, default: false },
+        camera: {type: String, default: "scene"},
         items: {
             type: Array,
             default: () => ([])
@@ -83,12 +84,10 @@ export default defineComponent({
                 }
                 watch(() => props.stopped,
                     (stopped) => {
-                        if (stopped) {
-                            stage.pause()
-                        } else {
-                            stage.unpause();
-                        }
+                        if (stopped) stage.pause(); else stage.unpause();
                     })
+
+                watch(() => props.camera, (camera: string) => stage.sendCameraTo(camera))
 
                 // We must wait until nextTick to prevent interference in the effect queue.
                 nextTick().then(() => {

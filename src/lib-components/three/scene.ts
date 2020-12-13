@@ -13,9 +13,10 @@ export default class Scene extends LifeCycle {
 
     public readonly width: number
     public readonly height: number
-    private readonly cameraTarget: THREE.Vector3 = new THREE.Vector3(0.0, 0.0, 1.5);
-    private cameraBase: THREE.Vector3 = new THREE.Vector3(0.0, 12.0, 7.0);
-    //private cameraBase: THREE.Vector3 = new THREE.Vector3(0.0, 4.0, 1.725);
+    readonly cameraTarget: THREE.Vector3 = new THREE.Vector3(0.0, 0.0, 1.5);
+    readonly cameraBase: THREE.Vector3 = new THREE.Vector3(0.0, 12.0, 9.0);
+    readonly cameraMotion: THREE.Vector3 = new THREE.Vector3(0.5, 0, 0.5);
+
     private readonly mouse: MousePosition
 
     readonly camera: THREE.PerspectiveCamera
@@ -99,12 +100,10 @@ export default class Scene extends LifeCycle {
         const camera = new THREE.PerspectiveCamera(
             45,
             this.width / this.height,
-            2,
+            1,
             32
         );
-        camera.position.x = 0;
-        camera.position.y = 10;
-        camera.position.z = -5;
+        camera.position.copy(this.cameraBase)
         return camera;
     }
 
@@ -206,15 +205,51 @@ export default class Scene extends LifeCycle {
         };
     }
 
+    startCameraRotation: THREE.Quaternion = new THREE.Quaternion();
+    targetCameraRotation: THREE.Quaternion = new THREE.Quaternion();
+    startTime: number = -1;
+    startCameraPos: any = null;
+    endCameraPos: any = null;
+
+    retargetCamera(lookAt: THREE.Vector3, atPosition: THREE.Vector3) {
+        this.startCameraPos = this.camera.position.clone();
+        this.endCameraPos = atPosition.clone();
+        this.cameraTarget.copy(lookAt);
+
+        this.startCameraRotation.copy(this.camera.quaternion);
+        //determine target camera rotation
+        const pos = this.camera.position.clone();
+        this.camera.position.copy(atPosition);
+        this.cameraBase.copy(atPosition);
+        this.camera.lookAt(lookAt);
+        //restore it back
+        this.targetCameraRotation.copy(this.camera.quaternion);
+        this.camera.position.copy(pos);
+        this.camera.quaternion.copy(this.startCameraRotation);
+        this.startTime = this.lifecycle.timer.current
+
+    }
+
+    easeInOut(x: number): number {
+        return x < 0.5 ? 2*x*x : 1 - (x*(4*x-8)+4) / 2;
+    }
+
     animateCamera() {
         return (timer:number, tick:number) => {
-            const phi = Math.PI / 2 + Math.sin(timer / 2000);
-            this.camera.position.x = this.cameraBase.x + this.cameraTarget.x + 0.5 * Math.cos(phi);
-            this.camera.position.y = this.cameraBase.y
-                //+ 0.1 * Math.sin(timer * 0.001); // + timer*0.0001;
-            this.camera.position.z = this.cameraBase.z + this.cameraTarget.z + 0.5 * Math.sin(phi);
+            if (this.startTime > 0 && timer < this.startTime + 1000) {
+                this.camera.position.lerpVectors(this.startCameraPos, this.endCameraPos, this.easeInOut((timer-this.startTime)/1000))
 
-            this.camera.lookAt(this.cameraTarget);
+                THREE.Quaternion.slerp(this.startCameraRotation, this.targetCameraRotation, this.camera.quaternion,
+                    this.easeInOut((timer-this.startTime)/1000)
+                )
+            } else {
+                //todo make camera move a little when idle for 5 seconds
+                //const phi = Math.sin(timer / 2000);
+                this.camera.position.x = this.cameraBase.x; // + this.cameraMotion.x * Math.cos(phi);
+                this.camera.position.y = this.cameraBase.y;
+                this.camera.position.z = this.cameraBase.z; // + this.cameraMotion.z * Math.sin(phi);
+                this.camera.lookAt(this.cameraTarget);
+            }
         };
     }
 

@@ -60,11 +60,11 @@ Vue template example with reactive features fully supported:
  </Vuetrex>
 </template>
 ```
+### Support and Resources
 
-More examples are in [Documentation](docs/README.md).
+Examples and explanations are in [Documentation](docs/README.md).
 
 Rendering example:
+
 ![image](docs/screenshot.png)
-
-
 

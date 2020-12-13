@@ -14,9 +14,13 @@ type NodeEvents = {
 export class Node extends Base {
     public element?: Element3d;
 
-    public readonly stage: VuetrexStage;
-    public name: string = '';
-    public text: string = '';
+    public readonly stage: VuetrexStage
+    public name: string = Math.floor(Math.random()*100000).toString(32)
+    public text: string = ''
+    subscribed: boolean = false
+    readonly clickListener = (ev: any) => {
+        this.dispatchClick(ev.originalEvent);
+    }
 
     public _nodeEvents?: NodeEvents = undefined;
 
@@ -71,6 +75,14 @@ export class Node extends Base {
     dispatchClick(e: MouseEvent) {
         if (this.nodeEvents.onClick)
             this.nodeEvents.onClick(e)
+    }
+
+    syncWithThree() {
+        super.syncWithThree();
+        if (this.nodeEvents.onClick && !this.subscribed) {
+            this.element?.mesh?.addEventListener('click', this.clickListener)
+            this.subscribed = true
+        }
     }
 }
 

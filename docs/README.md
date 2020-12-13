@@ -46,14 +46,14 @@ open `src/components/HelloWorld.vue` and add
   ...
 </template>
 <script>
-...
+//...
 import { Vuetrex } from "@exceeder/vuetrex";
 
 export default {
   components: {
     Vuetrex
   },
-...
+//...
 }
 </script> 
 ```
@@ -115,6 +115,39 @@ Caption reflects the text property. Caption text is reactive in case of `:text="
 ```
 as one would expect, in `setup()` you will need a `const counter = ref(0)` that you return in this case.
 There is only one possible event `click` at the moment.
+
+## Camera
+
+By setting a `camera` property to the name of the element you want to focus on, you will make Vuetrex zoom in on it.
+If you set it to `"scene"` (default value), it will go back to overview position.
+
+```vue
+<template>
+ <vuetrex :camera="camera">
+   <row>
+     <box v-for="item in list" :key="item" :text="item" @click="zoomIn"/>
+   </row>
+ </vuetrex>
+</template>
+<script>
+//...
+export default {
+  components: { Vuetrex },
+  setup() {
+    const camera = ref("scene") 
+    const list = reactive(["Bravo", "Charlie", "Echo", "Delta"])
+
+    function zoomIn(event) {
+        //zoom in on every clicked item, unless it is already in focus,
+        // in which case zoom out to a full view
+        camera.value = camera.value === event.vxNode.name ? "scene" : event.vxNode.name
+    }
+
+    return { camera, list, zoomIn} 
+  }
+}
+</script> 
+```
 
 ## Customization
 
