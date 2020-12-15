@@ -1,4 +1,4 @@
-# Vuetrex
+# Vuetrex [![beta](https://img.shields.io/npm/v/@exceeder/vuetrex)](https://www.npmjs.com/package/@exceeder/vuetrex)
 
 WebGL animated diagram visualizations in 3D for Vue 3.x
  
