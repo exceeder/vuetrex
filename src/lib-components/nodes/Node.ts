@@ -1,6 +1,7 @@
 import { Base } from "@/lib-components/nodes/Base";
 import Element3d from "@/lib-components/three/element3d";
 import {VuetrexStage} from "@/lib-components/three/stage";
+import {nextTick, reactive} from "vue";
 
 declare type VxEventListener<T extends Event> = (event: T) => any;
 
@@ -12,12 +13,16 @@ type NodeEvents = {
  * Named node in the tree hierarchy of Vuetrex renderer.
  */
 export class Node extends Base {
-    public element?: Element3d;
+    public element: Element3d;
 
     public readonly stage: VuetrexStage
     public name: string = Math.floor(Math.random()*100000).toString(32)
-    public text: string = ''
     subscribed: boolean = false
+
+    public state = reactive({
+        text: ''
+    })
+
     readonly clickListener = (ev: any) => {
         this.dispatchClick(ev.originalEvent);
     }
@@ -37,31 +42,23 @@ export class Node extends Base {
         return this._nodeEvents;
     }
 
-    getLayer(): Node | undefined {
-        return this.parent?.parent as Node;
-    }
-
-    getRow(): Node | undefined {
-        return this.parent as Node;
+    getLayer(): Node | null {
+        return this.parent.value?.parent.value as Node;
     }
 
     getScale(): number {
         if (this.getLayer() === undefined) return 1.0;
-        return (this.getLayer() as any).scale || 1.0;
+        return (this.getLayer()?.state as any)?.scale || 1.0;
     }
 
-    getIdx() {
-        if (!this.parent) return 0;
-        let idx = 0, i: Base | null = this.prevSibling;
-        while (i !== null) {
-            if (i instanceof Node) idx++;
-            i = i.prevSibling;
+    getElevation() {
+        let result = (this as any).state?.elevation || 0.0;
+        let parent = this.getLayer();
+        while (parent) {
+            result += (parent as any)?.state?.elevation || 0.0;
+            parent = parent.getLayer();
         }
-        return idx;
-    }
-
-    renderSize() {
-        return this.children.filter(el => el instanceof Node).length;
+        return result;
     }
 
     setName(name: string) {
@@ -78,11 +75,13 @@ export class Node extends Base {
     }
 
     syncWithThree() {
+        nextTick(() => {
+            if (this.nodeEvents.onClick && !this.subscribed) {
+                this.element.mesh?.addEventListener('click', this.clickListener)
+                this.subscribed = true
+            }
+        });
         super.syncWithThree();
-        if (this.nodeEvents.onClick && !this.subscribed) {
-            this.element?.mesh?.addEventListener('click', this.clickListener)
-            this.subscribed = true
-        }
     }
 }
 

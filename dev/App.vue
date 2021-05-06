@@ -8,8 +8,9 @@
             Boxes in the first row ( {{items.length}} ):
             <input type="range" min="0" max="5" :value="items.length" @input="e => updateItems(e.target.value)">
           </label>
+          <label><input type="checkbox" id="extraRow" v-model="extraRow"/> hidden row</label>
           <p/>
-            <TabA :items="items" />
+            <TabA :items="items" :extraRow="extraRow" />
         </section>
     </tab>
     <tab title="Example 2">
@@ -46,8 +47,9 @@ export default defineComponent( {
   },
 
   setup() {
-    const items = reactive([1])
+    const items = reactive([1,2])
     const alt = ref(0.1)
+    const extraRow = ref(false)
 
     function updateItems(n: number) {
       if (n > items.length) {
@@ -60,6 +62,7 @@ export default defineComponent( {
     return {
       items,
       alt,
+      extraRow,
       updateItems
     }
   }

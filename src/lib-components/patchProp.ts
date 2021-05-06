@@ -26,9 +26,16 @@ const getSetter = (key: string) => {
   if (!setterCache[key]) {
     setterCache[key] = (el, value) => {
       // @ts-ignore
-      el[key] = value
-      if (key === 'text' && (el as any).element?.mesh) {
-        el.syncWithThree();
+      if (el.state !== undefined && el.state[key] !== undefined) { // @ts-ignore
+        if (typeof el.state[key] === 'boolean') // @ts-ignore
+          el.state[key] = "true" == value; // @ts-ignore
+        else if (typeof el.state[key] === 'number') // @ts-ignore
+          el.state[key] = Number.parseFloat(value);
+        else // @ts-ignore
+          el.state[key] = value;
+      } else {
+        // @ts-ignore
+        el[key] = value
       }
     }
   }

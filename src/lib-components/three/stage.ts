@@ -65,7 +65,7 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     onEachFrame(fn: (time: number, tick:number) => void): void {
-        this.tweens.push(fn);
+        this.onAnimate(fn);
     }
 
     mount() {
@@ -118,8 +118,18 @@ export class VuetrexStage extends Scene implements VxStage {
 
         let material = new THREE.MeshBasicMaterial({
             opacity: 1.0,
-            transparent: true, map: texture.texture
+            transparent: true,
+            map: texture.texture
         });
+
+        // let material = new THREE.MeshStandardMaterial({
+        //     color: '0xc0c0c0',
+        //     roughness: 0.1,
+        //     metalness: 0.4,
+        //     opacity: 1.0,
+        //     transparent: true,
+        //     map: texture.texture
+        // });
         let plane = new THREE.Mesh(new THREE.PlaneGeometry(caps.planeSize, caps.planeSize), material);
         plane.rotation.x = -Math.PI / 2.0;
         plane.position.y = -0.349;
@@ -196,28 +206,51 @@ export class VuetrexStage extends Scene implements VxStage {
         const node = el.node;
         const scale = node.getScale();
 
-        const colIdx = node.getIdx();
-        const rowIdx = node.getRow()?.getIdx() || 0;
-        const cols = node.getRow()?.renderSize() || 1;
-        const rows = node.getLayer()?.renderSize() || 1;
-        const layerPos = node.getLayer()?.element?.pos;
+        let colIdx = node.myIdx.value;
+        let rowIdx = node.parent.value?.myIdx.value;
+        let cols = node.numColumns.value || 1;
+        let rows = node.numRows.value|| 1;
+        if (rowIdx === undefined || rowIdx < 0) {
+            rowIdx = 0;
+            colIdx = 0;
+            cols = 1;
+            rows = 1;
+        }
+
+        const layerPos = node.getLayer()?.element.pos || new THREE.Vector3(0, 0, 0);
         const offX =  layerPos?.x || 0.0;
         const offZ = layerPos?.z || 0.0;
 
-        //console.log(rows, cols, rowIdx, colIdx, offX, offZ, el.mesh?.uuid)
+        //console.log("  layout: "+node.name, rows, cols, " ", rowIdx, colIdx, " - ", offX, offZ, el.mesh?.uuid)
 
         //in WebGL, positive X to the right, Y to the top, Z to the back
         return new THREE.Vector3(
          (-rows * (R + D)) / 2 / scale + (R + D) * rowIdx / scale + (R + D) / 2 / scale + offX,
-            0.0,
+            node.getElevation(),
          (-cols * (R + D)) / 2 / scale + (R + D) * colIdx / scale + (R + D) / 2 / scale + offZ);
     }
 
     meshCreator(type: string): (size:number) => THREE.Mesh {
-        let bMaterial = this.createElementMaterial();
         switch (type) {
+            case 'plane': {
+                return size => {
+                    let bMaterial = this.createElementMaterial();
+                    bMaterial.transparent = true;
+                    bMaterial.opacity = 0.75;
+                    bMaterial.flatShading = true;
+                    bMaterial.side = THREE.DoubleSide;
+                    bMaterial.color.setRGB(255,255,255)
+                    const result = new THREE.Mesh(
+                        new THREE.PlaneGeometry(size, size, 2, 2),
+                        bMaterial
+                    );
+                    result.rotateX(Math.PI/2)
+                    return result;
+                }
+            }
             case 'cylinder': {
                 return size => {
+                    let bMaterial = this.createElementMaterial();
                     return new THREE.Mesh(
                         new THREE.CylinderGeometry(size / 2, size / 2 * 1.05, R / 2, 32),
                         bMaterial
@@ -226,6 +259,7 @@ export class VuetrexStage extends Scene implements VxStage {
             }
             case 'cylinder-shape': {
                 return size => {
+                    let bMaterial = this.createElementMaterial();
                     const width = size/2 || 1.0;
                     const r = width;
 
@@ -255,6 +289,7 @@ export class VuetrexStage extends Scene implements VxStage {
             }
             case 'rbox-shape': {
                 return size => {
+                    let bMaterial = this.createElementMaterial();
                     const width = size;
                     const length = R * 0.9;
 
@@ -284,6 +319,7 @@ export class VuetrexStage extends Scene implements VxStage {
             }
             case 'rbox': {
                 return size => {
+                    let bMaterial = this.createElementMaterial();
                     return new THREE.Mesh(new THREEx.RoundedBoxBufferGeometry(R, R / 2, size,  5, .1), bMaterial);
                 }
 
@@ -291,7 +327,8 @@ export class VuetrexStage extends Scene implements VxStage {
             default:
             case 'box': {
                 return size => {
-                    return new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
+                    let bMaterial = this.createElementMaterial();
+                    return new THREE.Mesh(new THREE.BoxBufferGeometry(R*0.9, R / 2, size), bMaterial);
                 }
             }
         }
@@ -328,6 +365,7 @@ export class VuetrexStage extends Scene implements VxStage {
         mesh.geometry.translate(0,0.5-scale/2,0)
         mesh.name = "el-" + el.node.name;
         mesh.castShadow = true;
+        //todo this.tween(el, ...)
         mesh.position.copy(this.positionLayoutElement(el));
         mesh.userData.caption = this.addCaption(mesh, size/scale, el.getCaption())
         scene.add(mesh);

@@ -1,8 +1,10 @@
+import Element3d from "./element3d";
+
 export interface Tween {
-    target: object
+    target?: object
     duration: number
-    start: { [key: string]: any }
-    end: { [key: string]: any }
+    start?: { [key: string]: any }
+    end?: { [key: string]: any }
     fn: (timer: number, ticks: number) => void
 }
 
@@ -11,7 +13,7 @@ export default class LifeCycle {
     /**
      * array of functions called on each animation frame
      */
-    tweens:Function[]  =  []
+    private tweens:Tween[]  =  []
 
     private _timeout: any  = 0
 
@@ -22,6 +24,10 @@ export default class LifeCycle {
             current: 0, //total time in ms since animation started, excluding pauses
             last: performance.now()
         },
+
+    }
+
+    static tween(el: Element3d, key: string, targetValue: any) {
 
     }
 
@@ -58,15 +64,18 @@ export default class LifeCycle {
             timer.current += t - timer.last;
             timer.last = t;
             this.lifecycle.tick++;
-            this.tweens.forEach(fn =>
-                fn(timer.current, this.lifecycle.tick)
+            this.tweens.forEach(t =>
+                t.fn(timer.current, this.lifecycle.tick)
             );
             this.render();
         }
     }
 
-    onAnimate(fn: Function) {
-        this.tweens.push(fn);
+    onAnimate(fn: (timer: number, ticks: number) => void) {
+        this.tweens.push({
+            duration: -1,
+            fn: fn
+        });
     }
 
     stopAnimation() {

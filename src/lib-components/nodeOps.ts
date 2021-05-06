@@ -15,7 +15,7 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
   },
 
   remove: (child) => {
-    const parent = child.parent;
+    const parent = child.parent.value;
     if (parent != null) {
       parent._removeChild(child);
     }
@@ -35,19 +35,20 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
   },
 
   createComment: (text) => {
+    //sometimes text === 'v-if' and we should have a placeholder for VirtualDOM even when condition is false
     return new Comment(text);
   },
 
   setText: (node, text) => {
-    // Noop
+    // NOOP
   },
 
   setElementText: (node, text) => {
     node.setElementText(text);
   },
 
-  parentNode: (node) => (node.parent ? node.parent : null),
+  parentNode: (node) => (node.parent.value ? node.parent.value : null),
 
-  nextSibling: (node) => node.nextSibling,
+  nextSibling: (node) => (node.nextSibling.value)
 
 });

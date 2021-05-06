@@ -9,7 +9,7 @@ export class Root extends Node {
     syncWithThree() {
         super.syncWithThree();
         //update non-containers
-        this.children.filter(c => c.firstChild == null).forEach(b => b.syncWithThree())
+        this.children.value.forEach(b => b.syncWithThree())
     }
 }
 

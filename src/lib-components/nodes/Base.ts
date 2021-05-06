@@ -1,4 +1,4 @@
-import { queuePostFlushCb } from "vue";
+import {ref, computed, queuePostFlushCb, ComputedRef, Ref, shallowRef} from "vue";
 
 // defer synchronization until after rendering for all nodes to have complete data about parents and children
 const pendingSyncBase: Base[] = [];
@@ -23,92 +23,75 @@ const registerUpdatedBase = (base: Base) => {
  */
 export class Base {
 
-    protected children: Base[] = [];
-
-    public parent?: Base = undefined;
-
-    public firstChild: Base | null = null;
-    public lastChild: Base | null = null;
-    public prevSibling: Base | null = null;
-    public nextSibling: Base | null = null;
+    public parent: Ref<Base | null> = shallowRef(null);
+    protected children: Ref<Base[]> = ref([]);
 
     private mustSync = false;
 
+    readonly elements = computed(() => {
+        return this.children.value.filter(c => ((c as any).state !== undefined))
+    })
+    public myIdx: ComputedRef<number> = computed(() => {
+        //if (this.parent.value == null) return -2;
+        const res = this.parent.value?.elements.value.indexOf(this);
+        return res === undefined ? -1 : res;
+    })
+
+    public renderSize: ComputedRef<number> = computed(() => {
+        const res = this.elements.value.length;
+        return res || 0
+    })
+
+    public numColumns: ComputedRef<number> = computed(() => {
+        const res = this.parent.value?.renderSize.value || 1
+        return res || 0
+    });
+
+    public numRows: ComputedRef<number> = computed(() => (this.parent.value?.parent.value?.renderSize.value || 1));
+
+    public readonly nextSibling : ComputedRef<Base | null> = computed(() => {
+            if (this.parent.value === null) {
+                return null;
+            }
+            const arr = this.parent.value.children.value;
+            const idx = arr.indexOf(this) || -1;
+            let result = null
+            if (idx >= 0 && idx < arr.length-1) {
+                result = arr[idx + 1]
+            }
+            return result
+    })
+
     _appendChild(child: Base) {
-        child.unlinkSiblings();
-
-        child.parent = this;
-        this.children.push(child);
-
-        if (!this.firstChild) {
-            this.firstChild = child;
-        }
-        child.prevSibling = this.lastChild;
-        child.nextSibling = null;
-        if (this.lastChild) {
-            this.lastChild.nextSibling = child;
-        }
-        this.lastChild = child;
+        child.parent.value = this;
+        this.children.value.push(child);
         this.registerSync();
     }
 
-    private unlinkSiblings() {
-        if (this.parent?.firstChild === this) {
-            this.parent!.firstChild = this.nextSibling;
-        }
-
-        if (this.parent?.lastChild === this) {
-            this.parent!.lastChild = this.prevSibling;
-        }
-
-        if (this.prevSibling) {
-            this.prevSibling.nextSibling = this.nextSibling;
-        }
-
-        if (this.nextSibling) {
-            this.nextSibling.prevSibling = this.prevSibling;
-        }
-
-        this.prevSibling = null;
-        this.nextSibling = null;
-    }
-
     _removeChild(child: Base) {
-        child.unlinkSiblings();
-        child.parent = undefined;
-        this.children.splice(this.children.indexOf(child),1);
+        child.parent.value = null;
+        this.children.value.splice(this.children.value.indexOf(child),1);
         this.registerSync();
         child.onRemoved()
     }
 
     _insertBefore(child: Base, anchor: Base) {
-        child.unlinkSiblings();
-
-        child.parent = this;
-
-        if (anchor.prevSibling) {
-            child.prevSibling = anchor.prevSibling;
-            anchor.prevSibling.nextSibling = child;
+        child.parent.value = this;
+        const anchorIdx = this.children.value.indexOf(anchor);
+        if (anchorIdx >= 0) {
+            this.children.value.splice(anchorIdx, 0, child);
+        } else {
+            this.children.value.push(child);
         }
-
-        anchor.prevSibling = child;
-        child.nextSibling = anchor;
-
-        if (this.firstChild === anchor) {
-            this.firstChild = child;
-        }
-
-        this.children.push(child);
         this.registerSync();
     }
 
-    private registerSync() {
+    registerSync() {
         if (!this.mustSync) {
             this.mustSync = true;
             registerUpdatedBase(this);
         }
     }
-
 
     syncWithThree() {
         this.mustSync = false;
@@ -119,8 +102,5 @@ export class Base {
     }
 
     onRemoved() {}
-
-    getIdx() { return 0; }
-    renderSize() { return 0; }
 }
 

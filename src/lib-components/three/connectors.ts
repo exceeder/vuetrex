@@ -12,7 +12,7 @@ const options: ParticleOptions = {
     particleSpread: 0.035,
     color: 0xa0ffff,
     colorRandomness: 0.1,
-    lifetime: 30,
+    lifetime: 20,
     size: 0.9,
     sizeRandomness: 0.3
 };
@@ -20,9 +20,9 @@ const options: ParticleOptions = {
 const spawnerOptions = {
     spawnRate: 50,
     horizontalSpeed: 0.2,
-    verticalSpeed: 0.1,
+    verticalSpeed: 0.2,
     timeScale: 1.0,
-    maxParticles: 5000,
+    maxParticles: 7500,
     containerCount: 1
 };
 
@@ -94,7 +94,7 @@ export class Connectors {
         } else if( Math.abs(sx-tx) < 0.01 ) {
             //single vertical line
             this.segments.push(new Segment(false, sx, sy, ty, el1, el2))
-        } else if (Math.abs(tx-sx) > Math.abs(ty-sy)) {
+        } else if (Math.abs(tx-sx) / 2 > Math.abs(ty-sy)) {
             //zig-zag
             let midy = snap(( sy + ty ) / 2);
             if (midy > 0) midy += 0.5; else midy -= 0.5;

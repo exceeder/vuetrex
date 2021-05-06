@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import {Node} from "@/lib-components/nodes/Node";
 import {VuetrexStage} from "./stage";
 
@@ -12,6 +13,6 @@ export default class Element3d {
     }
 
     getCaption() {
-        return this.node.text ? this.node.text : "";
+        return this.node!.state.text;
     }
 }

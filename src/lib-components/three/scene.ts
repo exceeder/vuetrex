@@ -239,7 +239,7 @@ export default class Scene extends LifeCycle {
             if (this.startTime > 0 && timer < this.startTime + 1000) {
                 this.camera.position.lerpVectors(this.startCameraPos, this.endCameraPos, this.easeInOut((timer-this.startTime)/1000))
 
-                THREE.Quaternion.slerp(this.startCameraRotation, this.targetCameraRotation, this.camera.quaternion,
+                this.camera.quaternion.slerpQuaternions(this.startCameraRotation, this.targetCameraRotation,
                     this.easeInOut((timer-this.startTime)/1000)
                 )
             } else {
