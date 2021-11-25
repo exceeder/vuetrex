@@ -33,8 +33,7 @@
 </head>
 
 <body>
-<h1>Shader object demo</h1>
-<div>Demonstrates basic shader raytracing with soft shadows in GLSL.</div>
+<h1>Shader demo</h1>
 <script id="frag1" type="x-shader/x-fragment">
   uniform float iTime;
   uniform vec2 iResolution;
@@ -233,6 +232,7 @@
                 side: THREE.DoubleSide,
                 blending: THREE.AdditiveBlending,
                 depthTest: true,
+                depthWrite: false,
                 transparent: true,
                 vertexShader: document.getElementById('general').textContent,
                 fragmentShader: document.getElementById('frag1').textContent
