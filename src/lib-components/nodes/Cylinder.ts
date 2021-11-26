@@ -50,6 +50,7 @@ export class Cylinder extends Node {
             }
             this.stage.removeObject(this.element)
         }
+        this.state.connection = null;
     }
 
 }

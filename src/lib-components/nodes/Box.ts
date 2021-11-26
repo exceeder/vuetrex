@@ -4,9 +4,10 @@ import {VuetrexStage} from "@/lib-components/three/stage";
 
 export class Box extends Node {
 
-    public state: { text: string, size: number, connection: string | null } = reactive({
+    public state: { text: string, size: number, height:number, connection: string | null } = reactive({
         text: '',
         size: 1.0,
+        height: 0.5,
         connection: null
     })
 
@@ -19,19 +20,19 @@ export class Box extends Node {
     syncWithThree() {
         if (this.stopHandle) return;
         this.stopHandle = watchEffect(() => {
-            //console.log(` >box weffect ${this.name} myIdx: ${this.myIdx.value} cols:${this.numColumns.value} rows:${this.numRows.value}`)
             if (this.myIdx.value >= 0) {
                 this.stage.renderMesh(this.element, this.state.size, this.stage.meshCreator('rbox'));
             }
 
             if (this.state.connection) {
                 nextTick(() => {  //todo fixme, there should be a better way!
-                    const otherEnd = this.stage.getById(this.state.connection || "");
+                    if (!this.state.connection) return;
+                    const otherEnd = this.stage.getById(this.state.connection);
                     if (this.element && otherEnd) {
                         this.stage.connect(this.element, otherEnd)
-                    } else {
-                        console.warn("Invalid connection from " + this.name + " to " + this.state.connection)
-                    }
+                    } //else {
+                    //    console.warn("Invalid connection from " + this.name + " to " + this.state.connection)
+                    //}
                 }).catch(r => console.log(r));
             }
         }, {flush: 'post'})
@@ -40,6 +41,10 @@ export class Box extends Node {
 
     setSize(size: number) {
         this.state.size = size;
+    }
+
+    setHeight(height: number) {
+        this.state.height = height;
     }
 
     onRemoved() {
@@ -53,5 +58,6 @@ export class Box extends Node {
             }
             this.stage.removeObject(this.element)
         }
+        this.state.connection = null;
     }
 }

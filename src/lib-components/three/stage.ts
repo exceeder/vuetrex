@@ -23,6 +23,7 @@ export interface VxSettings {
 
     particleSpread?: number
     particleVolume?: number
+    particleBlending?: THREE.Blending
 
     unit?: number
     distance?: number
@@ -32,8 +33,10 @@ let R = 1.3; //box radius
 let D = 1.5; //box distance
 
 /**
- * Stage keeps top-level structures to draw the tree of runtime nodes.
- * It replaces browser's drawing of DOM elements.
+ * Stage is a top level container of Vue-connected nodes. It literally sets the stage for everything happening in 3D.
+ *
+ * By using Vue's Custom Renderer interface (NodeOps) it replaces browser's drawing of DOM elements with updating
+ * ThreeJS scene.
  */
 export class VuetrexStage extends Scene implements VxStage {
     public root: Element3d | null = null;
@@ -42,7 +45,7 @@ export class VuetrexStage extends Scene implements VxStage {
     settings: VxSettings
     private caps: { repeats: number; size: number; planeSize: number; updateFn: () => void; texture: THREEx.DynamicTexture | null } = {
         planeSize: 512,
-        size: 2048,
+        size: 1024,
         repeats: 31,
         texture: null,
         updateFn: () => {}
@@ -110,6 +113,8 @@ export class VuetrexStage extends Scene implements VxStage {
         const texture = new THREEx.DynamicTexture(caps.size, caps.size)
         caps.texture = texture
         texture.texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+        texture.texture.minFilter = THREE.LinearMipmapLinearFilter
+        texture.texture.generateMipmaps = true
         texture.texture.repeat.set(caps.repeats, caps.repeats)
         texture.texture.offset.set(-textureOffset, -textureOffset)
 
@@ -202,34 +207,6 @@ export class VuetrexStage extends Scene implements VxStage {
         }
     }
 
-    positionLayoutElement(el: Element3d) : THREE.Vector3 {
-        const node = el.node;
-        const scale = node.getScale();
-
-        let colIdx = node.myIdx.value;
-        let rowIdx = node.parent.value?.myIdx.value;
-        let cols = node.numColumns.value || 1;
-        let rows = node.numRows.value|| 1;
-        if (rowIdx === undefined || rowIdx < 0) {
-            rowIdx = 0;
-            colIdx = 0;
-            cols = 1;
-            rows = 1;
-        }
-
-        const layerPos = node.getLayer()?.element.pos || new THREE.Vector3(0, 0, 0);
-        const offX =  layerPos?.x || 0.0;
-        const offZ = layerPos?.z || 0.0;
-
-        //console.log("  layout: "+node.name, rows, cols, " ", rowIdx, colIdx, " - ", offX, offZ, el.mesh?.uuid)
-
-        //in WebGL, positive X to the right, Y to the top, Z to the back
-        return new THREE.Vector3(
-         (-rows * (R + D)) / 2 / scale + (R + D) * rowIdx / scale + (R + D) / 2 / scale + offX,
-            node.getElevation(),
-         (-cols * (R + D)) / 2 / scale + (R + D) * colIdx / scale + (R + D) / 2 / scale + offZ);
-    }
-
     meshCreator(type: string): (size:number) => THREE.Mesh {
         switch (type) {
             case 'plane': {
@@ -320,7 +297,7 @@ export class VuetrexStage extends Scene implements VxStage {
             case 'rbox': {
                 return size => {
                     let bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new THREEx.RoundedBoxBufferGeometry(R, R / 2, size,  5, .1), bMaterial);
+                    return new THREE.Mesh(new THREEx.RoundedBoxBufferGeometry(R, R / 3, size,  5, .1), bMaterial);
                 }
 
             }
@@ -350,7 +327,7 @@ export class VuetrexStage extends Scene implements VxStage {
         const scene = this.scene;
 
         if (el.mesh !== null) {
-            el.mesh.position.copy(this.positionLayoutElement(el))
+            el.mesh.position.copy(el.getPosition())
             this.connectors?.update(el);
             el.mesh.userData.caption.x = el.mesh.position.x
             el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0
@@ -366,7 +343,7 @@ export class VuetrexStage extends Scene implements VxStage {
         mesh.name = "el-" + el.node.name;
         mesh.castShadow = true;
         //todo this.tween(el, ...)
-        mesh.position.copy(this.positionLayoutElement(el));
+        mesh.position.copy(el.getPosition());
         mesh.userData.caption = this.addCaption(mesh, size/scale, el.getCaption())
         scene.add(mesh);
         el.mesh = mesh;
@@ -375,6 +352,11 @@ export class VuetrexStage extends Scene implements VxStage {
 
     connect(el1: Element3d, el2: Element3d) {
         this.connectors?.connect(el1,el2);
+    }
+
+    destroy() {
+        super.destroy();
+        this.connectors?.clear();
     }
 
     // --- events ---
@@ -386,7 +368,7 @@ export class VuetrexStage extends Scene implements VxStage {
             const el3d = this.selectedObject.userData.el as Element3d;
             (event as any).vxNode = el3d.node;
             (event as any).vxPosition = el3d.mesh?.position.clone();
-            this.selectedObject.dispatchEvent({type:'click', originalEvent: event })
+            el3d.mesh?.dispatchEvent({type:'click', originalEvent: event })
         }
     }
 

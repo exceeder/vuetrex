@@ -7,6 +7,10 @@ interface MousePosition {
     y: number
 }
 
+/**
+ * Scene is tying together renderer, composer, camera, animation frames and events. It is meant to be an
+ * abstract base for the particular 3D setup.
+ */
 export default class Scene extends LifeCycle {
 
     private domParent: HTMLElement
@@ -30,6 +34,7 @@ export default class Scene extends LifeCycle {
     public colorMain = new THREE.Color(0x555555);
     public colorHighlight = new THREE.Color(0x3377bb);
 
+    private removeEventListeners: Function = () => {};
 
 
     /**
@@ -64,12 +69,22 @@ export default class Scene extends LifeCycle {
     }
 
     bindEvents(domParent: HTMLElement) {
-        window.addEventListener("resize", () => this.onWindowResize(), false);
-        domParent.addEventListener("mousemove", e =>
-            this.onCanvasMouseMove(e)
-        );
-        domParent.addEventListener("mousedown", e => this.onCanvasClick(e));
-        window.addEventListener('wheel', e => this.onMouseWheel(e), false);
+        const resizer = () => this.onWindowResize();
+        const wheeler = (e:WheelEvent) => this.onMouseWheel(e)
+        const mouseListener = (e:MouseEvent) => this.onCanvasMouseMove(e)
+        const clickListener = (e:MouseEvent) => this.onCanvasClick(e)
+
+        window.addEventListener("resize", resizer, false)
+        window.addEventListener('wheel', wheeler, false)
+        domParent.addEventListener("mousemove", mouseListener)
+        domParent.addEventListener("mousedown", clickListener )
+
+        this.removeEventListeners = ()  => {
+            window.removeEventListener("resize", resizer)
+            window.removeEventListener("wheel", wheeler)
+            domParent.removeEventListener("mousemove", mouseListener)
+            domParent.removeEventListener("mousedown", clickListener)
+        }
     }
 
     start() {
@@ -78,6 +93,17 @@ export default class Scene extends LifeCycle {
 
     stop() {
         this.stopAnimation();
+    }
+
+    destroy() {
+        this.stopAnimation();
+        this.removeEventListeners();
+        this.scene.clear();
+        this.camera.clear();
+        while (this.domParent.lastChild) {
+            this.domParent.removeChild(this.domParent.lastChild);
+        }
+        this.renderer.forceContextLoss();
     }
 
     //--- overridable ---
@@ -259,9 +285,10 @@ export default class Scene extends LifeCycle {
         const camera = this.camera;
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        //TODO parallax support
-        //camera.position.x = -window.pageYOffset / 500;
-        //camera.position.y = 11 + window.pageYOffset / 1000;
+
+        //TODO parallax support possible here via
+        // camera.position.x = -window.pageYOffset / 500;
+        // camera.position.y = 11 + window.pageYOffset / 1000;
 
         //camera.lookAt(new THREE.Vector3());
         this.renderer.setSize(width, height);

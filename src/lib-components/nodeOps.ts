@@ -2,7 +2,7 @@ import { Base } from "@/lib-components/nodes/Base";
 import { Comment, TextNode } from "@/lib-components/nodes/Root";
 import { RendererOptions } from "@vue/runtime-core";
 import { VuetrexStage } from "@/lib-components/three/stage";
-import {types} from "@/lib-components/nodes/types";
+import {types, FunctionalComponent, ClassComponent} from "@/lib-components/nodes/types";
 
 export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
 
@@ -27,7 +27,11 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
        console.warn(`Unknown native tag: ${tag}`);
        type = types["node"];
      }
-     return new type(stage);
+     if (typeof (type as any).setup === 'function') {
+        return (type as FunctionalComponent).setup(stage);
+     } else {
+       return new (type as ClassComponent)(stage);
+     }
   },
 
   createText: (text) => {

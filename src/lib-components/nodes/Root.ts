@@ -11,6 +11,13 @@ export class Root extends Node {
         //update non-containers
         this.children.value.forEach(b => b.syncWithThree())
     }
+
+    destroy() {
+        while (this.children.value.length > 0)
+            this._removeChild(this.children.value[this.children.value.length-1]);
+        console.log("Destroying ",this.stage)
+        this.stage.destroy();
+    }
 }
 
 export class Comment extends Base {

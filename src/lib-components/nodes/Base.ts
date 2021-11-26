@@ -70,9 +70,15 @@ export class Base {
 
     _removeChild(child: Base) {
         child.parent.value = null;
-        this.children.value.splice(this.children.value.indexOf(child),1);
-        this.registerSync();
-        child.onRemoved()
+        const idx = this.children.value.indexOf(child);
+        if (idx >= 0) {
+            this.children.value.splice(idx, 1);
+            child.onRemoved();
+            const grandChildren = child.children.value;
+            while (grandChildren && grandChildren.length > 0)
+                child._removeChild(grandChildren[grandChildren.length - 1]);
+            this.registerSync();
+        }
     }
 
     _insertBefore(child: Base, anchor: Base) {

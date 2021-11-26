@@ -26,11 +26,15 @@ export interface ParticleOptions {
 }
 
 export interface ParticleSystemOptions {
+    blending?: THREE.Blending
     maxParticles?: number
     containerCount?: number
 }
 
 interface FastRandom {
+    /**
+     * @return noise producing function in [-0.5..0.5) range
+     */
     random: () => number
 }
 
@@ -58,18 +62,18 @@ void main() {
     vColor = vec4( color, 1.0 );
     lifeLeft = 1.0 - ( timeElapsed / lifeTime );
 
-    gl_PointSize = uScale * size * lifeLeft;
+    gl_PointSize = 30.0*uScale * size * lifeLeft;
     pos = position + velocity * timeElapsed;
     
     if (velocity.z > -0.001 && velocity.z < 0.001) {
         pos.x = clamp(pos.x, minMax.x, minMax.y);
-        if (pos.x==minMax.x || pos.x == minMax.y) {
+        if (pos.x == minMax.x || pos.x == minMax.y) {
             timeElapsed = 0.0;
             gl_PointSize = 0.1;
         }
     } else {
         pos.z = clamp(pos.z, minMax.x, minMax.y);
-        if (pos.z==minMax.x || pos.z == minMax.y) {
+        if (pos.z == minMax.x || pos.z == minMax.y) {
             timeElapsed = 0.0;
             gl_PointSize = 0.1;
         }
@@ -77,7 +81,8 @@ void main() {
 
     if( timeElapsed > 0.0 ) {
         gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
-    } else {
+    } 
+    else {
         gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
         lifeLeft = 0.0;
         gl_PointSize = 0.1;
@@ -98,15 +103,29 @@ varying vec4 vColor;
 varying float lifeLeft;
 
 void main() {
-    float alpha = 0.3;
-    if( lifeLeft > 0.7 ) {
+    float alpha = 0.5;
+    if( lifeLeft > .05 ) {
         alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
     } else {
-        alpha = lifeLeft * 0.55;
+        alpha = lifeLeft * 0.95;
     }
+    alpha = max(1.0,alpha);
     
     float lum = 0.5; //luminosity
-    gl_FragColor = vec4(0.3) + vec4( vColor.rgb * lum, alpha * lum );
+
+    vec2 uv = vec2(gl_PointCoord.x, 1. - gl_PointCoord.y);
+    vec2 cUv = uv - 0.5;
+
+    vec3 origCol  = vec3(vColor.r, vColor.g, vColor.b);
+    vec4 col = vec4(0.0015 / length(cUv));
+    col.rgb = min(vec3(0.02), col.rgb);
+    col.rgb *= origCol * 20.0;
+    col.a = 0.003 / length(cUv);
+    
+    col.a =  smoothstep(0., 0.99, col.a * alpha);
+    gl_FragColor = vec4(col.rgb, col.a);
+    
+    //gl_FragColor = vec4(0.3) + vec4( vColor.rgb * lum, alpha * lum );
 }`
 
 export class VuetrexParticles extends Object3D implements FastRandom {
@@ -118,6 +137,7 @@ export class VuetrexParticles extends Object3D implements FastRandom {
     private rand: number[];
 
     particleShaderMat: THREE.ShaderMaterial;
+
     random: () => number;
     time: number;
 
@@ -128,7 +148,6 @@ export class VuetrexParticles extends Object3D implements FastRandom {
         options = options || {};
 
         // parse options and use defaults
-
         this.PARTICLE_COUNT = options.maxParticles || 1000000;
         this.PARTICLE_CONTAINERS = options.containerCount || 1;
 
@@ -157,7 +176,8 @@ export class VuetrexParticles extends Object3D implements FastRandom {
                     value: 1.0
                 }
             },
-            blending: THREE.NormalBlending,
+            blending: options.blending || THREE.AdditiveBlending,
+            side: THREE.FrontSide,
             vertexShader: vertexShader,
             fragmentShader: fragmentShader
         });
@@ -195,6 +215,7 @@ export class VuetrexParticles extends Object3D implements FastRandom {
         for (let i = 0; i < this.PARTICLE_CONTAINERS; i++) {
             this.particleContainers[i].dispose();
         }
+        this.clear();
     }
 }
 
@@ -248,6 +269,7 @@ class GPUParticleContainer extends THREE.Object3D {
         this.particleSystem = new THREE.Points(this.particleShaderGeo, particleSystem.particleShaderMat)
         this.particleSystem.frustumCulled = false;
         this.add(this.particleSystem);
+        this.particleSystem.renderOrder = 999;
     }
 
     spawnParticle(options: ParticleOptions) {
@@ -271,8 +293,8 @@ class GPUParticleContainer extends THREE.Object3D {
 
         //const positionRandomness = options.positionRandomness !== undefined ? options.positionRandomness : 0;
         //const velocityRandomness = options.velocityRandomness !== undefined ? options.velocityRandomness : 0;
-        const colorRandomness = options.colorRandomness !== undefined ? options.colorRandomness : 1;
-        const lifetime = options.lifetime !== undefined ? options.lifetime : 5;
+        // const colorRandomness = options.colorRandomness !== undefined ? options.colorRandomness : 1;
+        const lifetime = options.lifetime !== undefined ? options.lifetime : 25;
         let size = options.size !== undefined ? options.size : 10;
         const sizeRandomness = options.sizeRandomness !== undefined ? options.sizeRandomness : 0;
 
@@ -289,10 +311,14 @@ class GPUParticleContainer extends THREE.Object3D {
         minMaxAttribute.setXY(i, minMax.x, minMax.y);
 
         // velocity
-        let velX = velocity.x;// + gen.random() * velocityRandomness * velocity.x / 5.0;
-        let velY = velocity.y; // + gen.random() * velocityRandomness;
-        let velZ = velocity.z;// + gen.random() * velocityRandomness * velocity.y / 5.0;
+        let velX = velocity.x;
+        let velY = velocity.y;
+        let velZ = velocity.z;
 
+        // let velX = velocity.x + gen.random() * velocityRandomness * velocity.x / 25.0;
+        // let velY = velocity.y + gen.random() * velocityRandomness / 100.0;
+        // let velZ = velocity.z + gen.random() * velocityRandomness * velocity.y / 25.0;
+        //
         // const maxVel = 2;
         // velX = THREE.MathUtils.clamp((velX - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
         // velY = THREE.MathUtils.clamp((velY - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
@@ -300,13 +326,13 @@ class GPUParticleContainer extends THREE.Object3D {
         velocityAttribute.setXYZ(i,velX,velY,velZ)
 
         // color
-        color.r = THREE.MathUtils.clamp(color.r + gen.random() * colorRandomness, 0, 1);
-        color.g = THREE.MathUtils.clamp(color.g + gen.random() * colorRandomness, 0, 1);
-        color.b = THREE.MathUtils.clamp(color.b + gen.random() * colorRandomness, 0, 1);
+        // color.r = THREE.MathUtils.clamp(color.r + gen.random() * colorRandomness, 0, 1);
+        // color.g = THREE.MathUtils.clamp(color.g + gen.random() * colorRandomness, 0, 1);
+        // color.b = THREE.MathUtils.clamp(color.b + gen.random() * colorRandomness, 0, 1);
         colorAttribute.setXYZ(i, color.r, color.g, color.b)
 
         // size, lifetime and startTime
-        sizeAttribute.setX(i, size + gen.random() * sizeRandomness);
+        sizeAttribute.setX(i, size + gen.random() * sizeRandomness) ;
         lifeTimeAttribute.setX(i,  lifetime);
         startTimeAttribute.setX(i, this.time);
 
@@ -389,5 +415,6 @@ class GPUParticleContainer extends THREE.Object3D {
 
     dispose() {
         this.particleShaderGeo.dispose();
+        this.particleSystem.clear();
     }
 }

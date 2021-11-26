@@ -1,5 +1,5 @@
 import { createRendererForStage } from "@/lib-components/renderer";
-import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, ref, PropType, watch } from "vue";
+import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, onUnmounted, ref, PropType, watch } from "vue";
 import { Root } from "@/lib-components/nodes/Root";
 import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings } from "@/lib-components/three/stage";
 
@@ -37,6 +37,9 @@ export default defineComponent({
         const maxHeight = ref(4096);
 
         const vuetrexComponent = getCurrentInstance();
+
+        let stageRoot: Root | null = null;
+
         if (vuetrexComponent == null) {
             const err = "Vue's getCurrentInstance() returned null in Vuetrex setup(). It likely means" +
             " your app is misconfigured";
@@ -74,7 +77,7 @@ export default defineComponent({
             if (defaultSlot && elRef.value) {
                 const stage = new VuetrexStage(elRef.value as any, { ...props.settings }) as VuetrexStage;
                 const vuetrexRenderer = createRendererForStage(stage);
-                const stageRoot = new Root(stage);
+                stageRoot = new Root(stage);
                 //create stage environment
                 stage.mount();
                 emit('ready', stage);
@@ -92,12 +95,20 @@ export default defineComponent({
                 // We must wait until nextTick to prevent interference in the effect queue.
                 nextTick().then(() => {
                     const node = h(Connector, defaultSlot);
-                    vuetrexRenderer(node, stageRoot);
+                    if (stageRoot)
+                        vuetrexRenderer(node, stageRoot);
                 });
             } else {
                 console.warn("No default slot is defined");
             }
         });
+
+        onUnmounted(() => {
+            if (stageRoot) {
+                stageRoot.destroy();
+                stageRoot = null;
+            }
+        })
 
         // We need to use a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
         return () =>
