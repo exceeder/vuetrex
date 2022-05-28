@@ -1,14 +1,15 @@
 import { createRendererForStage } from "@/lib-components/renderer";
 import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, onUnmounted, ref, PropType, watch } from "vue";
 import { Root } from "@/lib-components/nodes/Root";
-import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings } from "@/lib-components/three/stage";
+import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings, VxMouseEvent as _VxMouseEvent } from "@/lib-components/three/stage";
 
 export type VxStage = _VxStage;
 export type VxSettings = _VxSettings;
+export type VxMouseEvent = _VxMouseEvent;
 
 /**
  * Vuetrex is a container that wraps everything in 3D scene.
- * It uses Vue Custom Renderer to provide reactivity.
+ * It uses Vue Custom Renderer to provide reactivity, giving the 3d environment the "feel" of Vue.
  * @vue-prop settings {VxSettings} - vuetrex settings (TBD)
  * @vue-prop position {String} - container div CSS position, static: absolute, relative
  * @vue-prop play {String} - whether to animate the scene from the start, "false" keeps it still until changed
@@ -110,7 +111,7 @@ export default defineComponent({
             }
         })
 
-        // We need to use a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
+        // There needs to be a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
         return () =>
             h(
                 "div",

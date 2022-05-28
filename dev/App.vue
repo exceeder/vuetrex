@@ -1,7 +1,7 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png" style="float:left; padding:0;margin:0">
   <tabs>
-    <tab title="Example 1">
+    <tab title="Simple">
         <h2>Multi-Row Setup</h2>
         <section>
           <label>
@@ -13,13 +13,19 @@
             <TabA :items="items" :extraRow="extraRow" />
         </section>
     </tab>
-    <tab title="Example 2">
+      <tab title="Nested">
       <h1>Nested layers</h1>
       <section>
         <TabB :items="items" />
       </section>
     </tab>
-    <tab title="Example 3">
+    <tab title="Stacks">
+      <h1>Nested layers</h1>
+      <section>
+        <TabD :items="items" />
+      </section>
+    </tab>
+    <tab title="Custom">
       <h1>Stacks and Connectors</h1>
       <section>
         <TabC />
@@ -33,6 +39,7 @@
 import TabA from './components/TabA.vue';
 import TabB from './components/TabB.vue';
 import TabC from './components/TabC.vue';
+import TabD from './components/TabD.vue';
 import Tabs from './components/Tabs.vue';
 import Tab from './components/Tab.vue';
 import {defineComponent, ref, reactive} from "vue";
@@ -42,6 +49,7 @@ export default defineComponent( {
     TabA,
     TabB,
     TabC,
+    TabD,
     Tabs,
     Tab
   },

@@ -82,7 +82,7 @@ export class Connectors {
 
     connect(el1: Element3d, el2: Element3d) {
 
-        const snap = (a:number) => Math.round(a/0.5)*0.5;
+        const snap = (a:number) => Math.round(a/1.5)*1.5;
 
         const sx = snap(el1.mesh?.position.x || 0)
         const sy = snap(el1.mesh?.position.z || 0)
@@ -97,16 +97,16 @@ export class Connectors {
             this.segments.push(new Segment(false, sx, sy, ty, el1, el2))
         } else if (Math.abs(tx-sx) / 2 > Math.abs(ty-sy)) {
             //zig-zag
-            let midy = snap(( sy + ty ) / 2 + 0.1);
-            if (midy > 0) midy += 0.3; else midy -= 0.3;
+            let midy = snap(( sy + ty ) / 2 );
+
+            //if (midy > 0) midy += 0.3; else midy -= 0.3;
 
             this.segments.push(new Segment(false, sx, sy, midy, el1, el2))
             this.segments.push(new Segment(true, midy, sx, tx, el1, el2))
             this.segments.push(new Segment(false, tx, midy, ty, el1, el2))
         } else {
             let midx = snap(( sx + tx ) / 2);
-            if (midx > 0) midx += 0.3; else midx -= 0.3;
-
+            if (midx % 1 === 0.5) midx += 1.0; //offset to avoid hitting things
             this.segments.push(new Segment(true, sy, sx, midx, el1, el2))
             this.segments.push(new Segment(false, midx, sy, ty, el1, el2))
             this.segments.push(new Segment(true, ty, midx, tx, el1, el2))
@@ -114,14 +114,20 @@ export class Connectors {
     }
 
     update(el: Element3d) {
-        const rem = this.remove(el);
-        rem.forEach(s => {
-            this.connect(s.sEl, s.tEl);
-        })
+        const removed = this.remove(el);
+        //removed has multiple segments per pair, we only need unique pairs
+        const processed : string[] = [];
+
+        for (let s of removed) {
+            const id = s.sEl.mesh?.name + "~"+s.tEl.mesh?.name
+            if (processed.indexOf(id) >=0 ) continue;
+            processed.push(id);
+            this.connect(s.sEl, s.tEl); //re-calculate the paths in case object moved
+        }
     }
 
     remove(el: Element3d): Segment[] {
-        const removed = this.segments.filter(s => s.sEl === el && s.tEl === el);
+        const removed = this.segments.filter(s => s.sEl === el || s.tEl === el);
         this.segments = this.segments.filter(s => s.sEl !== el && s.tEl !== el);
         return removed;
     }
@@ -130,12 +136,6 @@ export class Connectors {
         this.particleSystem?.dispose();
         this.segments.splice(0, this.segments.length);
     }
-
-    // updateDangling(el: Element3d) {
-    //     this.dangling.forEach((s,idx) => {
-    //
-    //     })
-    // }
 
     animateParticles() {
         return (timer: number, tick: number) => {

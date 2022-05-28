@@ -66,5 +66,5 @@ Examples and explanations are in [Documentation](docs/README.md).
 
 Rendering example:
 
-![image](docs/screenshot.png)
+![image](docs/public/screenshot.png)
 

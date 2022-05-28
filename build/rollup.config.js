@@ -112,7 +112,7 @@ if (!argv.format || argv.format === 'es') {
             {
               targets: esbrowserslist,
               debug: true,
-              useBuiltIns: "usage"
+              useBuiltIns: "entry"
             }
           ]
         ]

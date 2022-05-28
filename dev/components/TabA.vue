@@ -13,6 +13,7 @@
       <row>
         <box name="c1" connection="b1"/>
         <cylinder name="c2" :text="'clicks: ' + counter" @click="cylinderClick" connection="b3"/>
+        <cylinder name="c3" text="new" />
       </row>
       <row>
         <box name="d1" size="3" connection="b4"  @click="dBoxClick"/>
@@ -25,7 +26,7 @@
 </template>
 
 <script lang="ts">
-import {ref, watchEffect} from "vue";
+import {ref} from "vue";
 import {Vuetrex} from '@/lib-components/index';
 
 export default {

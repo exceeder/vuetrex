@@ -5,9 +5,10 @@ import {nextTick, reactive, watchEffect, WatchStopHandle} from "vue";
 
 export class Cylinder extends Node {
 
-    public state : {text: string, size: number, connection: string | null} = reactive({
+    public state : {text: string, height:number, size: number, connection: string | null} = reactive({
         text: '',
         size: 1.0,
+        height: 0.33,
         connection : null
     })
 
@@ -17,12 +18,21 @@ export class Cylinder extends Node {
         super(stage);
     }
 
+    setHeight(height: number) {
+        this.state.height = height;
+    }
+
+    setSize(size: number) {
+        this.state.size = size;
+    }
+
+
     syncWithThree() {
         if (this.stopHandle) return;
         this.stopHandle = watchEffect(() => {
             //console.log(` >cyl weffect ${this.name} myIdx: ${this.myIdx.value} cols:${this.numColumns.value} rows:${this.numRows.value}`)
             if (this.myIdx.value >= 0) {
-                this.stage.renderMesh(this.element, this.state.size, this.stage.meshCreator('cylinder-shape'));
+                this.stage.renderMesh(this.element, this.state.height, this.state.size, this.stage.meshCreator('cylinder-shape'));
             }
 
             if (this.state.connection) {

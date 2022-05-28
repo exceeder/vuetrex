@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as THREEx from "@/lib-components/three/three.imports";
 import LifeCycle from "@/lib-components/three/lifecycle";
+import {Color} from "three";
 
 interface MousePosition {
     x: number
@@ -51,12 +52,19 @@ export default class Scene extends LifeCycle {
             this.height,
             window.devicePixelRatio
         );
+
+        this.renderer.shadowMap.enabled = true;
+        // this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        // this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.shadowMap.type = THREE.VSMShadowMap;
+
         this.domParent.appendChild(this.renderer.domElement);
         //camera
         this.camera = this.createCamera();
         this.camera.lookAt(this.cameraTarget);
         //scene
         this.scene = this.createScene();
+        this.scene.background = new Color('#c0c0c0');
 
         //composer for mirror and other effects
         this.composer = new THREEx.EffectComposer(this.renderer)
@@ -74,7 +82,11 @@ export default class Scene extends LifeCycle {
         const mouseListener = (e:MouseEvent) => this.onCanvasMouseMove(e)
         const clickListener = (e:MouseEvent) => this.onCanvasClick(e)
 
-        window.addEventListener("resize", resizer, false)
+        const resizeObserver = new ResizeObserver(entries => {
+            resizer();
+        });
+        resizeObserver.observe(domParent);
+        //window.addEventListener("resize", resizer, false)
         window.addEventListener('wheel', wheeler, false)
         domParent.addEventListener("mousemove", mouseListener)
         domParent.addEventListener("mousedown", clickListener )
@@ -126,8 +138,8 @@ export default class Scene extends LifeCycle {
         const camera = new THREE.PerspectiveCamera(
             45,
             this.width / this.height,
-            1,
-            32
+            0.5,
+            64
         );
         camera.position.copy(this.cameraBase)
         return camera;
@@ -168,9 +180,20 @@ export default class Scene extends LifeCycle {
         // the following line would stop any other event handler from firing
         // (such as the mouse's TrackballControls)
         // event.preventDefault();
+        if (event.metaKey && event.buttons === 1) {
+            //const phi = Math.sin(timer / 2000);
+            //const dist = 2.0; //this.cameraBase.distanceTo(this.cameraTarget);
+            const xx = (event.offsetX / this.domParent.offsetWidth) * 2 - 1 + this.mouse.x;
+            const yy = - (event.offsetY / this.domParent.offsetHeight) * 2 + 1 - this.mouse.y;
+            //console.log(xx, yy);
+            this.retargetCamera(new THREE.Vector3(0.0, 0.0, 1.5), new THREE.Vector3(this.cameraBase.x + xx, this.cameraBase.y, this.cameraBase.z + yy))
+            //this.cameraBase.x = 0.0 - dist * Math.cos(2 * Math.PI * xx);
+            //this.cameraBase.z = 0.0 + dist * Math.sin(2 * Math.PI * yy);
+        } else {
+            this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
+            this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
+        }
 
-        this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
-        this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
     }
 
     onCanvasClick(event: MouseEvent) {
@@ -292,6 +315,6 @@ export default class Scene extends LifeCycle {
 
         //camera.lookAt(new THREE.Vector3());
         this.renderer.setSize(width, height);
-        this.composer.setSize( width, height );
+        this.composer.setSize(width, height);
     }
 }

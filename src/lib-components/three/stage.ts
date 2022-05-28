@@ -2,6 +2,7 @@ import * as THREE from "three";
 import * as THREEx from "@/lib-components/three/three.imports";
 import Scene from "@/lib-components/three/scene";
 import Element3d from "@/lib-components/three/element3d";
+import {Node} from "@/lib-components/nodes/Node";
 import {Connectors} from "@/lib-components/three/connectors";
 
 export interface VxStage {
@@ -29,6 +30,11 @@ export interface VxSettings {
     distance?: number
 }
 
+export interface VxMouseEvent extends MouseEvent {
+    vxNode: Node;
+    vxPosition: any;
+}
+
 let R = 1.3; //box radius
 let D = 1.5; //box distance
 
@@ -44,9 +50,9 @@ export class VuetrexStage extends Scene implements VxStage {
     private connectors: Connectors |  null = null;
     settings: VxSettings
     private caps: { repeats: number; size: number; planeSize: number; updateFn: () => void; texture: THREEx.DynamicTexture | null } = {
-        planeSize: 512,
-        size: 1024,
-        repeats: 31,
+        planeSize: 256,
+        size: 2048,
+        repeats: 17,
         texture: null,
         updateFn: () => {}
     }
@@ -121,23 +127,19 @@ export class VuetrexStage extends Scene implements VxStage {
         this.repaintTitles(caps.planeSize)
         caps.updateFn = () => this.repaintTitles(caps.planeSize)
 
-        let material = new THREE.MeshBasicMaterial({
-            opacity: 1.0,
+        let material = new THREE.MeshStandardMaterial({
+            color: '#f0f0f0',
+            roughness: 0.1,
+            metalness: 0.4,
+            opacity: 0.999,
             transparent: true,
             map: texture.texture
         });
-
-        // let material = new THREE.MeshStandardMaterial({
-        //     color: '0xc0c0c0',
-        //     roughness: 0.1,
-        //     metalness: 0.4,
-        //     opacity: 1.0,
-        //     transparent: true,
-        //     map: texture.texture
-        // });
         let plane = new THREE.Mesh(new THREE.PlaneGeometry(caps.planeSize, caps.planeSize), material);
         plane.rotation.x = -Math.PI / 2.0;
-        plane.position.y = -0.349;
+        plane.position.y = -0.3495;
+        plane.castShadow = false;
+        plane.receiveShadow = true;
         scene.add(plane);
     }
 
@@ -162,25 +164,58 @@ export class VuetrexStage extends Scene implements VxStage {
                 '#'+(this.settings.captionColor || 0xeeffff).toString(16))
         })
 
+        texture.fillStyle = '0x5070f0'
+        texture.setGlobalAlpha(0.1)
+        for (let i=0; i<20; i++) {
+            texture.fillRect(100, 100 + 100*i, 1897, 2)
+        }
+        for (let i=0; i<20; i++) {
+            texture.fillRect(100 + 100*i, 100,2, 1897)
+        }
+        texture.drawText("Bonjour", 110, 1980, '#eeffff')
+        texture.setGlobalAlpha(1.0)
+
+
+        // const size = 2048;
+        // const stops = [0.75,0.6,0.4,0.25]
+        // const colors = ['#1B1D1E','#3D4143','#72797D', '#b0babf'];
+        //
+        // const gradient = texture.createLinearGradient(0,0,0, size);
+        // let i = stops.length;
+        // while(i--){ gradient.addColorStop(stops[i], colors[i]); }
+        // texture.fillStyle = gradient;
+        // texture.fillRect(0,0,16, size);
+
     }
 
     createLights(scene: THREE.Scene) {
-        let light = new THREE.PointLight(this.settings.lightColor1 || 0xbbbbff, 0.8);
-        light.position.set(-10, 30, 10);
-        light.castShadow = false;
+        let light = new THREE.PointLight(this.settings.lightColor1 || 0xccccff, 0.5, 50)
+
+        light.position.set(20, 25, 15);
         scene.add(light);
 
-        let light2 = new THREE.SpotLight(this.settings.lightColor2 || 0xffffff, 0.7);
-        light2.position.set(1, 30, 15);
+        let light2 = new THREE.DirectionalLight(this.settings.lightColor2 || 0xffffff, 0.5);
+        light2.position.set(-7, 25, 13);
+        light2.target.position.set( 0, 0, 0 );
+        light2.castShadow = true;
+        const d = 8;
+        light2.shadow.camera = new THREE.OrthographicCamera( -d, d, d, -d,  1, 55);
+        light2.shadow.radius = 10;
+        light2.shadow.bias = -0.002;
+        (light2.shadow as any).blurSamples = 16;
+        light2.shadow.mapSize.width = light.shadow.mapSize.height = 1024;
+
         scene.add(light2);
 
-        let light3 = new THREE.PointLight(this.settings.lightColor1 || 0xbbbbff, 0.2);
-        light3.position.set(10, 30, 10);
+        // let light3 = new THREE.PointLight(this.settings.lightColor1 || 0xbbbbff, 0.3);
+        // light3.position.set(10, -10, 5);
+        const light3 = new THREE.HemisphereLight(0x808080, 0x080820, 2);
+        //light3.castShadow = true;
         scene.add(light3);
-
-        let light4 = new THREE.AmbientLight(this.settings.lightColor3 || 0xffffff, 0.3);
-        light4.position.y = 10;
-        scene.add(light4);
+        //
+        // let light4 = new THREE.AmbientLight(this.settings.lightColor3 || 0xffffff, 0.3);
+        // light4.position.y = 10;
+        // scene.add(light4);
     }
 
     createElementMaterial() {
@@ -207,10 +242,10 @@ export class VuetrexStage extends Scene implements VxStage {
         }
     }
 
-    meshCreator(type: string): (size:number) => THREE.Mesh {
+    meshCreator(type: string): (height:number, size:number) => THREE.Mesh {
         switch (type) {
             case 'plane': {
-                return size => {
+                return (height, size) => {
                     let bMaterial = this.createElementMaterial();
                     bMaterial.transparent = true;
                     bMaterial.opacity = 0.75;
@@ -226,16 +261,16 @@ export class VuetrexStage extends Scene implements VxStage {
                 }
             }
             case 'cylinder': {
-                return size => {
+                return (height, size) => {
                     let bMaterial = this.createElementMaterial();
                     return new THREE.Mesh(
-                        new THREE.CylinderGeometry(size / 2, size / 2 * 1.05, R / 2, 32),
+                        new THREE.CylinderGeometry(size / 2, size / 2 * 1.05, height, 32),
                         bMaterial
                     );
                 }
             }
             case 'cylinder-shape': {
-                return size => {
+                return (height, size) => {
                     let bMaterial = this.createElementMaterial();
                     const width = size/2 || 1.0;
                     const r = width;
@@ -252,7 +287,7 @@ export class VuetrexStage extends Scene implements VxStage {
                         steps: 1,
                         depth: R/4,
                         bevelEnabled: true,
-                        bevelThickness: 0.07,
+                        bevelThickness: 0.05,
                         bevelSize: 0.07,
                         bevelOffset: 0,
                         bevelSegments: 5
@@ -265,10 +300,10 @@ export class VuetrexStage extends Scene implements VxStage {
                 };
             }
             case 'rbox-shape': {
-                return size => {
+                return (height, size) => {
                     let bMaterial = this.createElementMaterial();
                     const width = size;
-                    const length = R * 0.9;
+                    const length = R * 0.975;
 
                     const shape = new THREE.Shape();
                     shape.moveTo(-length/2, -width/2);
@@ -278,32 +313,35 @@ export class VuetrexStage extends Scene implements VxStage {
                     shape.lineTo(-length/2, -width/2);
 
                     const extrudeSettings = {
-                        steps: 1,
+                        steps: 2,
                         depth: R/2,
                         bevelEnabled: true,
-                        bevelThickness: 0.1,
-                        bevelSize: 0.1,
+                        bevelThickness: 0.05,
+                        bevelSize: 0.05,
                         bevelOffset: 0,
-                        bevelSegments: 3
+                        bevelSegments: 5
                     };
 
                     const geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
                     geometry.rotateX(Math.PI/2)
                     geometry.translate(0,R/4,0)
-                    return new THREE.Mesh(geometry, bMaterial);
+                    const mesh = new THREE.Mesh(geometry, bMaterial);
+                    mesh.castShadow = true;
+                    return mesh;
                 }
 
             }
             case 'rbox': {
-                return size => {
-                    let bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new THREEx.RoundedBoxBufferGeometry(R, R / 3, size,  5, .1), bMaterial);
+                return (height, size) => {
+                    const bMaterial = this.createElementMaterial();
+                    const bGeometry = new THREEx.RoundedBoxBufferGeometry(size, height, size,  5, .05);
+                    return new THREE.Mesh(bGeometry, bMaterial);
                 }
 
             }
             default:
             case 'box': {
-                return size => {
+                return (height, size) => {
                     let bMaterial = this.createElementMaterial();
                     return new THREE.Mesh(new THREE.BoxBufferGeometry(R*0.9, R / 2, size), bMaterial);
                 }
@@ -323,11 +361,13 @@ export class VuetrexStage extends Scene implements VxStage {
         return c;
     }
 
-    renderMesh(el: Element3d, size: number = R, gen: (size:number) => THREE.Mesh) {
+    renderMesh(el: Element3d, height: number, size: number = R, gen: (height:number, size:number) => THREE.Mesh) {
         const scene = this.scene;
 
         if (el.mesh !== null) {
             el.mesh.position.copy(el.getPosition())
+            // const m = gen(height, size);
+            // el.mesh.geometry = m.geometry;
             this.connectors?.update(el);
             el.mesh.userData.caption.x = el.mesh.position.x
             el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0
@@ -336,12 +376,13 @@ export class VuetrexStage extends Scene implements VxStage {
             return;
         }
 
-        const mesh = gen(size);
+        const mesh = gen(height, size);
         const scale = el.node.getScale();
         mesh.scale.set(1/scale, 1/scale, 1/scale);
-        mesh.geometry.translate(0,0.5-scale/2,0)
+        mesh.geometry.translate(0,height/2,0)
         mesh.name = "el-" + el.node.name;
         mesh.castShadow = true;
+        mesh.receiveShadow = true;
         //todo this.tween(el, ...)
         mesh.position.copy(el.getPosition());
         mesh.userData.caption = this.addCaption(mesh, size/scale, el.getCaption())
@@ -366,9 +407,10 @@ export class VuetrexStage extends Scene implements VxStage {
         //display info below
         if (this.selectedObject) {
             const el3d = this.selectedObject.userData.el as Element3d;
-            (event as any).vxNode = el3d.node;
-            (event as any).vxPosition = el3d.mesh?.position.clone();
-            el3d.mesh?.dispatchEvent({type:'click', originalEvent: event })
+            const ev = event as VxMouseEvent;
+            ev.vxNode = el3d.node;
+            ev.vxPosition = el3d.mesh?.position.clone();
+            el3d.mesh?.dispatchEvent({type:'click', originalEvent: ev })
         }
     }
 
@@ -382,13 +424,13 @@ export class VuetrexStage extends Scene implements VxStage {
     sendCameraTo(camera: string) {
         switch (camera) {
             case "scene": {
-                this.cameraMotion.set(0.25, 0.0, 0.25);
+                //this.cameraMotion.set(0.25, 0.0, 0.25);
                 this.retargetCamera(new THREE.Vector3(0.0, 0.0, 1.5), new THREE.Vector3(0.0, 13.0, 8.0))
             } break;
             default: {
                 const el = this.scene.getObjectByName('el-'+camera);
                 if (el) {
-                    this.cameraMotion.set(0.0, 0.0, 0.0);
+                    //this.cameraMotion.set(0.0, 0.0, 0.0);
                     this.retargetCamera(el.position,  new THREE.Vector3(el.position.x, el.position.y + 4.0, el.position.z + 4.2))
                 }
             }

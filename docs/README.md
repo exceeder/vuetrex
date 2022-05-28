@@ -16,7 +16,7 @@ Consider an example:
 
 it will render this 
 
-![EXAMPLE 1](screen1.png)
+![EXAMPLE 1](public/screen1.png)
 
 The reactive properties of Vue are preserved, and you can use`v-if`, `v-for`, `@click` events etc., bind
 supported attributes, and build out your reactive 3D scene based on your data as you see fit. There is 
@@ -71,7 +71,7 @@ Multiple _rows_:
   </vuetrex>
 ```
 Rows orientation is from left to right, as if they were rows in the movie theater with the screen on the left side.
-![EXAMPLE 2](screen2.png)
+![EXAMPLE 2](public/screen2.png)
 
 Nested _layers_:
 ```vue
@@ -99,7 +99,7 @@ Note, that you can use `v-for` to bind elements to your data.
   </vuetrex>
 ```
 
-![EXAMPLE 3](screen3.png)
+![EXAMPLE 3](public/screen3.png)
 
 Connections are particle systems running along the connector lines. Both elements need to have a name 
 property to connect.
@@ -148,7 +148,7 @@ export default {
 }
 </script> 
 ```
-![Example](zoom.gif)
+![Example](public/zoom.gif)
 ## Customization
 
 If you need to dive deeper, you have access to the ThreeJS scene like this:

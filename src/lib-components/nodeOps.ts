@@ -8,16 +8,16 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
 
   insert: (child, parent, anchor) => {
     if (anchor != null) {
-      parent._insertBefore(child, anchor);
+      parent.insertBefore(child, anchor);
     } else {
-      parent._appendChild(child);
+      parent.appendChild(child);
     }
   },
 
   remove: (child) => {
     const parent = child.parent.value;
     if (parent != null) {
-      parent._removeChild(child);
+      parent.removeChild(child);
     }
   },
 

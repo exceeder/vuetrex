@@ -34,7 +34,7 @@ export class Layer extends Node {
                     this.state.scale = (this.getLayer() as Layer)?.state.scale + 1;
                 }
                 if (this.state.visible) {
-                    this.stage.renderMesh(this.element, 10.0, this.stage.meshCreator('plane'));
+                    this.stage.renderMesh(this.element, 1.0, 10.0, this.stage.meshCreator('plane'));
                 }
         })
         super.syncWithThree();

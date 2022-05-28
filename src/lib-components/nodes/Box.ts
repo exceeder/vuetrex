@@ -21,7 +21,7 @@ export class Box extends Node {
         if (this.stopHandle) return;
         this.stopHandle = watchEffect(() => {
             if (this.myIdx.value >= 0) {
-                this.stage.renderMesh(this.element, this.state.size, this.stage.meshCreator('rbox'));
+                this.stage.renderMesh(this.element, this.state.height, this.state.size, this.stage.meshCreator('rbox'));
             }
 
             if (this.state.connection) {

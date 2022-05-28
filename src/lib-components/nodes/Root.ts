@@ -14,8 +14,7 @@ export class Root extends Node {
 
     destroy() {
         while (this.children.value.length > 0)
-            this._removeChild(this.children.value[this.children.value.length-1]);
-        console.log("Destroying ",this.stage)
+            this.removeChild(this.children.value[this.children.value.length-1]);
         this.stage.destroy();
     }
 }
@@ -27,6 +26,8 @@ export class Comment extends Base {
         super();
         this.text = text;
     }
+
+    public get state() { return {}; }
 }
 
 export class TextNode extends Base {
@@ -36,6 +37,8 @@ export class TextNode extends Base {
         super();
         this.text = text;
     }
+
+    public get state() { return {}; }
 
     setElementText(text: string) {
         this.text = text;

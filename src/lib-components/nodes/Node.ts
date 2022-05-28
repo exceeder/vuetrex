@@ -3,7 +3,7 @@ import Element3d from "@/lib-components/three/element3d";
 import {VuetrexStage} from "@/lib-components/three/stage";
 import {nextTick, reactive} from "vue";
 
-declare type VxEventListener<T extends Event> = (event: T) => any;
+declare type VxEventListener<T extends Event> = (event: T) => void;
 
 type NodeEvents = {
     onClick?: VxEventListener<Event>;
@@ -67,6 +67,7 @@ export class Node extends Base {
     }
 
     setName(name: string) {
+        console.log("name ",name)
         this.name = name;
     }
 
@@ -75,7 +76,7 @@ export class Node extends Base {
     }
 
     dispatchClick(e: MouseEvent) {
-        console.log("dispatching ", (e as any).vxNode, this)
+        //console.log("dispatching ", (e as any).vxNode, this)
         if (this.nodeEvents.onClick)
             this.nodeEvents.onClick(e)
 

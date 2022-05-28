@@ -45,18 +45,24 @@ export default class Element3d {
         const offZ = layerPos?.z || 0.0;
 
         if ((node.parent.value as Node).type === 'Stack') {
-            let p = node.parent.value;
+            let p = node.parent.value as Node;
             if (p === null) return new THREE.Vector3(0);
+            //const size = (node.state as any).size || 1.0;
+            let height = p.elements.value
+                .slice(0, colIdx).map(el => (el as any).state?.height || 0)
+                .reduce((x,y)=>x+y,0.0);
+
             rowIdx = p.parent.value?.myIdx.value || 0;
             rows = p.numRows.value || 1;
             cols = p.numColumns.value || 1;
             let stackIdx = p.myIdx.value;
             const rowPosX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX + (R + D) * rowIdx / scale;
             const rowPosZ = (-cols * (R + D)) / 2 / scale + (R + D) / 2 / scale + offZ + (R + D) * stackIdx / scale;
-            return new THREE.Vector3(rowPosX, colIdx*0.7 + node.getElevation(), rowPosZ);
+            //console.log("c:",colIdx,"s:",stackIdx,"r:",rowIdx, "h:",height)
+            return new THREE.Vector3(rowPosX, node.getElevation() + height - 0.25, rowPosZ);
         } else if ((node.parent.value as any).state?.layout === 'circular') {
 
-            const rowPosX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX + (R + D) * rowIdx / scale;
+            const rowPosX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX;
             const rowPosZ = (-(R + D)) / 2 / scale + (R + D) / 2 / scale + offZ;
             const xx = (R + D) * Math.cos(colIdx * 2 * Math.PI / cols) / scale
             const zz = (R + D) * Math.sin(colIdx * 2 * Math.PI / cols) / scale

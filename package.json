@@ -1,6 +1,6 @@
 {
   "name": "@exceeder/vuetrex",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "WebGL animated diagram visualizations in 3D for Vue 3",
   "main": "dist/vuetrex.umd.js",
   "module": "dist/vuetrex.esm.js",
@@ -20,7 +20,10 @@
     "build": "tsc && cross-env NODE_ENV=production rollup --config build/rollup.config.js",
     "build:umd": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format umd",
     "build:es": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format es",
-    "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife"
+    "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs"
   },
   "repository": {
     "type": "git",
@@ -40,13 +43,13 @@
   },
   "homepage": "https://github.com/exceeder/vuetrex#readme",
   "dependencies": {
-    "three": "^0.130.1",
-    "vue": "^3.0.11"
+    "three": "^0.129.0",
+    "vue": "^3.2.31"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "@babel/preset-env": "^7.12.17",
-    "@babel/preset-typescript": "^7.12.17",
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.4",
+    "@babel/preset-typescript": "^7.16.0",
     "@rollup/plugin-alias": "^3.1.2",
     "@rollup/plugin-babel": "^5.2.3",
     "@rollup/plugin-commonjs": "^18.0.0",
@@ -54,14 +57,16 @@
     "@rollup/plugin-replace": "^2.4.2",
     "@types/jest": "^26.0.23",
     "@types/three": "^0.130.1",
-    "@vue/cli-plugin-babel": "^4.5.12",
-    "@vue/cli-plugin-typescript": "^4.5.12",
-    "@vue/cli-plugin-unit-jest": "^4.5.12",
-    "@vue/cli-service": "^4.5.12",
+    "@vue/babel-preset-app": "^4.5.15",
+    "@vue/cli-plugin-babel": "^4.5.15",
+    "@vue/cli-plugin-typescript": "^4.5.15",
+    "@vue/cli-plugin-unit-jest": "^4.5.15",
+    "@vue/cli-service": "^4.5.15",
     "@vue/compiler-sfc": "^3.0.11",
-    "@vue/test-utils": "^2.0.0-rc.15",
-    "babel-loader": "^8.2.2",
+    "@vue/test-utils": "^2.0.0-rc.17",
+    "babel-loader": "^8.2.3",
     "chai": "^4.3.4",
+    "core-js": "3",
     "cross-env": "^7.0.2",
     "minimist": "^1.2.5",
     "rollup": "^2.34.2",
@@ -70,11 +75,12 @@
     "rollup-plugin-vue": "^6.0.0",
     "ts-node": "^9.1.1s",
     "typescript": "^4.2.4",
+    "vitepress": "^0.22.0",
     "vue-loader": "^16.8.1"
   },
   "peerDependencies": {
     "three": "^0.129.0",
-    "vue": "^3.0.11"
+    "vue": "^3.2.1"
   },
   "engines": {
     "node": ">=14"

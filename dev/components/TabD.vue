@@ -3,30 +3,59 @@
     <layer @click="click3d">
       <row>
         <stack >
-          <box size="1.5" name="s1" text="stack 1"/>
-          <box size="0.7" />
-          <box size="0.7"/>
+          <box size="1.3" height="0.25" name="s1" text="stack 1"/>
+          <box size="0.5" height="0.25"/>
+          <box size="0.5" height="0.25"/>
+          <box size="0.5" height="0.25"/>
+          <box size="0.5" height="0.25"/>
         </stack>
         <stack >
-          <box size="1.5" name="s2"  text="stack 2"/>
-          <box size="0.7"/>
+          <box size="1.5" height="0.25" name="s2"  text="stack 2"/>
+          <box size="0.5"/>
+        </stack>
+        <stack >
+          <box size="1.5" height="0.25" name="s3"  text="stack 2"/>
+          <box size="0.5"/>
+        </stack>
+        <stack >
+          <box size="1.5" height="0.25" name="s4"  text="stack 2"/>
+          <box size="0.5"/>
         </stack>
       </row>
       <row>
-        <layer :elevation="elevation">
+        <layer :elevation="-0.5">
           <row layout="circular">
-            <box text="a1" connection="s1" />
-            <box text="a2" connection="s2" />
-            <box text="a3" connection="s1"/>
-            <box text="a4" connection="s2"/>
-            <box text="a5" connection="s1"/>
-            <box text="a6" connection="s2" />
-            <box text="a7" connection="s1" />
+            <box text="a1" />
+            <box text="a2" />
+            <box text="a3" />
+            <box text="a4" />
+            <box text="a5" />
+            <box text="a6" />
+            <box text="a7" />
           </row>
         </layer>
       </row>
       <row>
-        <box text="left" size="3"/>
+        <stack >
+          <box size="1.3" height="0.25" name="t1" text="Empty Spot" connection="s1"/>
+
+        </stack>
+        <stack >
+          <box size="1.5" height="0.25" name="t2"  text="Small Deploy"/>
+          <box size="0.5"/>
+        </stack>
+        <stack >
+          <box size="1.5" height="0.25" name="t3"  text="Complex set"/>
+          <box size="0.5" height="0.2"/>
+          <box size="0.5" height="0.3"/>
+          <box size="0.5" height="0.3"/>
+          <box size="0.5" height="0.3"/>
+          <box size="0.5" height="0.1"/>
+        </stack>
+        <stack >
+          <box size="1.5" height="0.25" name="t4"  text="Lebowsky" connection="s4"/>
+          <box size="0.5"/>
+        </stack>
       </row>
     </layer>
   </vuetrex>
@@ -55,7 +84,6 @@ export default defineComponent({
     }
 
     function click3d(ev:any) {
-      console.log("TabD Click!",ev, ev.vxNode)
       if (ev.vxNode) {
         camera.value === ev.vxNode.name ? camera.value = "scene" : camera.value = ev.vxNode.name;
       } else {
@@ -65,7 +93,7 @@ export default defineComponent({
 
     setInterval(() => {
       counter.value  ++;
-      elevation.value = 0.5 + 0.5 * Math.sin(Math.PI/32*counter.value);
+      elevation.value = 0.1 + 0.2 * Math.sin(Math.PI/32*counter.value);
     }, 100);
 
     return {
