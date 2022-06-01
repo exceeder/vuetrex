@@ -4,8 +4,11 @@ import {reactive} from "vue";
 
 export class Row extends Node {
 
-    public state : {text: string} = reactive({
-        text: ''
+    public readonly type: string = 'Row'
+
+    public state : {text: string, layout: string} = reactive({
+        text: '',
+        layout: ''
     })
 
     constructor(stage: VuetrexStage) {

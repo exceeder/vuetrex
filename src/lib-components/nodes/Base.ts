@@ -21,7 +21,7 @@ const registerUpdatedBase = (base: Base) => {
 /**
  * Base class of render elements of Vuetrex renderer. Handles tree hierarchy: children, siblings, etc.
  */
-export class Base {
+export abstract class Base {
 
     public parent: Ref<Base | null> = shallowRef(null);
     protected children: Ref<Base[]> = ref([]);
@@ -31,8 +31,8 @@ export class Base {
     readonly elements = computed(() => {
         return this.children.value.filter(c => ((c as any).state !== undefined))
     })
+
     public myIdx: ComputedRef<number> = computed(() => {
-        //if (this.parent.value == null) return -2;
         const res = this.parent.value?.elements.value.indexOf(this);
         return res === undefined ? -1 : res;
     })
@@ -49,6 +49,8 @@ export class Base {
 
     public numRows: ComputedRef<number> = computed(() => (this.parent.value?.parent.value?.renderSize.value || 1));
 
+    public abstract get state():  { [id: string] : any };
+
     public readonly nextSibling : ComputedRef<Base | null> = computed(() => {
             if (this.parent.value === null) {
                 return null;
@@ -62,20 +64,26 @@ export class Base {
             return result
     })
 
-    _appendChild(child: Base) {
+    appendChild(child: Base) {
         child.parent.value = this;
         this.children.value.push(child);
         this.registerSync();
     }
 
-    _removeChild(child: Base) {
+    removeChild(child: Base) {
         child.parent.value = null;
-        this.children.value.splice(this.children.value.indexOf(child),1);
-        this.registerSync();
-        child.onRemoved()
+        const idx = this.children.value.indexOf(child);
+        if (idx >= 0) {
+            this.children.value.splice(idx, 1);
+            child.onRemoved();
+            const grandChildren = child.children.value;
+            while (grandChildren && grandChildren.length > 0)
+                child.removeChild(grandChildren[grandChildren.length - 1]);
+            this.registerSync();
+        }
     }
 
-    _insertBefore(child: Base, anchor: Base) {
+    insertBefore(child: Base, anchor: Base) {
         child.parent.value = this;
         const anchorIdx = this.children.value.indexOf(anchor);
         if (anchorIdx >= 0) {

@@ -11,6 +11,12 @@ export class Root extends Node {
         //update non-containers
         this.children.value.forEach(b => b.syncWithThree())
     }
+
+    destroy() {
+        while (this.children.value.length > 0)
+            this.removeChild(this.children.value[this.children.value.length-1]);
+        this.stage.destroy();
+    }
 }
 
 export class Comment extends Base {
@@ -20,6 +26,8 @@ export class Comment extends Base {
         super();
         this.text = text;
     }
+
+    public get state() { return {}; }
 }
 
 export class TextNode extends Base {
@@ -29,6 +37,8 @@ export class TextNode extends Base {
         super();
         this.text = text;
     }
+
+    public get state() { return {}; }
 
     setElementText(text: string) {
         this.text = text;

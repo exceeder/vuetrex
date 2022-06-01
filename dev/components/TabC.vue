@@ -3,21 +3,25 @@
      <input type="checkbox" id="stop" v-model="paused"> <label for="stop">paused</label>
    </div>
 
-   <vuetrex height="79vh" width="100%" :stopped="paused" :settings="settings" @ready="onStageReady">
+   <vuetrex height="79vh" width="100%" :camera="camera" :stopped="paused" :settings="settings" @ready="onStageReady">
       <row>
-          <box name="xx"  :text="'['+counter+']'" @click="counter++"/>
-          <cylinder />
+        <box name="xx" :text="'['+counter+']'" @click="counter++"/>
       </row>
-     <row>
-       <box text="singleton" connection="xx"/>
+      <row>
+          <cylinder name="yy" text="click me" connection="xx" @click="cylClick"/>
+      </row>
+      <row>
+       <box text="singleton" connection="yy" />
      </row>
    </vuetrex>
 </template>
 
 <script lang="ts">
-import {SetupContext, ref} from "vue";
-import {Vuetrex, VxStage, VxSettings} from '@/lib-components/index';
+import {ref} from "vue";
+import {Vuetrex, VxStage, VxSettings, VxMouseEvent} from '@/lib-components/index';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
+//import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
+//import {AdditiveBlending} from "three";
 
 
 export default {
@@ -33,6 +37,7 @@ export default {
   setup() {
     const counter = ref(0)
     const paused = ref(false)
+    const camera = ref("scene")
     //light scheme example
     const settings : VxSettings = {
       unit: 1.25,
@@ -47,30 +52,47 @@ export default {
       lightColor3: 0xffffff,
       mirrorOpacity: 0.9,
       particleSpread: 0.1,
-      particleVolume: 5
+      particleVolume: 5,
+      particleBlending: 1
     }
 
-    function cylClick(ev:any) {
-      console.log("Cylinder Click!",ev)
+    function cylClick(ev: VxMouseEvent) {
+      camera.value === ev.vxNode.name ? camera.value = "scene" : camera.value = ev.vxNode.name;
     }
 
-    function onStageReady(stage:VxStage) {
-
+    function loadGLTFModel(stage:VxStage) {
       //loading external model
       const loader = new GLTFLoader();
-      loader.load('tripod2.gltf', gltf => {
+      loader.load('tripod2-2.gltf', gltf => {
             const sceneGroup = gltf.scene;
             sceneGroup.scale.set(0.75,0.75,0.75);
-            sceneGroup.position.set(-3.5,-0.5,0.0);
+            sceneGroup.position.set(0.0, -0.30,-1.0);
+            sceneGroup.rotation.set(0.0,0.50,0.0);
+
+
+            sceneGroup.traverse(o => {
+
+              if (o.parent !== null) {
+                console.log(o.name, ':', o.isObject3D, o);
+                (o as any).material.map.encoding = 3001; //THREE.LinearEncoding, see also THREE.sRGBEncoding
+                o.castShadow = true;
+                o.receiveShadow = false;
+              }
+
+            });
             stage.getScene().add(sceneGroup);
+
           },
           (xhr) => {
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
           },
           (error) => {
             console.log('An error happened', error);
-      });
+          });
+    }
 
+    function onStageReady(stage:VxStage) {
+      loadGLTFModel(stage);
       //animation simply counts fps
       let pTime = ( performance || Date ).now();
       let frames = 0;
@@ -88,6 +110,7 @@ export default {
       paused,
       counter,
       settings,
+      camera,
       onStageReady,
       cylClick
     }

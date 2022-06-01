@@ -18,6 +18,7 @@ class DynamicTexture {
         this.canvas = canvas
         this.context = canvas.getContext('2d')
         this.texture = new Texture(canvas)
+        this.globalAlpha = 1.0
     }
 
     /**
@@ -142,6 +143,39 @@ class DynamicTexture {
         this.texture.needsUpdate	= true;
         // for chained API
         return this;
+    }
+
+    createLinearGradient(x0, y0, x1, y1) {
+        return this.context.createLinearGradient(x0,y0,x1,y1);
+    }
+
+    createPattern(image, repetition) {
+        return this.context.createPattern(image, repetition)
+    }
+
+    createRadialGradient(x0, y0, r0, x1, y1, r1) {
+        return this.context.createRadialGradient(x0, y0, r0, x1, y1, r1)
+    }
+
+    setGlobalAlpha(a) {
+        this.context.globalAlpha = a;
+    }
+
+    clearRect(x, y, w, h) {
+        this.context.clearRect(x,y,w,h);
+        this.texture.needsUpdate = true;
+    }
+
+    fillRect(x, y, w, h) {
+        this.context.fillStyle = this.fillStyle
+        this.context.fillRect(x,y,w,h);
+        this.texture.needsUpdate = true;
+    }
+
+    strokeRect(x, y, w, h) {
+        this.context.fillStyle = this.fillStyle
+        this.context.strokeRect(x,y,w,h);
+        this.texture.needsUpdate = true;
     }
 }
 

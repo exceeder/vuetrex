@@ -11,7 +11,7 @@ module.exports = {
             .tap(options => {
                 options.compilerOptions = {
                     ...(options.compilerOptions || {}),
-                    isCustomElement: tag => /^layer|^box|^row|^cylinder/.test(tag)
+                    isCustomElement: tag => /^layer|^box|^row|^cylinder|^stack/.test(tag)
                 };
                 return options;
             });

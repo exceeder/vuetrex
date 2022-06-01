@@ -39,6 +39,7 @@ const baseConfig = {
     ],
     replace: {
       'process.env.NODE_ENV': JSON.stringify('production'),
+      "preventAssignment": true
     },
     vue: {
     },
@@ -111,7 +112,7 @@ if (!argv.format || argv.format === 'es') {
             {
               targets: esbrowserslist,
               debug: true,
-              useBuiltIns: "usage"
+              useBuiltIns: "entry"
             }
           ]
         ]

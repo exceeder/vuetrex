@@ -3,7 +3,7 @@ import Element3d from "@/lib-components/three/element3d";
 import {VuetrexStage} from "@/lib-components/three/stage";
 import {nextTick, reactive} from "vue";
 
-declare type VxEventListener<T extends Event> = (event: T) => any;
+declare type VxEventListener<T extends Event> = (event: T) => void;
 
 type NodeEvents = {
     onClick?: VxEventListener<Event>;
@@ -18,6 +18,7 @@ export class Node extends Base {
     public readonly stage: VuetrexStage
     public name: string = Math.floor(Math.random()*100000).toString(32)
     subscribed: boolean = false
+    public readonly type: string = 'Node'
 
     public state = reactive({
         text: ''
@@ -43,7 +44,11 @@ export class Node extends Base {
     }
 
     getLayer(): Node | null {
-        return this.parent.value?.parent.value as Node;
+        let result = this.parent.value as Node;
+        while (result !== null && result.type !== 'Layer') {
+            result = result.parent.value as Node;
+        }
+        return result;
     }
 
     getScale(): number {
@@ -62,6 +67,7 @@ export class Node extends Base {
     }
 
     setName(name: string) {
+        console.log("name ",name)
         this.name = name;
     }
 
@@ -70,17 +76,22 @@ export class Node extends Base {
     }
 
     dispatchClick(e: MouseEvent) {
+        //console.log("dispatching ", (e as any).vxNode, this)
         if (this.nodeEvents.onClick)
             this.nodeEvents.onClick(e)
+
+        //bubble up
+        let pn : Node = this.parent.value as Node;
+        if (pn) pn.dispatchClick(e);
     }
 
     syncWithThree() {
         nextTick(() => {
-            if (this.nodeEvents.onClick && !this.subscribed) {
+            if (!this.subscribed) {
                 this.element.mesh?.addEventListener('click', this.clickListener)
                 this.subscribed = true
             }
-        });
+        }).catch(() => {});
         super.syncWithThree();
     }
 }

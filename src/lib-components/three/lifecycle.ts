@@ -15,7 +15,9 @@ export default class LifeCycle {
      */
     private tweens:Tween[]  =  []
 
-    private _timeout: any  = 0
+    private fps = 30;
+    private timeout: any = 0;
+    private animationId: number = 0;
 
     lifecycle = {
         paused: false,
@@ -51,10 +53,14 @@ export default class LifeCycle {
     }
 
     animate() {
-        clearTimeout(this._timeout);
-        this._timeout = setTimeout(() => {
-            requestAnimationFrame(() => this.animate());
-        }, 1000 / 30);
+        if (this.fps > 60) {
+            this.animationId = requestAnimationFrame(() => this.animate());
+        } else {
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }, 1000 / 30);
+        }
 
         const timer = this.lifecycle.timer;
         const t = performance.now();
@@ -79,6 +85,7 @@ export default class LifeCycle {
     }
 
     stopAnimation() {
-        clearTimeout(this._timeout);
+        clearTimeout(this.timeout);
+        cancelAnimationFrame(this.animationId);
     }
 }

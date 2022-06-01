@@ -1,12 +1,17 @@
 import * as THREE from "three";
 import * as THREEx from "@/lib-components/three/three.imports";
 import LifeCycle from "@/lib-components/three/lifecycle";
+import {Color} from "three";
 
 interface MousePosition {
     x: number
     y: number
 }
 
+/**
+ * Scene is tying together renderer, composer, camera, animation frames and events. It is meant to be an
+ * abstract base for the particular 3D setup.
+ */
 export default class Scene extends LifeCycle {
 
     private domParent: HTMLElement
@@ -30,6 +35,7 @@ export default class Scene extends LifeCycle {
     public colorMain = new THREE.Color(0x555555);
     public colorHighlight = new THREE.Color(0x3377bb);
 
+    private removeEventListeners: Function = () => {};
 
 
     /**
@@ -46,12 +52,19 @@ export default class Scene extends LifeCycle {
             this.height,
             window.devicePixelRatio
         );
+
+        this.renderer.shadowMap.enabled = true;
+        // this.renderer.shadowMap.type = THREE.PCFShadowMap;
+        // this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.shadowMap.type = THREE.VSMShadowMap;
+
         this.domParent.appendChild(this.renderer.domElement);
         //camera
         this.camera = this.createCamera();
         this.camera.lookAt(this.cameraTarget);
         //scene
         this.scene = this.createScene();
+        this.scene.background = new Color('#c0c0c0');
 
         //composer for mirror and other effects
         this.composer = new THREEx.EffectComposer(this.renderer)
@@ -64,12 +77,26 @@ export default class Scene extends LifeCycle {
     }
 
     bindEvents(domParent: HTMLElement) {
-        window.addEventListener("resize", () => this.onWindowResize(), false);
-        domParent.addEventListener("mousemove", e =>
-            this.onCanvasMouseMove(e)
-        );
-        domParent.addEventListener("mousedown", e => this.onCanvasClick(e));
-        window.addEventListener('wheel', e => this.onMouseWheel(e), false);
+        const resizer = () => this.onWindowResize();
+        const wheeler = (e:WheelEvent) => this.onMouseWheel(e)
+        const mouseListener = (e:MouseEvent) => this.onCanvasMouseMove(e)
+        const clickListener = (e:MouseEvent) => this.onCanvasClick(e)
+
+        const resizeObserver = new ResizeObserver(entries => {
+            resizer();
+        });
+        resizeObserver.observe(domParent);
+        //window.addEventListener("resize", resizer, false)
+        window.addEventListener('wheel', wheeler, false)
+        domParent.addEventListener("mousemove", mouseListener)
+        domParent.addEventListener("mousedown", clickListener )
+
+        this.removeEventListeners = ()  => {
+            window.removeEventListener("resize", resizer)
+            window.removeEventListener("wheel", wheeler)
+            domParent.removeEventListener("mousemove", mouseListener)
+            domParent.removeEventListener("mousedown", clickListener)
+        }
     }
 
     start() {
@@ -78,6 +105,17 @@ export default class Scene extends LifeCycle {
 
     stop() {
         this.stopAnimation();
+    }
+
+    destroy() {
+        this.stopAnimation();
+        this.removeEventListeners();
+        this.scene.clear();
+        this.camera.clear();
+        while (this.domParent.lastChild) {
+            this.domParent.removeChild(this.domParent.lastChild);
+        }
+        this.renderer.forceContextLoss();
     }
 
     //--- overridable ---
@@ -100,8 +138,8 @@ export default class Scene extends LifeCycle {
         const camera = new THREE.PerspectiveCamera(
             45,
             this.width / this.height,
-            1,
-            32
+            0.5,
+            64
         );
         camera.position.copy(this.cameraBase)
         return camera;
@@ -142,9 +180,20 @@ export default class Scene extends LifeCycle {
         // the following line would stop any other event handler from firing
         // (such as the mouse's TrackballControls)
         // event.preventDefault();
+        if (event.metaKey && event.buttons === 1) {
+            //const phi = Math.sin(timer / 2000);
+            //const dist = 2.0; //this.cameraBase.distanceTo(this.cameraTarget);
+            const xx = (event.offsetX / this.domParent.offsetWidth) * 2 - 1 + this.mouse.x;
+            const yy = - (event.offsetY / this.domParent.offsetHeight) * 2 + 1 - this.mouse.y;
+            //console.log(xx, yy);
+            this.retargetCamera(new THREE.Vector3(0.0, 0.0, 1.5), new THREE.Vector3(this.cameraBase.x + xx, this.cameraBase.y, this.cameraBase.z + yy))
+            //this.cameraBase.x = 0.0 - dist * Math.cos(2 * Math.PI * xx);
+            //this.cameraBase.z = 0.0 + dist * Math.sin(2 * Math.PI * yy);
+        } else {
+            this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
+            this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
+        }
 
-        this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
-        this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
     }
 
     onCanvasClick(event: MouseEvent) {
@@ -259,12 +308,13 @@ export default class Scene extends LifeCycle {
         const camera = this.camera;
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        //TODO parallax support
-        //camera.position.x = -window.pageYOffset / 500;
-        //camera.position.y = 11 + window.pageYOffset / 1000;
+
+        //TODO parallax support possible here via
+        // camera.position.x = -window.pageYOffset / 500;
+        // camera.position.y = 11 + window.pageYOffset / 1000;
 
         //camera.lookAt(new THREE.Vector3());
         this.renderer.setSize(width, height);
-        this.composer.setSize( width, height );
+        this.composer.setSize(width, height);
     }
 }

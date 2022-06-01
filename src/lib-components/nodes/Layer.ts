@@ -7,6 +7,7 @@ import {VuetrexStage} from "@/lib-components/three/stage";
  */
 export class Layer extends Node {
 
+    public readonly type: string = 'Layer'
     public state : {text: string, scale: number, elevation: number, visible: boolean} = reactive({
         text: '',
         scale: 1,
@@ -29,11 +30,11 @@ export class Layer extends Node {
         if (this.stopHandle) return
         this.stopHandle = watchEffect(() => {
                 if (this.getLayer()) {
-                    this.element.pos = this.stage.positionLayoutElement(this.element);
+                    this.element.pos = this.element.getPosition();
                     this.state.scale = (this.getLayer() as Layer)?.state.scale + 1;
                 }
                 if (this.state.visible) {
-                    this.stage.renderMesh(this.element, 10.0, this.stage.meshCreator('plane'));
+                    this.stage.renderMesh(this.element, 1.0, 10.0, this.stage.meshCreator('plane'));
                 }
         })
         super.syncWithThree();

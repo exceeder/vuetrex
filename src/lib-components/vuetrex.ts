@@ -1,14 +1,15 @@
 import { createRendererForStage } from "@/lib-components/renderer";
-import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, ref, PropType, watch } from "vue";
+import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, onUnmounted, ref, PropType, watch } from "vue";
 import { Root } from "@/lib-components/nodes/Root";
-import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings } from "@/lib-components/three/stage";
+import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings, VxMouseEvent as _VxMouseEvent } from "@/lib-components/three/stage";
 
 export type VxStage = _VxStage;
 export type VxSettings = _VxSettings;
+export type VxMouseEvent = _VxMouseEvent;
 
 /**
  * Vuetrex is a container that wraps everything in 3D scene.
- * It uses Vue Custom Renderer to provide reactivity.
+ * It uses Vue Custom Renderer to provide reactivity, giving the 3d environment the "feel" of Vue.
  * @vue-prop settings {VxSettings} - vuetrex settings (TBD)
  * @vue-prop position {String} - container div CSS position, static: absolute, relative
  * @vue-prop play {String} - whether to animate the scene from the start, "false" keeps it still until changed
@@ -37,6 +38,9 @@ export default defineComponent({
         const maxHeight = ref(4096);
 
         const vuetrexComponent = getCurrentInstance();
+
+        let stageRoot: Root | null = null;
+
         if (vuetrexComponent == null) {
             const err = "Vue's getCurrentInstance() returned null in Vuetrex setup(). It likely means" +
             " your app is misconfigured";
@@ -74,7 +78,7 @@ export default defineComponent({
             if (defaultSlot && elRef.value) {
                 const stage = new VuetrexStage(elRef.value as any, { ...props.settings }) as VuetrexStage;
                 const vuetrexRenderer = createRendererForStage(stage);
-                const stageRoot = new Root(stage);
+                stageRoot = new Root(stage);
                 //create stage environment
                 stage.mount();
                 emit('ready', stage);
@@ -92,14 +96,22 @@ export default defineComponent({
                 // We must wait until nextTick to prevent interference in the effect queue.
                 nextTick().then(() => {
                     const node = h(Connector, defaultSlot);
-                    vuetrexRenderer(node, stageRoot);
+                    if (stageRoot)
+                        vuetrexRenderer(node, stageRoot);
                 });
             } else {
                 console.warn("No default slot is defined");
             }
         });
 
-        // We need to use a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
+        onUnmounted(() => {
+            if (stageRoot) {
+                stageRoot.destroy();
+                stageRoot = null;
+            }
+        })
+
+        // There needs to be a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
         return () =>
             h(
                 "div",
