@@ -1,7 +1,10 @@
 const path = require('path');
 module.exports = {
     devServer: {
-        contentBase: path.join(__dirname, 'dev/assets')
+        static: {
+            directory: path.join(__dirname, 'dev/assets')
+        },
+        compress: true
     },
     chainWebpack: config => {
         config.module
