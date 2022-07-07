@@ -14,6 +14,7 @@ export class DynamicTexture implements CanvasDrawImage, CanvasFillStrokeStyles, 
     drawImage(image: CanvasImageSource, dx: number, dy: number): DynamicTexture;
     drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): DynamicTexture;
     drawImage(image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): DynamicTexture;
+    createConicGradient(startAngle: number, x: number, y: number): CanvasGradient;
     createLinearGradient(x0: number, y0: number, x1: number, y1: number): CanvasGradient;
     createPattern(image: CanvasImageSource, repetition: string | null): CanvasPattern | null;
     createRadialGradient(x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): CanvasGradient;

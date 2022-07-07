@@ -149,6 +149,10 @@ class DynamicTexture {
         return this.context.createLinearGradient(x0,y0,x1,y1);
     }
 
+    createConicGradient(startAngle, x, y) {
+        return this.context.createConicGradient(startAngle, x, y);
+    }
+
     createPattern(image, repetition) {
         return this.context.createPattern(image, repetition)
     }
