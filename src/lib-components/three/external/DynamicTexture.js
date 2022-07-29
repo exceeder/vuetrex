@@ -6,7 +6,7 @@ import {
 
 class DynamicTexture {
     /**
-     * create a dynamic texture with a underlying canvas
+     * create a dynamic texture with an underlying canvas
      *
      * @param {Number} width  width of the canvas
      * @param {Number} height height of the canvas
@@ -25,7 +25,7 @@ class DynamicTexture {
      * clear the canvas
      *
      * @param  {String?} fillStyle 		the fillStyle to clear with, if not provided, fallback on .clearRect
-     * @return {THREEx.DynamicTexture}      the object itself, for chained texture
+     * @return {DynamicTexture}      the object itself, for chained texture
      */
     clear(fillStyle){
         // depends on fillStyle
@@ -49,7 +49,7 @@ class DynamicTexture {
      * @param  {Number}		y	- the y where to draw the text
      * @param  {String?} 		fillStyle - the fillStyle to clear with, if not provided, fallback on .clearRect
      * @param  {String?} 		contextFont - the font to use
-     * @return {THREEx.DynamicTexture}	- the object itself, for chained texture
+     * @return {DynamicTexture}	- the object itself, for chained texture
      */
     drawText(text, x, y, fillStyle, contextFont){
         // set font if needed
