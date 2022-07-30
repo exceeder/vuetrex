@@ -4,14 +4,14 @@ title: Vuetrex.js - The 3D extension for Vue 3
 ---
 Welcome to Vuetrex
 
-<span v-for="i in 3">{{ i }} </span>
+<span v-for="i in 7">{{ i }} </span>
 
-<<< @/examples/src/HelloWorld.vue
-
+<<< @/examples/src/Hello.vue
 <script setup>
-import HelloWorld from './examples/src/HelloWorld.vue';
+import Hello from './examples/src/Hello.vue';
 </script>
-<HelloWorld /> 
+
+<Hello simple /> 
 
 [comment]: <> (<Vuetrex>)
 

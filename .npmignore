@@ -6,5 +6,5 @@ public
 src
 tests
 *.config.js
-shims-vue.d.ts
+*.config.ts
 tsconfig.json

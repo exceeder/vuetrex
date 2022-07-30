@@ -10,7 +10,7 @@ Multiple _rows_:
   </vuetrex>
 ```
 Rows orientation is from left to right, as if they were rows in the movie theater with the screen on the left side.
-![EXAMPLE 2](../public/screen2.png)
+![EXAMPLE 2](/screen2.png)
 
 Nested _layers_:
 ```vue
@@ -38,7 +38,7 @@ Note, that you can use `v-for` to bind elements to your data.
   </vuetrex>
 ```
 
-![EXAMPLE 3](../public/screen3.png)
+![EXAMPLE 3](/screen3.png)
 
 Connections are particle systems running along the connector lines. Both elements need to have a name
 property to connect.
@@ -87,4 +87,4 @@ export default {
 }
 </script> 
 ```
-![Example](../public/zoom.gif)
+![Example](/zoom.gif)

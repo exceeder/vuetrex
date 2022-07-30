@@ -7,7 +7,7 @@ const D = 1.5; //box distance
 
 export default class Element3d {
 
-    private stage: VuetrexStage;
+    private readonly stage: VuetrexStage;
     public node: Node;
     public mesh: THREE.Mesh | null = null;
     public pos: THREE.Vector3 | null = null;

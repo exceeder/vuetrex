@@ -63,7 +63,7 @@ export default {
     function loadGLTFModel(stage:VxStage) {
       //loading external model
       const loader = new GLTFLoader();
-      loader.load('tripod2-2.gltf', gltf => {
+      loader.load('dev/assets/tripod2-2.gltf', gltf => {
             const sceneGroup = gltf.scene;
             sceneGroup.scale.set(0.75,0.75,0.75);
             sceneGroup.position.set(0.0, -0.30,-1.0);

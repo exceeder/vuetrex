@@ -1,6 +1,10 @@
 node_packages/
 node_modules/
 .idea/
+.history/
+.vscode/
+.parcel-cache/
 dist/
+dist_types/
 yarn.lock
 .DS_Store

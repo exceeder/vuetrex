@@ -23,4 +23,5 @@ const types: Record<string, ClassComponent | FunctionalComponent> = {
     stack: Stack
 }
 
-export {types, FunctionalComponent, ClassComponent}
+export {types}
+export type {FunctionalComponent, ClassComponent}

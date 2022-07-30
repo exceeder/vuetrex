@@ -22,10 +22,10 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
   },
 
   createElement: (tag: keyof typeof types, isSVG, isCustomizedBuiltIn) => {
-     let type = types[tag];
+    let type = types[tag];
      if (!type) {
-       console.warn(`Unknown native tag: ${tag}`);
-       type = types["node"];
+       console.warn(`Vuetrex nodeOps: unknown tag: ${tag}`);
+       return new Comment("Unknown "+tag);
      }
      if (typeof (type as any).setup === 'function') {
         return (type as FunctionalComponent).setup(stage);

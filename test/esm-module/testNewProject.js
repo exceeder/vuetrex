@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+import { execSync } from 'node:child_process';
 
 const inlinePreset = {
     "useConfigFiles": true,
@@ -10,7 +10,7 @@ const inlinePreset = {
     "vueVersion": "3"
 };
 
-const appTemplateName = 'tests/esm-module/TestApp.vue'
+const appTemplateName = 'test/esm-module/TestApp.vue'
 const projectName = 'test'+Math.floor(Math.random()*1000)
 
 execSync(`mkdir -p temp && rm -rf temp/${projectName} && \\

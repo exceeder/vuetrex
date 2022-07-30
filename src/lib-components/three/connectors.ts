@@ -58,7 +58,7 @@ class Segment {
 export class Connectors {
 
     stage: VuetrexStage;
-    private particleSystem: VuetrexParticles | null = null
+    private readonly particleSystem: VuetrexParticles | null = null
     private segments: Segment[] = []
     //private dangling: Segment[] = []
 

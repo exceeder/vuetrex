@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { describe, it, expect} from 'vitest'
 
 describe('The THREE object', function() {
 

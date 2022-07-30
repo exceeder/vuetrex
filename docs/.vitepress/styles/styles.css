@@ -1,1 +1,5 @@
 /* update styles here */
+:root {
+    --vp-c-brand: #157c85;
+    --vp-c-brand-light: #1a9ca8;
+}

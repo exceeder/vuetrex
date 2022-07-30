@@ -14,7 +14,7 @@ Note: the project is in alpha stage and there could be some changes to the inter
 ## Usage Example
 
 ### ES Module Browser build
-For an example using in-browser ES6 modules, see the [tests](tests/iife).
+For an example using in-browser ES6 modules, see the [tests](test/iife).
 
 ### Using in Vue Project
 Use [Vue CLI](https://github.com/vuejs/vue-cli) to set up your project with Vue 3. 

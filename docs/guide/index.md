@@ -17,7 +17,7 @@ Consider an example:
 
 it will render this
 
-![EXAMPLE 1](../public/screen1.png)
+![EXAMPLE 1](../screen1.png)
 
 The reactive properties of Vue are preserved, and you can use`v-if`, `v-for`, `@click` events etc., bind
 supported attributes, and build out your reactive 3D scene based on your data as you see fit. There is
