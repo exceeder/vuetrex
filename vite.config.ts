@@ -20,6 +20,9 @@ export default defineConfig({
             fileName: (format) => `vuetrex.${format}.js`,
         },
         rollupOptions: {
+            input: {
+                main: path.resolve(__dirname, "src/lib-components/index.ts")
+            },
             output: {
                 // Provide global variables to use in the UMD build
                 // for externalized deps

@@ -8,7 +8,7 @@
         <box name="xx" :text="'['+counter+']'" @click="counter++"/>
       </row>
       <row>
-          <cylinder name="yy" text="click me" connection="xx" @click="cylClick"/>
+          <cylinder ref="cylinder" name="yy" text="click me" connection="xx" @click="cylClick"/>
       </row>
       <row>
        <box text="singleton" connection="yy" />
@@ -17,9 +17,11 @@
 </template>
 
 <script lang="ts">
-import {ref} from "vue";
+import {ref} from 'vue';
 import {Vuetrex, VxStage, VxSettings, VxMouseEvent} from '@/lib-components/index';
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
+import {Text} from 'troika-three-text';
+import gsap from 'gsap';
 //import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
 //import {AdditiveBlending} from "three";
 
@@ -35,9 +37,11 @@ export default {
     }
   },
   setup() {
+    const cylinder = ref(null)
     const counter = ref(0)
     const paused = ref(false)
     const camera = ref("scene")
+    let thing = null
     //light scheme example
     const settings : VxSettings = {
       unit: 1.25,
@@ -57,14 +61,30 @@ export default {
     }
 
     function cylClick(ev: VxMouseEvent) {
-      camera.value === ev.vxNode.name ? camera.value = "scene" : camera.value = ev.vxNode.name;
+      const pos = cylinder.value.element.mesh.position;
+      if (camera.value === ev.vxNode.name) {
+        camera.value = "scene"
+        // gsap.to(thing.position, {duration:1, x:0, z:-1});
+        //gsap.to(thing.position, {duration:1, x:0, y:-.5});
+        gsap.to(pos, {duration:0.1, x:0, y:-0.1});
+        gsap.to(pos, {duration:0.1, x:0, y:0.2, delay: 0.1});
+        //gsap.to(pos, {duration:1, x:0, y:0.5});
+
+      } else {
+        camera.value = ev.vxNode.name;
+        //gsap.to(thing.position, {duration:1, x:0, y:-1.5});
+        gsap.to(pos, {duration:0.1, x:0, y:-0.1});
+        gsap.to(pos, {duration:0.1, x:0, y:0.2, delay: 0.1});
+      }
+
     }
 
     function loadGLTFModel(stage:VxStage) {
       //loading external model
       const loader = new GLTFLoader();
-      loader.load('dev/assets/tripod2-2.gltf', gltf => {
+      loader.load('demo/assets/tripod2-2.gltf', gltf => {
             const sceneGroup = gltf.scene;
+            thing = sceneGroup;
             sceneGroup.scale.set(0.75,0.75,0.75);
             sceneGroup.position.set(0.0, -0.30,-1.0);
             sceneGroup.rotation.set(0.0,0.50,0.0);
@@ -81,6 +101,22 @@ export default {
 
             });
             stage.getScene().add(sceneGroup);
+
+            const myText = new Text();
+            stage.getScene().add(myText);
+            myText.text = 'Welcome to the demo!\nThis is an example of\na simple 3D chart'
+            myText.font = 'https://fonts.gstatic.com/s/notosans/v7/o-0IIpQlx3QUlC5A4PNr5TRG.woff'
+
+            myText.anchorX = 'center'
+            myText.selectable = true
+            myText.lineHeight = 1.3
+            myText.fontSize = 0.3
+            myText.position.z = 2
+            myText.position.y = 0.1
+            myText.position.x = 0
+            myText.rotation.x = -1.57
+            myText.color = 0x8090A0
+            myText.sync()
 
           },
           (xhr) => {
@@ -107,6 +143,7 @@ export default {
     }
 
     return {
+      cylinder,
       paused,
       counter,
       settings,

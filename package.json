@@ -17,7 +17,6 @@
     "build": "vue-tsc --declaration --emitDeclarationOnly && vite build",
     "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview",
-    "servedemo": "vue-cli-service serve dev/serve.ts --port 8080 --mode production",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -51,24 +50,27 @@
     "url": "https://github.com/exceeder/vuetrex/issues"
   },
   "homepage": "https://github.com/exceeder/vuetrex#readme",
-  "dependencies": {},
+  "dependencies": {
+    "gsap": "^3.10.4",
+    "troika-three-text": "^0.47.1"
+  },
   "devDependencies": {
-    "@types/three": "^0.143.0",
-    "@vitejs/plugin-vue": "^3.0.0",
-    "@vitest/ui": "latest",
-    "@vue/test-utils": "^2.0.2",
-    "happy-dom": "^6.0.4",
-    "three": "^0.129.0",
-    "typescript": "^4.6.4",
-    "vite": "^3.0.0",
-    "vitepress": "^1.0.0-alpha.4",
-    "vitest": "^0.19.1",
-    "vue": "^3.2.1",
-    "vue-tsc": "^0.38.4"
+    "@types/three": "^0.149.0",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "@vitest/ui": "^0.28.5",
+    "@vue/test-utils": "^2.3.0",
+    "happy-dom": "^8.7.2",
+    "three": "^0.150.0",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.4",
+    "vitepress": "^1.0.0-alpha.47",
+    "vitest": "^0.28.5",
+    "vue": "^3.2.47",
+    "vue-tsc": "^1.1.7"
   },
   "peerDependencies": {
-    "three": "^0.129.0",
-    "vue": "^3.2.1"
+    "three": "^0.150.0",
+    "vue": "^3.2.47"
   },
   "engines": {
     "node": ">=14"

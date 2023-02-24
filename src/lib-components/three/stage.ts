@@ -99,7 +99,7 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     createGroundMirror(scene: THREE.Scene) {
-        const geometry = new THREE.PlaneBufferGeometry(100, 100);
+        const geometry = new THREE.PlaneGeometry(100, 100);
         const groundMirror = new THREEx.Reflector(geometry, {
             clipBias: 0.003,
             textureWidth: this.width * window.devicePixelRatio * 2,
@@ -293,7 +293,7 @@ export class VuetrexStage extends Scene implements VxStage {
                         bevelSegments: 5
                     };
 
-                    const geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
+                    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
                     geometry.rotateX(Math.PI/2)
                     geometry.translate(0,0.07,0)
                     return new THREE.Mesh(geometry, bMaterial);
@@ -322,7 +322,7 @@ export class VuetrexStage extends Scene implements VxStage {
                         bevelSegments: 5
                     };
 
-                    const geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
+                    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
                     geometry.rotateX(Math.PI/2)
                     geometry.translate(0,R/4,0)
                     const mesh = new THREE.Mesh(geometry, bMaterial);
@@ -343,7 +343,7 @@ export class VuetrexStage extends Scene implements VxStage {
             case 'box': {
                 return (height, size) => {
                     let bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new THREE.BoxBufferGeometry(R*0.9, R / 2, size), bMaterial);
+                    return new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
                 }
             }
         }

@@ -129,12 +129,12 @@ void main() {
 }`
 
 export class VuetrexParticles extends Object3D implements FastRandom {
-    private PARTICLE_COUNT: number;
-    private PARTICLE_CONTAINERS: number;
-    private PARTICLES_PER_CONTAINER: number;
-    private PARTICLE_CURSOR: number;
-    private particleContainers: GPUParticleContainer[];
-    private rand: number[];
+    private readonly PARTICLE_COUNT: number;
+    private readonly PARTICLE_CONTAINERS: number;
+    private readonly PARTICLES_PER_CONTAINER: number;
+    private _PARTICLE_CURSOR: number;
+    private readonly particleContainers: GPUParticleContainer[];
+    private readonly rand: number[];
 
     particleShaderMat: THREE.ShaderMaterial;
 
@@ -152,7 +152,7 @@ export class VuetrexParticles extends Object3D implements FastRandom {
         this.PARTICLE_CONTAINERS = options.containerCount || 1;
 
         this.PARTICLES_PER_CONTAINER = Math.ceil(this.PARTICLE_COUNT / this.PARTICLE_CONTAINERS);
-        this.PARTICLE_CURSOR = 0;
+        this._PARTICLE_CURSOR = 0;
         this.time = 0;
         this.particleContainers = [];
         this.rand = [];
@@ -194,13 +194,13 @@ export class VuetrexParticles extends Object3D implements FastRandom {
     }
 
     spawnParticle(options: ParticleOptions) {
-        this.PARTICLE_CURSOR++;
+        this._PARTICLE_CURSOR++;
 
-        if (this.PARTICLE_CURSOR >= this.PARTICLE_COUNT) {
-            this.PARTICLE_CURSOR = 1;
+        if (this._PARTICLE_CURSOR >= this.PARTICLE_COUNT) {
+            this._PARTICLE_CURSOR = 1;
         }
 
-        const currentContainer = this.particleContainers[Math.floor(this.PARTICLE_CURSOR / this.PARTICLES_PER_CONTAINER)];
+        const currentContainer = this.particleContainers[Math.floor(this._PARTICLE_CURSOR / this.PARTICLES_PER_CONTAINER)];
         currentContainer.spawnParticle(options);
     }
 
@@ -273,13 +273,13 @@ class GPUParticleContainer extends THREE.Object3D {
     }
 
     spawnParticle(options: ParticleOptions) {
-        const positionAttribute = this.particleShaderGeo.getAttribute('position');
-        const minMaxAttribute = this.particleShaderGeo.getAttribute('minMax');
-        const startTimeAttribute = this.particleShaderGeo.getAttribute('startTime');
-        const velocityAttribute = this.particleShaderGeo.getAttribute('velocity');
-        const colorAttribute = this.particleShaderGeo.getAttribute('color');
-        const sizeAttribute = this.particleShaderGeo.getAttribute('size');
-        const lifeTimeAttribute = this.particleShaderGeo.getAttribute('lifeTime');
+        const positionAttribute = this.particleShaderGeo.getAttribute('position') as THREE.Float32BufferAttribute;
+        const minMaxAttribute = this.particleShaderGeo.getAttribute('minMax') as THREE.Float32BufferAttribute;
+        const startTimeAttribute = this.particleShaderGeo.getAttribute('startTime') as THREE.Float32BufferAttribute;
+        const velocityAttribute = this.particleShaderGeo.getAttribute('velocity') as THREE.Float32BufferAttribute;
+        const colorAttribute = this.particleShaderGeo.getAttribute('color') as THREE.Float32BufferAttribute;
+        const sizeAttribute = this.particleShaderGeo.getAttribute('size') as THREE.Float32BufferAttribute;
+        const lifeTimeAttribute = this.particleShaderGeo.getAttribute('lifeTime') as THREE.Float32BufferAttribute;
         const gen = this.gen;
 
         options = options || {};

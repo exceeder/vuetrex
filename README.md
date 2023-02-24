@@ -8,7 +8,7 @@ Note: the project is in alpha stage and there could be some changes to the inter
 
 ## For development:
 
-1.  `yarn serve` for development
+1.  `yarn dev` for development
 2.  `yarn build` to rebuild the library
 
 ## Usage Example
