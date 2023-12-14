@@ -1,5 +1,3 @@
-/// <reference types="vitest" />
-
 import path from 'node:path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -17,7 +15,7 @@ export default defineConfig({
             entry: path.resolve(__dirname, 'src/lib-components/index.ts'),
             name: 'Vuetrex',
             formats: ['es', 'umd'],
-            fileName: (format) => `vuetrex.${format}.js`,
+            fileName: (format: string) => `vuetrex.${format}.js`,
         },
         rollupOptions: {
             input: {
@@ -37,11 +35,16 @@ export default defineConfig({
         target: "esnext",
         sourcemap: true
     },
-    plugins: [vue({
-        customElement: /^layer|^box|^row|^cylinder/
-    })],
+    plugins: [
+        vue({
+        template: {
+            compilerOptions: {
+                isCustomElement: (tag:string) => /^layer|^box|^row|^cylinder/.test(tag)
+            }
+        }})
+    ],
     test: {
-      globals: true,
-      environment: "happy-dom"
+        globals: true,
+        environment: "happy-dom"
     }
 })

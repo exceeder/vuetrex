@@ -2,7 +2,6 @@ import {
 	Mesh,
 	BufferGeometry,
 	Color,
-	TextureEncoding,
 	WebGLRenderTarget
 } from 'three';
 
@@ -12,7 +11,7 @@ export interface ReflectorOptions {
 	textureHeight?: number;
 	clipBias?: number;
 	shader?: object;
-	encoding?: TextureEncoding;
+	multisample?: number;
 }
 
 export class Reflector extends Mesh {

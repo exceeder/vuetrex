@@ -5,8 +5,8 @@
 export {EffectComposer} from "./external/EffectComposer";
 export {RenderPass} from "./external/RenderPass";
 export {Reflector} from "./external/Reflector";
-export {RoundedBoxBufferGeometry} from "./external/RoundedBoxBufferGeometry";
-export {DynamicTexture} from "./external/DynamicTexture.js";
+export {RoundedBoxGeometry} from "./external/RoundedBoxBufferGeometry";
+export {DynamicTexture} from "./external/DynamicTexture";
 
 /* ---
 

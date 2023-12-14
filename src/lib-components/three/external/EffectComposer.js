@@ -1,8 +1,10 @@
 import {
 	Clock,
+	HalfFloatType,
+	NoBlending,
 	Vector2,
 	WebGLRenderTarget
-} from "three";
+} from 'three';
 import { CopyShader } from "./CopyShader.js";
 import { ShaderPass } from "./ShaderPass.js";
 import { MaskPass, ClearMaskPass } from "./MaskPass.js";
@@ -13,18 +15,20 @@ class EffectComposer {
 
 		this.renderer = renderer;
 
+		this._pixelRatio = renderer.getPixelRatio();
+
 		if ( renderTarget === undefined ) {
 
 			const size = renderer.getSize( new Vector2() );
-			this._pixelRatio = renderer.getPixelRatio();
 			this._width = size.width;
 			this._height = size.height;
-			renderTarget = new WebGLRenderTarget( this._width * this._pixelRatio, this._height * this._pixelRatio );
+
+			renderTarget = new WebGLRenderTarget( this._width * this._pixelRatio, this._height * this._pixelRatio, { type: HalfFloatType } );
 			renderTarget.texture.name = 'EffectComposer.rt1';
+			renderTarget.texture.colorSpace = 'srgb';
 
 		} else {
 
-			this._pixelRatio = 1;
 			this._width = renderTarget.width;
 			this._height = renderTarget.height;
 
@@ -32,25 +36,19 @@ class EffectComposer {
 
 		this.renderTarget1 = renderTarget;
 		this.renderTarget2 = renderTarget.clone();
+		this.renderTarget2.texture.colorSpace = 'srgb';
 		this.renderTarget2.texture.name = 'EffectComposer.rt2';
+
 		this.writeBuffer = this.renderTarget1;
 		this.readBuffer = this.renderTarget2;
+
 		this.renderToScreen = true;
-		this.passes = []; // dependencies
 
-		if ( CopyShader === undefined ) {
-
-			console.error( 'EffectComposer relies on CopyShader' );
-
-		}
-
-		if ( ShaderPass === undefined ) {
-
-			console.error( 'EffectComposer relies on ShaderPass' );
-
-		}
+		this.passes = [];
 
 		this.copyPass = new ShaderPass( CopyShader );
+		this.copyPass.material.blending = NoBlending;
+
 		this.clock = new Clock();
 
 	}
@@ -108,6 +106,7 @@ class EffectComposer {
 	render( deltaTime ) {
 
 		// deltaTime value is in seconds
+
 		if ( deltaTime === undefined ) {
 
 			deltaTime = this.clock.getDelta();
@@ -115,13 +114,16 @@ class EffectComposer {
 		}
 
 		const currentRenderTarget = this.renderer.getRenderTarget();
+
 		let maskActive = false;
 
 		for ( let i = 0, il = this.passes.length; i < il; i ++ ) {
 
 			const pass = this.passes[ i ];
+
 			if ( pass.enabled === false ) continue;
-			pass.renderToScreen = this.renderToScreen && this.isLastEnabledPass( i );
+
+			pass.renderToScreen = ( this.renderToScreen && this.isLastEnabledPass( i ) );
 			pass.render( this.renderer, this.writeBuffer, this.readBuffer, deltaTime, maskActive );
 
 			if ( pass.needsSwap ) {
@@ -129,11 +131,14 @@ class EffectComposer {
 				if ( maskActive ) {
 
 					const context = this.renderer.getContext();
-					const stencil = this.renderer.state.buffers.stencil; //context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
+					const stencil = this.renderer.state.buffers.stencil;
 
+					//context.stencilFunc( context.NOTEQUAL, 1, 0xffffffff );
 					stencil.setFunc( context.NOTEQUAL, 1, 0xffffffff );
-					this.copyPass.render( this.renderer, this.writeBuffer, this.readBuffer, deltaTime ); //context.stencilFunc( context.EQUAL, 1, 0xffffffff );
 
+					this.copyPass.render( this.renderer, this.writeBuffer, this.readBuffer, deltaTime );
+
+					//context.stencilFunc( context.EQUAL, 1, 0xffffffff );
 					stencil.setFunc( context.EQUAL, 1, 0xffffffff );
 
 				}
@@ -170,6 +175,7 @@ class EffectComposer {
 			this._pixelRatio = this.renderer.getPixelRatio();
 			this._width = size.width;
 			this._height = size.height;
+
 			renderTarget = this.renderTarget1.clone();
 			renderTarget.setSize( this._width * this._pixelRatio, this._height * this._pixelRatio );
 
@@ -179,6 +185,7 @@ class EffectComposer {
 		this.renderTarget2.dispose();
 		this.renderTarget1 = renderTarget;
 		this.renderTarget2 = renderTarget.clone();
+
 		this.writeBuffer = this.renderTarget1;
 		this.readBuffer = this.renderTarget2;
 
@@ -188,8 +195,10 @@ class EffectComposer {
 
 		this._width = width;
 		this._height = height;
+
 		const effectiveWidth = this._width * this._pixelRatio;
 		const effectiveHeight = this._height * this._pixelRatio;
+
 		this.renderTarget1.setSize( effectiveWidth, effectiveHeight );
 		this.renderTarget2.setSize( effectiveWidth, effectiveHeight );
 
@@ -204,7 +213,17 @@ class EffectComposer {
 	setPixelRatio( pixelRatio ) {
 
 		this._pixelRatio = pixelRatio;
+
 		this.setSize( this._width, this._height );
+
+	}
+
+	dispose() {
+
+		this.renderTarget1.dispose();
+		this.renderTarget2.dispose();
+
+		this.copyPass.dispose();
 
 	}
 

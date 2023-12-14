@@ -1,30 +1,35 @@
 import {
 	ShaderMaterial,
 	UniformsUtils
-} from "three";
-
-import { Pass, FullScreenQuad} from "./Pass";
+} from 'three';
+import { Pass, FullScreenQuad } from './Pass.js';
 
 class ShaderPass extends Pass {
 
 	constructor( shader, textureID ) {
 
 		super();
-		this.textureID = textureID !== undefined ? textureID : 'tDiffuse';
+
+		this.textureID = ( textureID !== undefined ) ? textureID : 'tDiffuse';
 
 		if ( shader instanceof ShaderMaterial ) {
 
 			this.uniforms = shader.uniforms;
+
 			this.material = shader;
 
 		} else if ( shader ) {
 
 			this.uniforms = UniformsUtils.clone( shader.uniforms );
+
 			this.material = new ShaderMaterial( {
+
+				name: ( shader.name !== undefined ) ? shader.name : 'unspecified',
 				defines: Object.assign( {}, shader.defines ),
 				uniforms: this.uniforms,
 				vertexShader: shader.vertexShader,
 				fragmentShader: shader.fragmentShader
+
 			} );
 
 		}
@@ -56,6 +61,14 @@ class ShaderPass extends Pass {
 			this.fsQuad.render( renderer );
 
 		}
+
+	}
+
+	dispose() {
+
+		this.material.dispose();
+
+		this.fsQuad.dispose();
 
 	}
 

@@ -30,7 +30,7 @@ export default class Scene extends LifeCycle {
     selectedObject: (THREE.Mesh | null) = null
 
     private composer: THREEx.EffectComposer;
-    private renderPass: THREEx.RenderPass;
+    private readonly renderPass: THREEx.RenderPass;
 
     public colorMain = new THREE.Color(0x555555);
     public colorHighlight = new THREE.Color(0x3377bb);
@@ -53,18 +53,14 @@ export default class Scene extends LifeCycle {
             window.devicePixelRatio
         );
 
-        this.renderer.shadowMap.enabled = true;
-        // this.renderer.shadowMap.type = THREE.PCFShadowMap;
-        // this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.shadowMap.type = THREE.VSMShadowMap;
-
         this.domParent.appendChild(this.renderer.domElement);
         //camera
         this.camera = this.createCamera();
         this.camera.lookAt(this.cameraTarget);
         //scene
         this.scene = this.createScene();
-        this.scene.background = new Color('#c0c0c0');
+        this.scene.background = new Color('#808080');
+        // this.scene.background = new Color('#ffffff');
 
         //composer for mirror and other effects
         this.composer = new THREEx.EffectComposer(this.renderer)
@@ -100,15 +96,15 @@ export default class Scene extends LifeCycle {
     }
 
     start() {
-        this.animate();
+        this.animate(0);
     }
 
     stop() {
-        this.stopAnimation();
+        this.stopRenderLoop();
     }
 
     destroy() {
-        this.stopAnimation();
+        this.stopRenderLoop();
         this.removeEventListeners();
         this.scene.clear();
         this.camera.clear();
@@ -127,18 +123,22 @@ export default class Scene extends LifeCycle {
             logarithmicDepthBuffer: false
         });
         renderer.setSize(width, height);
-        //renderer.physicallyCorrectLights = true;
-        renderer.sortObjects = false;
-        renderer.setClearColor(0xa0a0a0, 0.5);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.setPixelRatio(devicePixelRatio || 1);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.shadowMap.enabled = true;
+        //renderer.shadowMap.type = THREE.PCFShadowMap;
+        //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = THREE.VSMShadowMap;
         return renderer;
     }
 
     createCamera() {
         const camera = new THREE.PerspectiveCamera(
-            45,
+            35,
             this.width / this.height,
-            0.5,
+            0.25,
             64
         );
         camera.position.copy(this.cameraBase)
@@ -218,7 +218,7 @@ export default class Scene extends LifeCycle {
 
     //--- animations ---
 
-    animateMouse() {
+    mouseAnimationFn() {
         return (timer: number, tick:number) => {
             const mouse = this.mouse;
             if (mouse.x === 0 && mouse.y === 0) return;
@@ -280,10 +280,11 @@ export default class Scene extends LifeCycle {
     }
 
     easeInOut(x: number): number {
+        //S-curve flat at 0,0 and 1,1 and 45 deg at 0.5
         return x < 0.5 ? 2*x*x : 1 - (x*(4*x-8)+4) / 2;
     }
 
-    animateCamera() {
+    cameraAnimationFn() {
         return (timer:number, tick:number) => {
             if (this.startTime > 0 && timer < this.startTime + 1000) {
                 this.camera.position.lerpVectors(this.startCameraPos, this.endCameraPos, this.easeInOut((timer-this.startTime)/1000))

@@ -8,9 +8,10 @@ describe('The Vuetrex Stage object', () => {
         // @ts-ignore
         const wrapper = shallowMount(Vuetrex,{
             propsData: {
-                play: false
+                camera: "camera"
             }
         });
         expect(wrapper).toBeDefined();
+        expect(wrapper.vm.camera).toBe("camera");
     })
 })

@@ -16,7 +16,7 @@
         <cylinder name="c3" text="new" />
       </row>
       <row>
-        <box name="d1" size="3" connection="b4"  @click="dBoxClick"/>
+        <box name="d1" size="2" connection="b4"  @click="dBoxClick"/>
       </row>
       <row v-if="extraRow">
         <box name="e1" size="1" />

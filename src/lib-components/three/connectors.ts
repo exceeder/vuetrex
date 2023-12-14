@@ -72,7 +72,8 @@ export class Connectors {
             containerCount: spawnerOptions.containerCount
         } );
         this.stage.scene.add( this.particleSystem );
-        this.stage.onAnimate(this.animateParticles());
+        //TODO
+        this.stage.registerAnimation(this.animateParticles());
         options.color = stage.settings.particleColor || 0xa0ffff;
         options.particleSpread  = stage.settings.particleSpread || 0.035;
         spawnerOptions.spawnRate  = stage.settings.particleVolume || 50;

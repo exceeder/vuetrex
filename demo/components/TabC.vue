@@ -46,16 +46,16 @@ export default {
     const settings : VxSettings = {
       unit: 1.25,
       distance: 1.5,
-      color: 0x334455,
+      color: 0x334755,
       highlightColor: 0x3377bb,
       floorColor: 0xffffff,
       captionColor: 0x333333,
       particleColor: 0x707070,
-      lightColor1: 0xffffff,
+      lightColor1: 0x7070ff,
       lightColor2: 0xffffff,
-      lightColor3: 0xffffff,
-      mirrorOpacity: 0.9,
-      particleSpread: 0.1,
+      lightColor3: 0x0000ff,
+      mirrorOpacity: 0.92,
+      particleSpread: 0.2,
       particleVolume: 5,
       particleBlending: 1
     }
@@ -115,7 +115,7 @@ export default {
             myText.position.y = 0.1
             myText.position.x = 0
             myText.rotation.x = -1.57
-            myText.color = 0x8090A0
+            myText.color = 0x507090
             myText.sync()
 
           },

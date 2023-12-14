@@ -1,6 +1,5 @@
 import { beforeEach, describe, it, expect} from 'vitest'
 import { shallowMount } from '@vue/test-utils'
-import NoOp from "./NoOp.vue"
 import Simple from "./Simple.vue"
 
 beforeEach(() => {
@@ -35,5 +34,6 @@ describe('Vuetrex Component works object', () => {
         const wrapper = shallowMount(Simple,{
         });
         expect(wrapper).toBeDefined();
+        expect(wrapper.vm.counter.valueOf()).toBe(0);
     })
 })

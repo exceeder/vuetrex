@@ -1,41 +1,62 @@
 import {
-	OrthographicCamera, Mesh, BufferGeometry, Float32BufferAttribute
-} from "three";
+	BufferGeometry,
+	Float32BufferAttribute,
+	OrthographicCamera,
+	Mesh
+} from 'three';
 
 class Pass {
 
 	constructor() {
 
+		this.isPass = true;
+
 		// if set to true, the pass is processed by the composer
-		this.enabled = true; // if set to true, the pass indicates to swap read and write buffer after rendering
+		this.enabled = true;
 
-		this.needsSwap = true; // if set to true, the pass clears its buffer before rendering
+		// if set to true, the pass indicates to swap read and write buffer after rendering
+		this.needsSwap = true;
 
-		this.clear = false; // if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
+		// if set to true, the pass clears its buffer before rendering
+		this.clear = false;
 
+		// if set to true, the result of the pass is rendered to screen. This is set automatically by EffectComposer.
 		this.renderToScreen = false;
 
 	}
 
-	setSize() {}
+	setSize( /* width, height */ ) {}
 
-	render() {
+	render( /* renderer, writeBuffer, readBuffer, deltaTime, maskActive */ ) {
 
-		console.error( 'Pass: .render() must be implemented in derived pass.' );
+		console.error( 'THREE.Pass: .render() must be implemented in derived pass.' );
 
 	}
 
-} // Helper for passes that need to fill the viewport with a single quad.
+	dispose() {}
 
+	}
 
-const _camera = new OrthographicCamera( - 1, 1, 1, - 1, 0, 1 ); // https://github.com/mrdoob/js/pull/21358
+// Helper for passes that need to fill the viewport with a single quad.
 
+const _camera = new OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 
-const _geometry = new BufferGeometry();
+// https://github.com/mrdoob/three.js/pull/21358
 
-_geometry.setAttribute( 'position', new Float32BufferAttribute( [ - 1, 3, 0, - 1, - 1, 0, 3, - 1, 0 ], 3 ) );
+class FullscreenTriangleGeometry extends BufferGeometry {
 
-_geometry.setAttribute( 'uv', new Float32BufferAttribute( [ 0, 2, 0, 0, 2, 0 ], 2 ) );
+	constructor() {
+
+		super();
+
+		this.setAttribute( 'position', new Float32BufferAttribute( [ - 1, 3, 0, - 1, - 1, 0, 3, - 1, 0 ], 3 ) );
+		this.setAttribute( 'uv', new Float32BufferAttribute( [ 0, 2, 0, 0, 2, 0 ], 2 ) );
+
+	}
+
+}
+
+const _geometry = new FullscreenTriangleGeometry();
 
 class FullScreenQuad {
 
@@ -71,4 +92,4 @@ class FullScreenQuad {
 
 }
 
-export { FullScreenQuad, Pass };
+export { Pass, FullScreenQuad };

@@ -5,6 +5,8 @@ import Element3d from "@/lib-components/three/element3d";
 import {Node} from "@/lib-components/nodes/Node";
 import {Connectors} from "@/lib-components/three/connectors";
 
+//import gsap from 'gsap';
+
 export interface VxStage {
     getScene(): THREE.Scene
     onEachFrame(fn: (time: number, tick:number) => void): void
@@ -33,6 +35,11 @@ export interface VxSettings {
 export interface VxMouseEvent extends MouseEvent {
     vxNode: Node;
     vxPosition: any;
+}
+
+interface EvType {
+    type: string
+    originalEvent: MouseEvent
 }
 
 let R = 1.3; //box radius
@@ -74,7 +81,7 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     onEachFrame(fn: (time: number, tick:number) => void): void {
-        this.onAnimate(fn);
+        // this.onAnimate(fn);
     }
 
     mount() {
@@ -86,8 +93,10 @@ export class VuetrexStage extends Scene implements VxStage {
         //particle system
         this.connectors = new Connectors(this);
 
-        this.onAnimate(this.animateCamera());
-        this.onAnimate(this.animateMouse());
+        //TODO
+        //gsap.to(this.camera.position, {duration:2.1, x:0.2, y:1.75, z:2.5,  delay: 0.5});
+        this.registerAnimation(this.cameraAnimationFn()); //push tween function to be called on each frame
+        this.registerAnimation(this.mouseAnimationFn());
     }
 
     getById(id: string): Element3d {
@@ -130,11 +139,12 @@ export class VuetrexStage extends Scene implements VxStage {
         let material = new THREE.MeshStandardMaterial({
             color: '#f0f0f0',
             roughness: 0.1,
-            metalness: 0.4,
+            metalness: 0.5,
             opacity: 0.999,
             transparent: true,
             map: texture.texture
         });
+        material.toneMapped = false;
         let plane = new THREE.Mesh(new THREE.PlaneGeometry(caps.planeSize, caps.planeSize), material);
         plane.rotation.x = -Math.PI / 2.0;
         plane.position.y = -0.3495;
@@ -147,7 +157,7 @@ export class VuetrexStage extends Scene implements VxStage {
         const caps = this.caps;
         const textureSize = caps.size;
         const textureRepeats = caps.repeats;
-        const texture = caps.texture!
+        const texture = caps.texture!;
         texture.clear(undefined)
         texture.clear('#' + ( this.settings.floorColor || 0x3f3f3f).toString(16) +
             Math.floor((this.settings.mirrorOpacity || 0.85)*256).toString(16) //opacity
@@ -161,18 +171,19 @@ export class VuetrexStage extends Scene implements VxStage {
             const x = c.x * scale
             const y = c.y * scale
             texture.drawText(c.text, x + textureSize / 2 - w / 2, y + textureSize / 2 + R/4*scale,
-                '#'+(this.settings.captionColor || 0xeeffff).toString(16))
+                '#'+(this.settings.captionColor || 0xffffff).toString(16))
         })
 
         texture.fillStyle = '0x5070f0'
-        texture.setGlobalAlpha(0.1)
+        texture.setGlobalAlpha(0.2)
         for (let i=0; i<20; i++) {
             texture.fillRect(100, 100 + 100*i, 1897, 2)
         }
+        texture.setGlobalAlpha(0.1)
         for (let i=0; i<20; i++) {
             texture.fillRect(100 + 100*i, 100,2, 1897)
         }
-        texture.drawText("Bonjour", 110, 1980, '#eeffff')
+        //texture.drawText("Bonjour", 110, 1980, '#eeffff')
         texture.setGlobalAlpha(1.0)
 
 
@@ -189,17 +200,19 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     createLights(scene: THREE.Scene) {
-        let light = new THREE.PointLight(this.settings.lightColor1 || 0xccccff, 0.5, 50)
+        const light = new THREE.SpotLight(this.settings.lightColor1 || 0xccccff, 5.5, 20, 25.5)
 
-        light.position.set(20, 25, 15);
+        light.position.set(5, 15, -5);
+        light.target.position.set(0, -2, -2);
+        light.castShadow = true;
         scene.add(light);
 
-        let light2 = new THREE.DirectionalLight(this.settings.lightColor2 || 0xffffff, 0.5);
+        const light2 = new THREE.DirectionalLight(this.settings.lightColor2 || 0xffffff, 5.5);
         light2.position.set(-7, 25, 13);
         light2.target.position.set( 0, 0, 0 );
         light2.castShadow = true;
         const d = 8;
-        light2.shadow.camera = new THREE.OrthographicCamera( -d, d, d, -d,  1, 55);
+        light2.shadow.camera = new THREE.OrthographicCamera( -d, d, d, -d,  0.5, 55);
         light2.shadow.radius = 10;
         light2.shadow.bias = -0.002;
         (light2.shadow as any).blurSamples = 16;
@@ -209,11 +222,11 @@ export class VuetrexStage extends Scene implements VxStage {
 
         // let light3 = new THREE.PointLight(this.settings.lightColor1 || 0xbbbbff, 0.3);
         // light3.position.set(10, -10, 5);
-        const light3 = new THREE.HemisphereLight(0x808080, 0x080820, 2);
+        //const light3 = new THREE.HemisphereLight(0xffffff, 0x000000, 1.0);
         //light3.castShadow = true;
-        scene.add(light3);
+        //scene.add(light3);
         //
-        // let light4 = new THREE.AmbientLight(this.settings.lightColor3 || 0xffffff, 0.3);
+        // const light4 = new THREE.AmbientLight(this.settings.lightColor3 || 0xffffff, 0.3);
         // light4.position.y = 10;
         // scene.add(light4);
     }
@@ -334,7 +347,7 @@ export class VuetrexStage extends Scene implements VxStage {
             case 'rbox': {
                 return (height, size) => {
                     const bMaterial = this.createElementMaterial();
-                    const bGeometry = new THREEx.RoundedBoxBufferGeometry(size, height, size,  5, .05);
+                    const bGeometry = new THREEx.RoundedBoxGeometry(size, height, size,  5, .05);
                     return new THREE.Mesh(bGeometry, bMaterial);
                 }
 
@@ -410,7 +423,9 @@ export class VuetrexStage extends Scene implements VxStage {
             const ev = event as VxMouseEvent;
             ev.vxNode = el3d.node;
             ev.vxPosition = el3d.mesh?.position.clone();
-            el3d.mesh?.dispatchEvent({type:'click', originalEvent: ev })
+            const clickEvent = {type: 'click', originalEvent: ev };
+            // @ts-ignore //TODO fix types
+            el3d.mesh?.dispatchEvent(clickEvent);
         }
     }
 
@@ -428,10 +443,11 @@ export class VuetrexStage extends Scene implements VxStage {
                 this.retargetCamera(new THREE.Vector3(0.0, 0.0, 1.5), new THREE.Vector3(0.0, 13.0, 8.0))
             } break;
             default: {
-                const el = this.scene.getObjectByName('el-'+camera);
+                const el: THREE.Object3D | undefined = this.scene.getObjectByName('el-'+camera);
                 if (el) {
-                    //this.cameraMotion.set(0.0, 0.0, 0.0);
-                    this.retargetCamera(el.position,  new THREE.Vector3(el.position.x, el.position.y + 4.0, el.position.z + 4.2))
+                    this.cameraMotion.set(0.0, 0.0, 0.0);
+                    this.retargetCamera(el.position,
+                        new THREE.Vector3(el.position.x, el.position.y + 4.0, el.position.z + 4.2))
                 }
             }
         }

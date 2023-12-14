@@ -67,7 +67,6 @@ export class Node extends Base {
     }
 
     setName(name: string) {
-        console.log("name ",name)
         this.name = name;
     }
 

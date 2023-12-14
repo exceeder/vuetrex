@@ -249,7 +249,6 @@ class GPUParticleContainer extends THREE.Object3D {
         this.gen = particleSystem; //todo extract randomizer
 
         this.particleShaderMat = particleSystem.particleShaderMat;
-
         // geometry
 
         this.particleShaderGeo = new THREE.BufferGeometry();
@@ -375,16 +374,14 @@ class GPUParticleContainer extends THREE.Object3D {
 
             const updateCountsOffsets = (...attrs: THREE.BufferAttribute[]) => {
                 attrs.forEach(attr => {
-                    attr.updateRange.offset = this.offset * attr.itemSize
-                    attr.updateRange.count = this.count * attr.itemSize
+                    attr.addUpdateRange(this.offset * attr.itemSize, this.count * attr.itemSize);
                     attr.needsUpdate = true;
                 });
             }
 
             const resetCountsOffsets = (...attrs: THREE.BufferAttribute[]) => {
                 attrs.forEach(attr => {
-                    attr.updateRange.offset = 0
-                    attr.updateRange.count = -1
+                    attr.addUpdateRange(0,0);
                     attr.needsUpdate = false;
                 });
             }
