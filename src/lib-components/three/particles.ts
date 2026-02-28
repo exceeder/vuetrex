@@ -4,7 +4,7 @@
  *
  *
  * Credits:
- * Shader and javascript code derived from several Stack Overflow examples and some work of
+ * Shader and JavaScript code derived from several Stack Overflow examples and some work of
  *  Charlie Hoey - http://charliehoey.com
  */
 
@@ -225,20 +225,21 @@ const minMax = new THREE.Vector2();
 const velocity = new THREE.Vector3();
 const color = new THREE.Color();
 
-// Subclass for particle containers, allows for very large arrays to be spread out
+// Subclass for particle containers allows for very large arrays to be spread out
 
 class GPUParticleContainer extends THREE.Object3D {
     private PARTICLE_COUNT: number;
     private PARTICLE_CURSOR: number = 0;
     private time: number = 0;
     private offset: number = 0;
-    private count: number = 0;
     private DPR: number;
     private gen: FastRandom;
     private particleUpdate: boolean;
     private particleShaderGeo: THREE.BufferGeometry;
     private particleSystem: THREE.Points<THREE.BufferGeometry, any>;
     private particleShaderMat: THREE.ShaderMaterial;
+
+    count: number = 0;
 
     constructor(maxParticles: number, particleSystem: VuetrexParticles) {
         super();

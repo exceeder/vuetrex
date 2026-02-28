@@ -96,7 +96,7 @@ export default class Scene extends LifeCycle {
     }
 
     start() {
-        this.animate(0);
+        super.start();
     }
 
     stop() {
