@@ -6,12 +6,6 @@ export class Root extends Node {
         super(stage);
     }
 
-    syncWithThree() {
-        super.syncWithThree();
-        //update non-containers
-        this.children.value.forEach(b => b.syncWithThree())
-    }
-
     destroy() {
         while (this.children.value.length > 0)
             this.removeChild(this.children.value[this.children.value.length-1]);
@@ -27,6 +21,8 @@ export class Comment extends Base {
         this.text = text;
     }
 
+    protected subscribeEvents() : void {}
+
     public get state() { return {}; }
 }
 
@@ -37,6 +33,8 @@ export class TextNode extends Base {
         super();
         this.text = text;
     }
+
+    protected subscribeEvents() : void {}
 
     public get state() { return {}; }
 

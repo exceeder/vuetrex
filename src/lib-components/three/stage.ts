@@ -200,11 +200,10 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     createLights(scene: THREE.Scene) {
-        const light = new THREE.SpotLight(this.settings.lightColor1 || 0xccccff, 5.5, 20, 25.5)
+        const light = new THREE.DirectionalLight(this.settings.lightColor1 || 0xccccff, 1.5);
 
-        light.position.set(5, 15, -5);
-        light.target.position.set(0, -2, -2);
-        light.castShadow = true;
+        light.position.set(20, 3, -25);
+        light.target.position.set(-5, -0.5, 0);
         scene.add(light);
 
         const light2 = new THREE.DirectionalLight(this.settings.lightColor2 || 0xffffff, 5.5);
@@ -213,10 +212,10 @@ export class VuetrexStage extends Scene implements VxStage {
         light2.castShadow = true;
         const d = 8;
         light2.shadow.camera = new THREE.OrthographicCamera( -d, d, d, -d,  0.5, 55);
-        light2.shadow.radius = 10;
-        light2.shadow.bias = -0.002;
+        light2.shadow.radius = 11;
+        light2.shadow.bias = -0.003;
         (light2.shadow as any).blurSamples = 16;
-        light2.shadow.mapSize.width = light.shadow.mapSize.height = 1024;
+        light2.shadow.mapSize.width = light2.shadow.mapSize.height = 512;
 
         scene.add(light2);
 
@@ -424,7 +423,7 @@ export class VuetrexStage extends Scene implements VxStage {
             ev.vxNode = el3d.node;
             ev.vxPosition = el3d.mesh?.position.clone();
             const clickEvent = {type: 'click', originalEvent: ev };
-            // @ts-ignore //TODO fix types
+            // @ts-ignore //TODO THREE.EventDispatcher allows to dispatch custom events, but TS limits it
             el3d.mesh?.dispatchEvent(clickEvent);
         }
     }

@@ -21,11 +21,6 @@ export class Layer extends Node {
         super(stage)
     }
 
-    registerSync() {
-        super.registerSync();
-        //this.state.children = this.numChildren();
-    }
-
     syncWithThree() {
         if (this.stopHandle) return
         this.stopHandle = watchEffect(() => {
@@ -37,7 +32,6 @@ export class Layer extends Node {
                     this.stage.renderMesh(this.element, 1.0, 10.0, this.stage.meshCreator('plane'));
                 }
         })
-        super.syncWithThree();
     }
 
     onRemoved() {

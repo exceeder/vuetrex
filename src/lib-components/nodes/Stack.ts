@@ -16,15 +16,6 @@ export class Stack extends Node {
         super(stage);
     }
 
-    registerSync() {
-        super.registerSync();
-    }
-
-    syncWithThree() {
-        this.children.value.forEach(b => b.syncWithThree())
-        super.syncWithThree();
-    }
-
     onRemoved() {
         this.children.value.forEach(c => c.onRemoved());
     }

@@ -10,7 +10,7 @@ type NodeEvents = {
 }
 
 /**
- * Named node in the tree hierarchy of Vuetrex renderer.
+ * Named node in the ThreeJS tree hierarchy of Vuetrex renderer.
  */
 export class Node extends Base {
     public element: Element3d;
@@ -19,6 +19,8 @@ export class Node extends Base {
     public name: string = Math.floor(Math.random()*100000).toString(32)
     subscribed: boolean = false
     public readonly type: string = 'Node'
+
+    public static readonly CLICK: string = 'click'
 
     public state = reactive({
         text: ''
@@ -84,14 +86,14 @@ export class Node extends Base {
         if (pn) pn.dispatchClick(e);
     }
 
-    syncWithThree() {
+    subscribeEvents() {
         nextTick(() => {
             if (!this.subscribed) {
-                this.element.mesh?.addEventListener('click', this.clickListener)
+                // @ts-ignore //TODO THREE.EventDispatcher allows to dispatch custom events, but TS limits it
+                this.element.mesh?.addEventListener(Node.CLICK, this.clickListener)
                 this.subscribed = true
             }
         }).catch(() => {});
-        super.syncWithThree();
     }
 }
 

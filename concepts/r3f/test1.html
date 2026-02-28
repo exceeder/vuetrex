@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Three Fiber GLTF Loader</title>
+  <style>
+      body { margin: 0; padding: 0; overflow: hidden; }
+      #root { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Babel Standalone for JSX transformation -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- React -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+<!-- Three.js -->
+<script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+
+<!-- React Three Fiber -->
+<script src="https://unpkg.com/@react-three/fiber@8.15.11/dist/index.umd.js"></script>
+
+<!-- React Three Drei -->
+<script src="https://unpkg.com/@react-three/drei@9.88.17/dist/index.umd.js"></script>
+
+<script type="text/babel">
+    const { Suspense } = React;
+    const { createRoot } = ReactDOM;
+    const { Canvas } = ReactThreeFiber;
+    const { useGLTF, OrbitControls } = ReactThreeDrei;
+
+    // GLTF Model Component
+    function Model({ url }) {
+        const { scene } = useGLTF(url);
+        return <primitive object={scene} />;
+    }
+
+    // Loading fallback
+    function Loading() {
+        return (
+            <mesh>
+                <boxGeometry args={[1, 1, 1]} />
+                <meshStandardMaterial color="orange" />
+            </mesh>
+        );
+    }
+
+    // Main App
+    function App() {
+        return (
+            <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[10, 10, 5]} intensity={1} />
+
+                <Suspense fallback={<Loading />}>
+                    <Model url="https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf" />
+                </Suspense>
+
+                <OrbitControls
+                    enablePan={true}
+                    enableZoom={true}
+                    enableRotate={true}
+                />
+            </Canvas>
+        );
+    }
+
+    // Initialize
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+</script>
+</body>
+</html>

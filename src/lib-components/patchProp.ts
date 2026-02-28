@@ -1,4 +1,4 @@
-import { ComponentInternalInstance, SuspenseBoundary, VNode } from "vue";
+import {ComponentInternalInstance, ElementNamespace, SuspenseBoundary, VNode} from "vue";
 import { Base } from "@/lib-components/nodes/Base";
 
 /**
@@ -9,11 +9,8 @@ export function patchProp(
     key: string,
     prevValue: any,
     nextValue: any,
-    isSVG: boolean,
-    prevChildren?: VNode[],
-    parentComponent?: ComponentInternalInstance,
-    parentSuspense?: SuspenseBoundary,
-    unmountChildren?: any,
+    namespace?: ElementNamespace,
+    parentComponent?: ComponentInternalInstance | null
 ) {
   getSetter(key)(el, nextValue);
 }

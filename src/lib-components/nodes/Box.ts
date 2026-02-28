@@ -2,6 +2,7 @@ import {reactive, watchEffect, WatchStopHandle, nextTick} from 'vue';
 import {Node} from '@/lib-components/nodes/Node';
 import {VuetrexStage} from "@/lib-components/three/stage";
 
+
 export class Box extends Node {
 
     public state: { text: string, size: number, height:number, connection: string | null } = reactive({
@@ -36,7 +37,6 @@ export class Box extends Node {
                 }).catch(r => console.log(r));
             }
         }, {flush: 'post'})
-        super.syncWithThree();
     }
 
     setSize(size: number) {
@@ -54,7 +54,8 @@ export class Box extends Node {
                 this.stopHandle = undefined;
             }
             if (this.subscribed) {
-                this.element.mesh?.removeEventListener("click", this.clickListener)
+                // @ts-ignore //TODO THREE.EventDispatcher allows to dispatch custom events, but TS limits it
+                this.element.mesh?.removeEventListener(Node.CLICK, this.clickListener)
             }
             this.stage.removeObject(this.element)
         }

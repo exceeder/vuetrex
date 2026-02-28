@@ -46,7 +46,6 @@ export class Cylinder extends Node {
                 }).catch(r => console.log(r));
             }
         },{flush: 'sync'})
-        super.syncWithThree();
     }
 
     onRemoved() {
@@ -56,7 +55,8 @@ export class Cylinder extends Node {
                 this.stopHandle = undefined;
             }
             if (this.subscribed) {
-                this.element.mesh?.removeEventListener("click", this.clickListener)
+                // @ts-ignore //TODO THREE.EventDispatcher allows to dispatch custom events, but TS limits it
+                this.element.mesh?.removeEventListener(Node.CLICK, this.clickListener)
             }
             this.stage.removeObject(this.element)
         }

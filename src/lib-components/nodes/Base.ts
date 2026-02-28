@@ -5,7 +5,7 @@ const pendingSyncBase: Base[] = [];
 let pending = false;
 
 const flushChanges = () => {
-    pendingSyncBase.forEach(b => b.syncWithThree())
+    pendingSyncBase.forEach(b => b.applySync())
     pendingSyncBase.length = 0
     pending = false
 };
@@ -50,6 +50,7 @@ export abstract class Base {
     public numRows: ComputedRef<number> = computed(() => (this.parent.value?.parent.value?.renderSize.value || 1));
 
     public abstract get state():  { [id: string] : any };
+    protected abstract subscribeEvents(): void;
 
     public readonly nextSibling : ComputedRef<Base | null> = computed(() => {
             if (this.parent.value === null) {
@@ -96,13 +97,20 @@ export abstract class Base {
 
     registerSync() {
         if (!this.mustSync) {
-            this.mustSync = true;
-            registerUpdatedBase(this);
+            this.mustSync = true
+            registerUpdatedBase(this)
         }
     }
 
+    applySync(): void {
+        this.children.value.forEach(b => {
+            b.syncWithThree()
+            if (b.subscribeEvents) b.subscribeEvents()
+        })
+        this.mustSync = false
+    }
+
     syncWithThree() {
-        this.mustSync = false;
     }
 
     setElementText(text: string) {
