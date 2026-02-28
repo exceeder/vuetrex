@@ -47,8 +47,10 @@ export default defineConfig({
             }
         }})
     ],
+    // @ts-ignore
     test: {
         globals: true,
-        environment: "happy-dom"
+        environment: "happy-dom",
+        setupFiles: ['./test/setup.ts']
     }
 })
