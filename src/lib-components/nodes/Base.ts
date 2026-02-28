@@ -57,7 +57,7 @@ export abstract class Base {
                 return null;
             }
             const arr = this.parent.value.children.value;
-            const idx = arr.indexOf(this) || -1;
+            const idx = arr.indexOf(this);
             let result = null
             if (idx >= 0 && idx < arr.length-1) {
                 result = arr[idx + 1]
