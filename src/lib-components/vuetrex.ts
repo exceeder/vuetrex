@@ -2,6 +2,7 @@ import { createRendererForStage } from "@/lib-components/renderer";
 import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, onUnmounted, ref, PropType, watch } from "vue";
 import { Root } from "@/lib-components/nodes/Root";
 import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings, VxMouseEvent as _VxMouseEvent } from "@/lib-components/three/stage";
+import { ElementRegistry } from "@/lib-components/nodes/types";
 
 export type VxStage = _VxStage;        // A ThreeJS scene rendered within a DOM element, supporting configurable camera and settings.
 export type VxSettings = _VxSettings;  // Configuration options such as color schemes and material opacity.
@@ -25,7 +26,8 @@ export default defineComponent({
         width: { type: String, default: "100%" },
         stopped: { type: Boolean, default: false },
         camera: {type: String, default: "scene"},
-        items: { type: Array, default: () => [] }
+        items: { type: Array, default: () => [] },
+        elements: { type: Object as PropType<ElementRegistry>, default: () => ({}) }
     },
     emits: ["ready"],
     setup(props, {slots, emit}) {
@@ -72,7 +74,7 @@ export default defineComponent({
             }
 
             const stage = new VuetrexStage(elRef.value, {...props.settings});
-            const vuetrexRenderer = createRendererForStage(stage);
+            const vuetrexRenderer = createRendererForStage(stage, props.elements);
             stageRoot = new Root(stage);
 
             stage.mount();

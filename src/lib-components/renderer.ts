@@ -1,8 +1,9 @@
 import { createRenderer, RootRenderFunction } from "vue";
 import { nodeOps } from "@/lib-components/nodeOps";
 import { patchProp } from "@/lib-components/patchProp";
-import {VuetrexStage} from "@/lib-components/three/stage";
-import {Base} from "@/lib-components/nodes/Base";
+import { VuetrexStage } from "@/lib-components/three/stage";
+import { Base } from "@/lib-components/nodes/Base";
+import { ElementRegistry } from "@/lib-components/nodes/types";
 
 /**
  * Vuetrex Stage requires implementation of Vue's Custom Renderer to hijack painting of boxes and cylinders and other
@@ -34,10 +35,10 @@ import {Base} from "@/lib-components/nodes/Base";
  * @param stage Vuetrex Stage
  */
 
-export function createRendererForStage(stage: VuetrexStage): RootRenderFunction<Base> {
+export function createRendererForStage(stage: VuetrexStage, extraTypes?: ElementRegistry): RootRenderFunction<Base> {
     const { render } = createRenderer({
         patchProp,
-        ...nodeOps(stage)
+        ...nodeOps(stage, extraTypes)
     });
 
     return render;

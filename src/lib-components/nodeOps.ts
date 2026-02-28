@@ -2,9 +2,9 @@ import { Base } from "@/lib-components/nodes/Base";
 import { Comment, TextNode } from "@/lib-components/nodes/Root";
 import { RendererOptions } from "@vue/runtime-core";
 import { VuetrexStage } from "@/lib-components/three/stage";
-import {types, FunctionalComponent, ClassComponent} from "@/lib-components/nodes/types";
+import { types, ElementRegistry, FunctionalComponent, ClassComponent } from "@/lib-components/nodes/types";
 
-export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
+export const nodeOps = (stage: VuetrexStage, extraTypes?: ElementRegistry): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
 
   insert: (child, parent, anchor) => {
     if (anchor != null) {
@@ -21,17 +21,17 @@ export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, 
     }
   },
 
-  createElement: (tag: keyof typeof types, isSVG, isCustomizedBuiltIn) => {
-    let type = types[tag];
-     if (!type) {
-       console.warn(`Vuetrex nodeOps: unknown tag: ${tag}`);
-       return new Comment("Unknown "+tag);
-     }
-     if (typeof (type as any).setup === 'function') {
-        return (type as FunctionalComponent).setup(stage);
-     } else {
-       return new (type as ClassComponent)(stage);
-     }
+  createElement: (tag: string, isSVG, isCustomizedBuiltIn) => {
+    const type = extraTypes?.[tag] ?? types[tag];
+    if (!type) {
+      console.warn(`Vuetrex nodeOps: unknown tag: ${tag}`);
+      return new Comment("Unknown " + tag);
+    }
+    if (typeof (type as FunctionalComponent).setup === 'function') {
+      return (type as FunctionalComponent).setup(stage);
+    } else {
+      return new (type as ClassComponent)(stage);
+    }
   },
 
   createText: (text) => {

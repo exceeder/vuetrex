@@ -6,16 +6,20 @@ import {Row} from "@/lib-components/nodes/Row";
 import {Stack} from "@/lib-components/nodes/Stack";
 import {Cylinder} from "@/lib-components/nodes/Cylinder";
 
-interface FunctionalComponent {
+export interface FunctionalComponent {
     setup(stage: VuetrexStage): Base
 }
 
-type ClassComponent = new (stage: VuetrexStage) => Base
+export type ClassComponent = new (stage: VuetrexStage) => Base
+
+export type ElementRegistry = Record<string, ClassComponent | FunctionalComponent>
 
 /**
- * NodeOps createElement uses this dictionary of elements to create custom DOM elements that are mapped to 3D scene
+ * Built-in element types shipped with Vuetrex.
+ * Use registerElement() to add custom types globally or pass an `elements`
+ * prop to <vuetrex> for per-instance registration.
  */
-const types: Record<string, ClassComponent | FunctionalComponent> = {
+const builtins: ElementRegistry = {
     layer: Layer,
     row: Row,
     box: Box,
@@ -23,5 +27,13 @@ const types: Record<string, ClassComponent | FunctionalComponent> = {
     stack: Stack
 }
 
-export {types}
-export type {FunctionalComponent, ClassComponent}
+/**
+ * Register a custom element type globally. Must be called before the
+ * <vuetrex> component mounts. For per-instance registration use the
+ * `elements` prop instead.
+ */
+export function registerElement(tag: string, impl: ClassComponent | FunctionalComponent): void {
+    builtins[tag] = impl
+}
+
+export { builtins as types }
