@@ -122,6 +122,7 @@ void main() {
 /**
  * Class representing a particle system with GPU-accelerated support and customizable shaders.
  * Extends the THREE.Object3D class.
+ *
  */
 export class VuetrexParticles extends Object3D implements FastRandom {
     private readonly PARTICLE_COUNT: number;
@@ -219,8 +220,12 @@ const minMax = new THREE.Vector2();
 const velocity = new THREE.Vector3();
 const color = new THREE.Color();
 
-// Subclass for particle containers allows for very large arrays to be spread out
 
+/**
+ * A container for managing GPU-based particles in a Three.js rendering system.
+ * Extends `THREE.Object3D` and represents a point cloud-based particle system.
+ * Each particle is defined by multiple attributes including position, velocity, color, size, and lifetime.
+ */
 class GPUParticleContainer extends THREE.Object3D {
     private PARTICLE_COUNT: number;
     private PARTICLE_CURSOR: number = 0;

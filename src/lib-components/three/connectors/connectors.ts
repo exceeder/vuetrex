@@ -1,7 +1,8 @@
-import {VuetrexStage} from "./stage";
-import {VuetrexParticles, ParticleOptions} from "@/lib-components/three/particles";
-import * as THREE from "three"
+import {VuetrexStage} from "../stage";
+import {VuetrexParticles, ParticleOptions} from "@/lib-components/three/connectors/particles";
+import {Segment} from "@/lib-components/three/connectors/path";
 import Element3d from "@/lib-components/three/element3d";
+import * as THREE from "three"
 
 const options: ParticleOptions = {
     position: new THREE.Vector3(-2.5, 0.2, -0.5),
@@ -26,34 +27,6 @@ const spawnerOptions = {
     containerCount: 1
 };
 
-
-// class Connector {
-//     sEl: Element3d
-//     tEl: Element3d
-//     isVertical: boolean
-//     mid: number
-//     s: number
-//     t: number
-// }
-
-class Segment {
-    horizontal: boolean
-    mid: number
-    s: number
-    t: number
-    len: number
-    sEl: Element3d
-    tEl: Element3d
-    constructor(horizontal: boolean, mid: number, s: number, t: number, sEl: Element3d, tEl: Element3d) {
-        this.horizontal = horizontal;
-        this.mid = mid
-        this.s = s
-        this.t = t
-        this.len = Math.abs(t-s);
-        this.sEl = sEl;
-        this.tEl = tEl;
-    }
-}
 
 /**
  * The Connectors class is responsible for managing connections between elements in a 3D scene,

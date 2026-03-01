@@ -3,7 +3,7 @@ import * as THREEx from "@/lib-components/three/three.imports";
 import Scene from "@/lib-components/three/scene";
 import Element3d from "@/lib-components/three/element3d";
 import {Node} from "@/lib-components/nodes/Node";
-import {Connectors} from "@/lib-components/three/connectors";
+import {Connectors} from "@/lib-components/three/connectors/connectors";
 
 //import gsap from 'gsap';
 
@@ -108,17 +108,19 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     createGroundMirror(scene: THREE.Scene) {
-        const geometry = new THREE.PlaneGeometry(100, 100);
-        const groundMirror = new THREEx.Reflector(geometry, {
-            clipBias: 0.003,
-            textureWidth: this.width * window.devicePixelRatio * 2,
-            textureHeight: this.height * window.devicePixelRatio * 2,
-            color: new THREE.Color(this.settings.floorColor || 0x777777)
-        });
-        groundMirror.rotateX(-Math.PI / 2);
-        groundMirror.position.y = -0.25;
-        groundMirror.receiveShadow = false;
-        scene.add(groundMirror);
+        if ((this.settings.mirrorOpacity ?? 1) < 0.99) {
+            const geometry = new THREE.PlaneGeometry(100, 100);
+            const groundMirror = new THREEx.Reflector(geometry, {
+                clipBias: 0.003,
+                textureWidth: this.width * window.devicePixelRatio * 2,
+                textureHeight: this.height * window.devicePixelRatio * 2,
+                color: new THREE.Color(this.settings.floorColor || 0x777777)
+            });
+            groundMirror.rotateX(-Math.PI / 2);
+            groundMirror.position.y = -0.251;
+            groundMirror.receiveShadow = false;
+            scene.add(groundMirror);
+        }
     }
 
     createFloor(scene: THREE.Scene) {
@@ -160,7 +162,7 @@ export class VuetrexStage extends Scene implements VxStage {
         const texture = caps.texture!;
         texture.clear(undefined)
         texture.clear('#' + ( this.settings.floorColor || 0x3f3f3f).toString(16) +
-            Math.floor((this.settings.mirrorOpacity || 0.85)*256).toString(16) //opacity
+            Math.floor((this.settings.mirrorOpacity || 0.90)*256).toString(16) //opacity
         );
 
         texture.context.font = "bold "+Math.floor(textureSize/72)+"px Helvetica"
@@ -175,7 +177,7 @@ export class VuetrexStage extends Scene implements VxStage {
         })
 
         texture.fillStyle = '0x5070f0'
-        texture.setGlobalAlpha(0.2)
+        texture.setGlobalAlpha(0.1)
         for (let i=0; i<20; i++) {
             texture.fillRect(100, 100 + 100*i, 1897, 2)
         }
@@ -185,7 +187,6 @@ export class VuetrexStage extends Scene implements VxStage {
         }
         //texture.drawText("Bonjour", 110, 1980, '#eeffff')
         texture.setGlobalAlpha(1.0)
-
 
         // const size = 2048;
         // const stops = [0.75,0.6,0.4,0.25]
@@ -200,7 +201,7 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     createLights(scene: THREE.Scene) {
-        const light = new THREE.DirectionalLight(this.settings.lightColor1 || 0xccccff, 1.5);
+        const light = new THREE.DirectionalLight(this.settings.lightColor1 || 0xccffff, 2.0);
 
         light.position.set(20, 3, -25);
         light.target.position.set(-5, -0.5, 0);
@@ -307,7 +308,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
                     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
                     geometry.rotateX(Math.PI/2)
-                    geometry.translate(0,0.07,0)
+                    geometry.translate(0,0.19,0)
                     return new THREE.Mesh(geometry, bMaterial);
                 };
             }
