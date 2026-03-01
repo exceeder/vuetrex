@@ -29,7 +29,7 @@ export default {
 }
 </script>
 ```
-Check [TabC](../dev/components/TabC.vue) example for advanced customization. This demo
+Check [dev/components/TabC.vue] example for advanced customization. This demo
 also extensively uses settings, that you can bind to the `settings` property:
 ```js
 <vuetrex :settings="settings">...</vuetrex> 

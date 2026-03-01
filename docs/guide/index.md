@@ -17,7 +17,7 @@ Consider an example:
 
 it will render this
 
-![EXAMPLE 1](../screen1.png)
+![EXAMPLE 1](/screen1.png)
 
 The reactive properties of Vue are preserved, and you can use`v-if`, `v-for`, `@click` events etc., bind
 supported attributes, and build out your reactive 3D scene based on your data as you see fit. There is
@@ -59,5 +59,5 @@ export default {
 </script> 
 ```
 Run `npm run serve`, open your browser to the suggested url and that's it, you got your first 3d world running.
-For a full example, take a look at [this test component](../tests/esm-module/TestApp.vue).
+For a full example, take a look at [tests/esm-module/TestApp.vue].
 
