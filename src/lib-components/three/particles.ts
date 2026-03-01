@@ -119,6 +119,10 @@ void main() {
     gl_FragColor = vec4(col.rgb, col.a);       
 }`
 
+/**
+ * Class representing a particle system with GPU-accelerated support and customizable shaders.
+ * Extends the THREE.Object3D class.
+ */
 export class VuetrexParticles extends Object3D implements FastRandom {
     private readonly PARTICLE_COUNT: number;
     private readonly PARTICLE_CONTAINERS: number;
@@ -148,13 +152,12 @@ export class VuetrexParticles extends Object3D implements FastRandom {
         this.particleContainers = [];
         this.rand = [];
 
-
-        // preload a million random numbers
-        let i = 0;
-        for (i = 16384; i >= 0; i--) {
-            this.rand.push(Math.random() - 0.5);
+        {
+            // FastRandom implementation, preload a million random numbers, closed under array and counter
+            let idx = 0, rand = [], N = 16384;
+            for (idx = N; idx >= 0; idx--) rand.push(Math.random() - 0.5);
+            this.random = () => ++idx >= rand.length ? rand[idx = 0] : rand[idx];
         }
-        this.random = () => ++i >= this.rand.length ? this.rand[i = 0] : this.rand[i];
 
         this.particleShaderMat = new THREE.ShaderMaterial({
             transparent: true,

@@ -92,7 +92,7 @@ export default {
       const loader = new GLTFLoader();
       //const dracoLoader = new DRACOLoader(stage.getScene());
       //loader.setDRACOLoader(dracoLoader);
-     loader.load('demo/assets/tripod2-2.gltf', gltf => {
+     loader.load('/demo/assets/tripod2-2.gltf', gltf => {
             console.log("loaded...", gltf);
             const sceneGroup = gltf.scene;
             thing = sceneGroup;

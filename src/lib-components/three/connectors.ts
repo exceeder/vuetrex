@@ -55,6 +55,10 @@ class Segment {
     }
 }
 
+/**
+ * The Connectors class is responsible for managing connections between elements in a 3D scene,
+ * represented by segments and enhanced with particle animations.
+ */
 export class Connectors {
 
     stage: VuetrexStage;
@@ -79,11 +83,10 @@ export class Connectors {
         spawnerOptions.spawnRate  = stage.settings.particleVolume || 50;
     }
 
-
-
     connect(el1: Element3d, el2: Element3d) {
 
-        const snap = (a:number) => Math.round(a/1.4)*1.4; //todo figure out snapping constant reference
+        //todo figure out snapping constant reference, assumes grid with 1.4 units distance between cells
+        const snap = (a:number) => Math.round(a/1.4)*1.4;
 
         const sx = snap(el1.mesh?.position.x || 0)
         const sy = snap(el1.mesh?.position.z || 0)
@@ -138,8 +141,21 @@ export class Connectors {
         this.segments.splice(0, this.segments.length);
     }
 
-    animateParticles() {
-        return (timer: number, tick: number) => {
+    /**
+     * Animates particles within a particle system by spawning and updating particles
+     * based on defined spawner options and segment data.
+     *
+     * The method calculates random positions, velocities, and other parameters
+     * for the particles and assigns them to spawn particles in the system. It also
+     * handles the update of particle states over time.
+     *
+     * @return {Function} A function with `timer` and `tick` parameters.
+     * The `timer` parameter represents the elapsed time, and the `tick` parameter
+     * represents the current system update tick. The returned function performs
+     * particle spawning and updates.
+     */
+    animateParticles(): (timer: number, tick: number) => void {
+        return (timer, tick) => {
             if (!this.particleSystem) return;
             const particles = this.particleSystem;
 
@@ -147,7 +163,7 @@ export class Connectors {
                 if (this.segments.length == 0) continue;
                 const rnd = particles.random() + 0.5;
                 const rnd2 = particles.random() + 0.75;
-                const seg = Math.floor(rnd * 16384) % this.segments.length
+                const seg = Math.floor(rnd * 16384 + timer) % this.segments.length
                 const s = this.segments[seg];
                 const mid = s.mid;
                 let start = s.s;

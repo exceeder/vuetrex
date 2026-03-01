@@ -18,7 +18,7 @@ export default class Scene extends LifeCycle {
 
     public readonly width: number
     public readonly height: number
-    readonly cameraTarget: THREE.Vector3 = new THREE.Vector3(0.0, 0.0, 1.5);
+    readonly cameraTarget: THREE.Vector3 = new THREE.Vector3(0.0, 0.0, 1.0);
     readonly cameraBase: THREE.Vector3 = new THREE.Vector3(0.0, 12.0, 9.0);
     readonly cameraMotion: THREE.Vector3 = new THREE.Vector3(0.5, 0, 0.5);
 
@@ -136,9 +136,9 @@ export default class Scene extends LifeCycle {
 
     createCamera() {
         const camera = new THREE.PerspectiveCamera(
-            35,
+            40,
             this.width / this.height,
-            0.25,
+            0.1,
             64
         );
         camera.position.copy(this.cameraBase)
