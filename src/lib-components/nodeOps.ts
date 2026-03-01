@@ -1,6 +1,6 @@
 import { Base } from "@/lib-components/nodes/Base";
 import { Comment, TextNode } from "@/lib-components/nodes/Root";
-import { RendererOptions } from "@vue/runtime-core";
+import { ElementNamespace, RendererOptions, VNodeProps} from "@vue/runtime-core";
 import { VuetrexStage } from "@/lib-components/three/stage";
 import { types, ElementRegistry, FunctionalComponent, ClassComponent } from "@/lib-components/nodes/types";
 
@@ -21,7 +21,11 @@ export const nodeOps = (stage: VuetrexStage, extraTypes?: ElementRegistry): Omit
     }
   },
 
-  createElement: (tag: string, isSVG, isCustomizedBuiltIn) => {
+  createElement: (tag: string, namespace?: ElementNamespace, isCustomizedBuiltIn?: string, vnodeProps?: (VNodeProps & { [key: string]: any }) | null) => {
+    if (namespace) {
+      console.warn(`Vuetrex: namespace '${namespace}' is not supported. Remove SVG/MathML from Vuetrex templates.`)
+      return new Comment(`unsupported namespace: ${namespace}`)
+    }
     const type = extraTypes?.[tag] ?? types[tag];
     if (!type) {
       console.warn(`Vuetrex nodeOps: unknown tag: ${tag}`);
