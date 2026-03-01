@@ -102,17 +102,10 @@ float scaleLinear( float value, vec2 valueDomain, vec2 valueRange ) {
 varying vec4 vColor;
 varying float lifeLeft;
 
-void main() {
-    float alpha = 0.5;
-    if( lifeLeft > .05 ) {
-        alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
-    } else {
-        alpha = lifeLeft * 0.95;
-    }
+void main() {        
+    float alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
     alpha = max(1.0,alpha);
     
-    float lum = 0.5; //luminosity
-
     vec2 uv = vec2(gl_PointCoord.x, 1. - gl_PointCoord.y);
     vec2 cUv = uv - 0.5;
 
@@ -125,7 +118,7 @@ void main() {
     col.a =  smoothstep(0., 0.99, col.a * alpha);
     gl_FragColor = vec4(col.rgb, col.a);
     
-    //gl_FragColor = vec4(0.3) + vec4( vColor.rgb * lum, alpha * lum );
+    //gl_FragColor = vec4( col.rgb, alpha * lum );
 }`
 
 export class VuetrexParticles extends Object3D implements FastRandom {
@@ -359,7 +352,12 @@ class GPUParticleContainer extends THREE.Object3D {
         this.geometryUpdate();
     }
 
-    geometryUpdate() {
+    /**
+     * Updates the geometry for particle attributes of a single particle if a particle update is flagged.
+     * Determines whether to update or reset the update ranges of various buffer attributes based on the offset and count.
+     * Resets the offset and count values after processing.
+     */
+    geometryUpdate(): void {
 
         if (this.particleUpdate) {
 
@@ -382,7 +380,6 @@ class GPUParticleContainer extends THREE.Object3D {
 
             const resetCountsOffsets = (...attrs: THREE.BufferAttribute[]) => {
                 attrs.forEach(attr => {
-                    attr.addUpdateRange(0,0);
                     attr.needsUpdate = false;
                 });
             }

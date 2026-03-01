@@ -55,6 +55,52 @@ describe('registerElement', () => {
     })
 })
 
+// ── nodeOps general functionality
+describe('nodeOps', () => {
+    const { insert, remove, createComment, parentNode, nextSibling } = nodeOps(mockStage)
+
+    it('insert without anchor appends child and sets parent', () => {
+        const parent = new TestNode()
+        const child  = new TestNode()
+        insert(child, parent, null)
+        expect(parentNode(child)).toBe(parent)
+    })
+
+    it('insert with anchor places child before anchor', () => {
+        const parent = new TestNode()
+        const first  = new TestNode()
+        const second = new TestNode()
+        insert(first,  parent, null)
+        insert(second, parent, first)   // second should land before first
+        expect(nextSibling(second)).toBe(first)
+    })
+
+    it('remove detaches child from parent', () => {
+        const parent = new TestNode()
+        const child  = new TestNode()
+        insert(child, parent, null)
+        remove(child)
+        expect(parentNode(child)).toBeNull()
+    })
+
+    it('createComment returns a Comment with the given text', () => {
+        const node = createComment('v-if')
+        expect(node).toBeInstanceOf(Comment)
+        expect((node as Comment).text).toBe('v-if')
+    })
+
+    it('parentNode returns null for a node with no parent', () => {
+        expect(parentNode(new TestNode())).toBeNull()
+    })
+
+    it('nextSibling returns null when node has no following sibling', () => {
+        const parent = new TestNode()
+        const only   = new TestNode()
+        insert(only, parent, null)
+        expect(nextSibling(only)).toBeNull()
+    })
+})
+
 // ── nodeOps.createElement — per-instance extraTypes ──────────────────────────
 
 describe('nodeOps.createElement', () => {

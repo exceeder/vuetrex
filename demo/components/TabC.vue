@@ -58,12 +58,12 @@ export default {
       highlightColor: 0x3377bb,
       floorColor: 0xffffff,
       captionColor: 0x333333,
-      particleColor: 0x707070,
+      particleColor: 0x505050,
       lightColor1: 0x7070ff,
       lightColor2: 0xffffff,
       lightColor3: 0x0000ff,
       mirrorOpacity: 0.92,
-      particleSpread: 0.2,
+      particleSpread: 0.02,
       particleVolume: 5,
       particleBlending: 1
     };

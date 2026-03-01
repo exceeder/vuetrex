@@ -1,8 +1,15 @@
 import Vuetrex from "@/lib-components/vuetrex"
 import { shallowMount } from '@vue/test-utils'
 import { describe, it, expect} from 'vitest'
+import { createRendererForStage } from "@/lib-components/renderer";
 
 describe('The Vuetrex Stage object', () => {
+
+    it("should create a renderer for the given stage", () => {
+        const mockStage = null as any
+        const render = createRendererForStage(mockStage, {})
+        expect(typeof render).toBe('function')
+    })
 
     it('should be able to mount Stage', function() {
         // @ts-ignore
