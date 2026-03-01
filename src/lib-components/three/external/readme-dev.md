@@ -1,5 +1,8 @@
-This directory contains copies of some files from three/examples/jsm/* with imports sections adjusted to local file tree.
+This directory contains only utilities that have no official Three.js jsm equivalent.
 
-The reason not to reference them in examples is twofold:
-1. Rollup tree shaking and bundling fails on them: https://github.com/mrdoob/three.js/issues/17482
-2. Their imports reference three/src instead of "three", causing double-inclusion
+- `DynamicTexture` — adapted from https://github.com/jeromeetienne/threex.dynamictexture
+
+Previously held copies of Three.js jsm add-ons (EffectComposer, RenderPass, Reflector,
+RoundedBoxGeometry) that worked around Rollup bundling issues (three.js#17482) and the
+old `three/src` import paths in jsm files. Both issues are resolved in modern Three.js (r140+),
+so those files have been removed in favour of direct `three/examples/jsm/*` imports.
