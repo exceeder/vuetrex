@@ -17,9 +17,9 @@ export interface ParticleOptions {
     particleSpread: number
     minMax: THREE.Vector2
     velocity: THREE.Vector3
-    velocityRandomness: number
+    //velocityRandomness: number
     color: number,
-    colorRandomness: number,
+    //colorRandomness: number,
     lifetime: number,
     size: number,
     sizeRandomness: number
@@ -103,8 +103,8 @@ varying vec4 vColor;
 varying float lifeLeft;
 
 void main() {        
-    float alpha = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
-    alpha = max(1.0,alpha);
+    float brightness = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
+    brightness = max(1.0, brightness);
     
     vec2 uv = vec2(gl_PointCoord.x, 1. - gl_PointCoord.y);
     vec2 cUv = uv - 0.5;
@@ -115,10 +115,8 @@ void main() {
     col.rgb *= origCol * 20.0;
     col.a = 0.003 / length(cUv);
     
-    col.a =  smoothstep(0., 0.99, col.a * alpha);
-    gl_FragColor = vec4(col.rgb, col.a);
-    
-    //gl_FragColor = vec4( col.rgb, alpha * lum );
+    col.a =  smoothstep(0., 0.99, col.a * brightness);
+    gl_FragColor = vec4(col.rgb, col.a);       
 }`
 
 export class VuetrexParticles extends Object3D implements FastRandom {
@@ -380,6 +378,7 @@ class GPUParticleContainer extends THREE.Object3D {
 
             const resetCountsOffsets = (...attrs: THREE.BufferAttribute[]) => {
                 attrs.forEach(attr => {
+                    attr.addUpdateRange(0, 0);
                     attr.needsUpdate = false;
                 });
             }

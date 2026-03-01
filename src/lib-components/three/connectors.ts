@@ -5,14 +5,14 @@ import Element3d from "@/lib-components/three/element3d";
 
 const options: ParticleOptions = {
     position: new THREE.Vector3(-2.5, 0.2, -0.5),
-    positionRandomness: 1.95,
+    positionRandomness: 1.05,
     velocity: new THREE.Vector3(0.1,0,0),
     minMax: new THREE.Vector2(-5.0, 5.0),
-    velocityRandomness: 0.001,
-    particleSpread: 0.035,
+    //velocityRandomness: 0.001,
+    particleSpread: 0.015,
     color: 0xa0ffff,
-    colorRandomness: 0.1,
-    lifetime: 35,
+    //colorRandomness: 0.1,
+    lifetime: 55,
     size: 0.9,
     sizeRandomness: 0.3
 };
@@ -83,7 +83,7 @@ export class Connectors {
 
     connect(el1: Element3d, el2: Element3d) {
 
-        const snap = (a:number) => Math.round(a/1.5)*1.5;
+        const snap = (a:number) => Math.round(a/1.4)*1.4; //todo figure out snapping constant reference
 
         const sx = snap(el1.mesh?.position.x || 0)
         const sy = snap(el1.mesh?.position.z || 0)
@@ -154,14 +154,14 @@ export class Connectors {
                 let end = s.t;
                 //if (particles.random() > -2.0) {const t = start;start = end;end = t;}
                 options.minMax.set(Math.min(start, end), Math.max(start, end))
-                const len = (options.minMax.y - options.minMax.x);
+                const len = options.minMax.y - options.minMax.x;
                 if (s.horizontal) {
-                    options.position.set(start + (end - start) * rnd * rnd2, -0.25, mid)
-                    options.velocity.set((end - start) / len / 30.0, 0, 0);
+                    options.position.set(start + (end - start) * rnd * rnd2, 0.15, mid)
+                    options.velocity.set((end - start) / len / 40.0, 0, 0);
                 } else {
                     //vertical
-                    options.position.set(mid, -0.25, start + (end - start) * rnd * rnd2)
-                    options.velocity.set(0, 0, (end - start) / len / 50);
+                    options.position.set(mid, 0.15, start + (end - start) * rnd * rnd2)
+                    options.velocity.set(0, 0, (end - start) / len / 40.0);
                 }
                 particles.spawnParticle(options);
             }

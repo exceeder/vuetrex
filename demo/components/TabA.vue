@@ -8,7 +8,7 @@
         <box name="b1" text="I'm lost" @click="dBoxClick"/>
         <box name="b2" text="busy bee" @click="dBoxClick"/>
         <box name="b3" @click="dBoxClick"/>
-        <box name="b4" @click="dBoxClick"/>
+        <box name="b4" @click="dBoxClick" text="bot"/>
       </row>
       <row>
         <box name="c1" connection="b1"/>

@@ -42,8 +42,8 @@ interface EvType {
     originalEvent: MouseEvent
 }
 
-let R = 1.3; //box radius
-let D = 1.5; //box distance
+let BOX_RADIUS = 1.3;
+let BOX_DISTANCE = 1.5;
 
 /**
  * Stage is a top level container of Vue-connected nodes. It literally sets the stage for everything happening in 3D.
@@ -70,8 +70,8 @@ export class VuetrexStage extends Scene implements VxStage {
         this.subscribers = []
         this.settings = settings
 
-        R = settings.unit || R
-        D = settings.distance || D
+        BOX_RADIUS = settings.unit || BOX_RADIUS
+        BOX_DISTANCE = settings.distance || BOX_DISTANCE
         this.colorMain = new THREE.Color(settings.color || 0x555555);
         this.colorHighlight = new THREE.Color(settings.highlightColor || 0x4c7fb2);
     }
@@ -116,7 +116,7 @@ export class VuetrexStage extends Scene implements VxStage {
             color: new THREE.Color(this.settings.floorColor || 0x777777)
         });
         groundMirror.rotateX(-Math.PI / 2);
-        groundMirror.position.y = -0.35;
+        groundMirror.position.y = -0.25;
         groundMirror.receiveShadow = false;
         scene.add(groundMirror);
     }
@@ -147,7 +147,7 @@ export class VuetrexStage extends Scene implements VxStage {
         material.toneMapped = false;
         let plane = new THREE.Mesh(new THREE.PlaneGeometry(caps.planeSize, caps.planeSize), material);
         plane.rotation.x = -Math.PI / 2.0;
-        plane.position.y = -0.3495;
+        plane.position.y = -0.2495;
         plane.castShadow = false;
         plane.receiveShadow = true;
         scene.add(plane);
@@ -170,7 +170,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
             const x = c.x * scale
             const y = c.y * scale
-            texture.drawText(c.text, x + textureSize / 2 - w / 2, y + textureSize / 2 + R/4*scale,
+            texture.drawText(c.text, x + textureSize / 2 - w / 2, y + textureSize / 2 + BOX_RADIUS/4*scale,
                 '#'+(this.settings.captionColor || 0xffffff).toString(16))
         })
 
@@ -297,7 +297,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
                     const extrudeSettings = {
                         steps: 1,
-                        depth: R/4,
+                        depth: BOX_RADIUS/4,
                         bevelEnabled: true,
                         bevelThickness: 0.05,
                         bevelSize: 0.07,
@@ -315,7 +315,7 @@ export class VuetrexStage extends Scene implements VxStage {
                 return (height, size) => {
                     let bMaterial = this.createElementMaterial();
                     const width = size;
-                    const length = R * 0.975;
+                    const length = BOX_RADIUS * 0.975;
 
                     const shape = new THREE.Shape();
                     shape.moveTo(-length/2, -width/2);
@@ -326,7 +326,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
                     const extrudeSettings = {
                         steps: 2,
-                        depth: R/2,
+                        depth: BOX_RADIUS/2,
                         bevelEnabled: true,
                         bevelThickness: 0.05,
                         bevelSize: 0.05,
@@ -336,7 +336,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
                     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
                     geometry.rotateX(Math.PI/2)
-                    geometry.translate(0,R/4,0)
+                    geometry.translate(0,BOX_RADIUS/4,0)
                     const mesh = new THREE.Mesh(geometry, bMaterial);
                     mesh.castShadow = true;
                     return mesh;
@@ -355,7 +355,7 @@ export class VuetrexStage extends Scene implements VxStage {
             case 'box': {
                 return (height, size) => {
                     let bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new THREE.BoxGeometry(R*0.9, R / 2, size), bMaterial);
+                    return new THREE.Mesh(new THREE.BoxGeometry(BOX_RADIUS*0.9, BOX_RADIUS / 2, size), bMaterial);
                 }
             }
         }
@@ -373,7 +373,7 @@ export class VuetrexStage extends Scene implements VxStage {
         return c;
     }
 
-    renderMesh(el: Element3d, height: number, size: number = R, gen: (height:number, size:number) => THREE.Mesh) {
+    renderMesh(el: Element3d, height: number, size: number = BOX_RADIUS, gen: (height:number, size:number) => THREE.Mesh) {
         const scene = this.scene;
 
         if (el.mesh !== null) {
@@ -394,7 +394,7 @@ export class VuetrexStage extends Scene implements VxStage {
         mesh.geometry.translate(0,height/2,0)
         mesh.name = "el-" + el.node.name;
         mesh.castShadow = true;
-        mesh.receiveShadow = true;
+        mesh.receiveShadow = false;
         //todo this.tween(el, ...)
         mesh.position.copy(el.getPosition());
         mesh.userData.caption = this.addCaption(mesh, size/scale, el.getCaption())
