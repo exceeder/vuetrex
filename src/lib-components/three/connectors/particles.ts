@@ -10,6 +10,8 @@
 
 import * as THREE from "three"
 import {Object3D} from "three";
+import fragmentShader from './glsl/p-fragment.glsl';
+import vertexShader from './glsl/p-vertex.glsl';
 
 export interface ParticleOptions {
     position: THREE.Vector3
@@ -17,9 +19,6 @@ export interface ParticleOptions {
     particleSpread: number
     minMax: THREE.Vector2
     velocity: THREE.Vector3
-    //velocityRandomness: number
-    color: number,
-    //colorRandomness: number,
     lifetime: number,
     size: number,
     sizeRandomness: number
@@ -28,7 +27,7 @@ export interface ParticleOptions {
 export interface ParticleSystemOptions {
     blending?: THREE.Blending
     maxParticles?: number
-    containerCount?: number
+    color: number
 }
 
 interface FastRandom {
@@ -38,87 +37,6 @@ interface FastRandom {
     random: () => number
 }
 
-// custom vertex and fragment shaders
-// language=GLSL
-const vertexShader = `    
-uniform float uTime;
-uniform float uScale;
-
-attribute vec3 velocity;
-attribute vec3 color;
-attribute vec2 minMax;
-attribute float startTime;
-attribute float size;
-attribute float lifeTime;
-
-varying vec4 vColor;
-varying float lifeLeft;
-
-void main() {
-
-    vec3 pos;
-    float timeElapsed = uTime - startTime;
-    
-    vColor = vec4( color, 1.0 );
-    lifeLeft = 1.0 - ( timeElapsed / lifeTime );
-
-    gl_PointSize = 30.0*uScale * size * lifeLeft;
-    pos = position + velocity * timeElapsed;
-    
-    if (velocity.z > -0.001 && velocity.z < 0.001) {
-        pos.x = clamp(pos.x, minMax.x, minMax.y);
-        if (pos.x == minMax.x || pos.x == minMax.y) {
-            timeElapsed = 0.0;
-            gl_PointSize = 0.1;
-        }
-    } else {
-        pos.z = clamp(pos.z, minMax.x, minMax.y);
-        if (pos.z == minMax.x || pos.z == minMax.y) {
-            timeElapsed = 0.0;
-            gl_PointSize = 0.1;
-        }
-    }
-
-    if( timeElapsed > 0.0 ) {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
-    } 
-    else {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-        lifeLeft = 0.0;
-        gl_PointSize = 0.1;
-    }
-}`;
-
-// language=GLSL
-const fragmentShader = `
-float scaleLinear( float value, vec2 valueDomain ) {
-    return ( value - valueDomain.x ) / ( valueDomain.y - valueDomain.x );
-}
-
-float scaleLinear( float value, vec2 valueDomain, vec2 valueRange ) {
-    return mix( valueRange.x, valueRange.y, scaleLinear( value, valueDomain ) );
-}
-
-varying vec4 vColor;
-varying float lifeLeft;
-
-void main() {        
-    float brightness = scaleLinear( lifeLeft, vec2( 1.0, 0.95 ), vec2( 0.0, 1.0 ) );
-    brightness = max(1.0, brightness);
-    
-    vec2 uv = vec2(gl_PointCoord.x, 1. - gl_PointCoord.y);
-    vec2 cUv = uv - 0.5;
-
-    vec3 origCol  = vec3(vColor.r, vColor.g, vColor.b);
-    vec4 col = vec4(0.0015 / length(cUv));
-    col.rgb = min(vec3(0.02), col.rgb);
-    col.rgb *= origCol * 20.0;
-    col.a = 0.003 / length(cUv);
-    
-    col.a =  smoothstep(0., 0.99, col.a * brightness);
-    gl_FragColor = vec4(col.rgb, col.a);       
-}`
-
 /**
  * Class representing a particle system with GPU-accelerated support and customizable shaders.
  * Extends the THREE.Object3D class.
@@ -126,10 +44,7 @@ void main() {
  */
 export class VuetrexParticles extends Object3D implements FastRandom {
     private readonly PARTICLE_COUNT: number;
-    private readonly PARTICLE_CONTAINERS: number;
-    private readonly PARTICLES_PER_CONTAINER: number;
-    private _PARTICLE_CURSOR: number;
-    private readonly particleContainers: GPUParticleContainer[];
+    private particleContainer: GPUParticleContainer;
     private readonly rand: number[];
 
     particleShaderMat: THREE.ShaderMaterial;
@@ -143,14 +58,10 @@ export class VuetrexParticles extends Object3D implements FastRandom {
 
         options = options || {};
 
-        // parse options and use defaults
-        this.PARTICLE_COUNT = options.maxParticles || 1000000;
-        this.PARTICLE_CONTAINERS = options.containerCount || 1;
+        // parse options and use defaults, don't go over 100k particles
+        this.PARTICLE_COUNT = options.maxParticles || 100000;
 
-        this.PARTICLES_PER_CONTAINER = Math.ceil(this.PARTICLE_COUNT / this.PARTICLE_CONTAINERS);
-        this._PARTICLE_CURSOR = 0;
         this.time = 0;
-        this.particleContainers = [];
         this.rand = [];
 
         {
@@ -159,6 +70,9 @@ export class VuetrexParticles extends Object3D implements FastRandom {
             for (idx = N; idx >= 0; idx--) rand.push(Math.random() - 0.5);
             this.random = () => ++idx >= rand.length ? rand[idx = 0] : rand[idx];
         }
+
+        const particleColor = new THREE.Color();
+        particleColor.set(options.color || 0xffffff);
 
         this.particleShaderMat = new THREE.ShaderMaterial({
             transparent: true,
@@ -169,6 +83,9 @@ export class VuetrexParticles extends Object3D implements FastRandom {
                 },
                 'uScale': {
                     value: 1.0
+                },
+                'uColor': {
+                    value: particleColor
                 }
             },
             blending: options.blending || THREE.AdditiveBlending,
@@ -177,39 +94,21 @@ export class VuetrexParticles extends Object3D implements FastRandom {
             fragmentShader: fragmentShader
         });
 
-        this.init();
-    }
-
-    init() {
-        for (let i = 0; i < this.PARTICLE_CONTAINERS; i++) {
-            const c = new GPUParticleContainer(this.PARTICLES_PER_CONTAINER, this);
-            this.particleContainers.push(c);
-            this.add(c); //Object3D.add()
-        }
+        this.particleContainer = new GPUParticleContainer(this.PARTICLE_COUNT, this);
+        this.add(this.particleContainer); //Object3D.add()
     }
 
     spawnParticle(options: ParticleOptions) {
-        this._PARTICLE_CURSOR++;
-
-        if (this._PARTICLE_CURSOR >= this.PARTICLE_COUNT) {
-            this._PARTICLE_CURSOR = 1;
-        }
-
-        const currentContainer = this.particleContainers[Math.floor(this._PARTICLE_CURSOR / this.PARTICLES_PER_CONTAINER)];
-        currentContainer.spawnParticle(options);
+        this.particleContainer.spawnParticle(options);
     }
 
     update(time: number) {
-        for (let i = 0; i < this.PARTICLE_CONTAINERS; i++) {
-            this.particleContainers[i].update(time);
-        }
+        this.particleContainer.update(time);
     }
 
     dispose() {
         this.particleShaderMat.dispose();
-        for (let i = 0; i < this.PARTICLE_CONTAINERS; i++) {
-            this.particleContainers[i].dispose();
-        }
+        this.particleContainer.dispose();
         this.clear();
     }
 }
@@ -218,8 +117,6 @@ export class VuetrexParticles extends Object3D implements FastRandom {
 const position = new THREE.Vector3();
 const minMax = new THREE.Vector2();
 const velocity = new THREE.Vector3();
-const color = new THREE.Color();
-
 
 /**
  * A container for managing GPU-based particles in a Three.js rendering system.
@@ -250,13 +147,10 @@ class GPUParticleContainer extends THREE.Object3D {
 
         this.particleShaderMat = particleSystem.particleShaderMat;
         // geometry
-
         this.particleShaderGeo = new THREE.BufferGeometry();
-
 
         this.particleShaderGeo.setAttribute('position', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 3, 3).setUsage(THREE.DynamicDrawUsage));
         this.particleShaderGeo.setAttribute('velocity', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 3, 3).setUsage(THREE.DynamicDrawUsage));
-        this.particleShaderGeo.setAttribute('color', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 3, 3).setUsage(THREE.DynamicDrawUsage));
 
         this.particleShaderGeo.setAttribute('minMax', new THREE.Float32BufferAttribute(this.PARTICLE_COUNT * 2, 2).setUsage(THREE.DynamicDrawUsage));
 
@@ -276,7 +170,6 @@ class GPUParticleContainer extends THREE.Object3D {
         const minMaxAttribute = this.particleShaderGeo.getAttribute('minMax') as THREE.Float32BufferAttribute;
         const startTimeAttribute = this.particleShaderGeo.getAttribute('startTime') as THREE.Float32BufferAttribute;
         const velocityAttribute = this.particleShaderGeo.getAttribute('velocity') as THREE.Float32BufferAttribute;
-        const colorAttribute = this.particleShaderGeo.getAttribute('color') as THREE.Float32BufferAttribute;
         const sizeAttribute = this.particleShaderGeo.getAttribute('size') as THREE.Float32BufferAttribute;
         const lifeTimeAttribute = this.particleShaderGeo.getAttribute('lifeTime') as THREE.Float32BufferAttribute;
         const gen = this.gen;
@@ -288,11 +181,6 @@ class GPUParticleContainer extends THREE.Object3D {
         options.position !== undefined ? position.copy(options.position) : position.set(0, 0, 0);
         options.minMax !== undefined ? minMax.copy(options.minMax) : minMax.set(-10., 10.);
         options.velocity !== undefined ? velocity.copy(options.velocity) : velocity.set(0, 0, 0);
-        options.color !== undefined ? color.set(options.color) : color.set(0xffffff);
-
-        //const positionRandomness = options.positionRandomness !== undefined ? options.positionRandomness : 0;
-        //const velocityRandomness = options.velocityRandomness !== undefined ? options.velocityRandomness : 0;
-        // const colorRandomness = options.colorRandomness !== undefined ? options.colorRandomness : 1;
         const lifetime = options.lifetime !== undefined ? options.lifetime : 25;
         let size = options.size !== undefined ? options.size : 10;
         const sizeRandomness = options.sizeRandomness !== undefined ? options.sizeRandomness : 0;
@@ -314,21 +202,7 @@ class GPUParticleContainer extends THREE.Object3D {
         let velY = velocity.y;
         let velZ = velocity.z;
 
-        // let velX = velocity.x + gen.random() * velocityRandomness * velocity.x / 25.0;
-        // let velY = velocity.y + gen.random() * velocityRandomness / 100.0;
-        // let velZ = velocity.z + gen.random() * velocityRandomness * velocity.y / 25.0;
-        //
-        // const maxVel = 2;
-        // velX = THREE.MathUtils.clamp((velX - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        // velY = THREE.MathUtils.clamp((velY - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
-        // velZ = THREE.MathUtils.clamp((velZ - (-maxVel)) / (maxVel - (-maxVel)), 0, 1);
         velocityAttribute.setXYZ(i,velX,velY,velZ)
-
-        // color
-        // color.r = THREE.MathUtils.clamp(color.r + gen.random() * colorRandomness, 0, 1);
-        // color.g = THREE.MathUtils.clamp(color.g + gen.random() * colorRandomness, 0, 1);
-        // color.b = THREE.MathUtils.clamp(color.b + gen.random() * colorRandomness, 0, 1);
-        colorAttribute.setXYZ(i, color.r, color.g, color.b)
 
         // size, lifetime and startTime
         sizeAttribute.setX(i, size + gen.random() * sizeRandomness) ;
@@ -373,7 +247,6 @@ class GPUParticleContainer extends THREE.Object3D {
             const startTimeAttribute = this.particleShaderGeo.getAttribute('startTime') as THREE.BufferAttribute;
             const minMaxAttribute = this.particleShaderGeo.getAttribute('minMax') as THREE.BufferAttribute;
             const velocityAttribute = this.particleShaderGeo.getAttribute('velocity') as THREE.BufferAttribute;
-            const colorAttribute = this.particleShaderGeo.getAttribute('color') as THREE.BufferAttribute;
             const sizeAttribute = this.particleShaderGeo.getAttribute('size') as THREE.BufferAttribute;
             const lifeTimeAttribute = this.particleShaderGeo.getAttribute('lifeTime') as THREE.BufferAttribute;
 
@@ -396,7 +269,6 @@ class GPUParticleContainer extends THREE.Object3D {
                     startTimeAttribute,
                     minMaxAttribute,
                     velocityAttribute,
-                    colorAttribute,
                     sizeAttribute,
                     lifeTimeAttribute)
             } else {
@@ -404,7 +276,6 @@ class GPUParticleContainer extends THREE.Object3D {
                     startTimeAttribute,
                     minMaxAttribute,
                     velocityAttribute,
-                    colorAttribute,
                     sizeAttribute,
                     lifeTimeAttribute)
             }

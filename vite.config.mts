@@ -1,6 +1,7 @@
 import path from 'node:path'
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
+import glsl from 'vite-plugin-glsl'
 import vue from '@vitejs/plugin-vue'
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,7 +46,8 @@ export default defineConfig({
             compilerOptions: {
                 isCustomElement: (tag:string) => /^layer|^box|^row|^cylinder/.test(tag)
             }
-        }})
+        }}),
+        glsl()
     ],
     // @ts-ignore
     test: {

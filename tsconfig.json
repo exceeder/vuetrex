@@ -18,7 +18,10 @@
         "baseUrl": "./",
         "paths": {
             "@/*": ["src/*"]
-        }
+        },
+        "types": [
+            "vite-plugin-glsl/ext"
+        ]
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
