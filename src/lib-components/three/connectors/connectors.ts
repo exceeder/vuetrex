@@ -94,26 +94,26 @@ export class Connectors {
             if (!this.particleSystem) return;
             const particles = this.particleSystem;
 
-            for (let x = 0; x < spawnerOptions.spawnRate; x++) {
-                if (this.segments.size() == 0) continue;
+            if (this.segments.size() === 0) {
+                return;
+            }
+
+            for (let idx = 0; idx < spawnerOptions.spawnRate; idx++) {
                 const rnd = particles.random() + 0.5;
-                const rnd2 = particles.random() + 0.75;
-                const seg = Math.floor(rnd * 16384 + timer) % this.segments.size()
-                const s = this.segments.getSegment(seg);
+                const rnd2 = particles.random() + 0.85;
+                const xys = this.segments.sample(rnd*this.segments.totaLength()*20);
+                const s = xys.s;
+                if (s === null) continue;
                 const mid = s.mid;
                 let start = s.s;
                 let end = s.t;
-                //if (particles.random() > 0.0) {const t = start; start = end; end = t;}
                 options.minMax.set(Math.min(start, end), Math.max(start, end))
                 const len = options.minMax.y - options.minMax.x;
-                if (s.horizontal) {
-                    options.position.set(start + (end - start) * rnd * rnd2, 0.15, mid)
-                    options.velocity.set((end - start) / len / 40.0, 0, 0);
-                } else {
-                    //vertical
-                    options.position.set(mid, 0.15, start + (end - start) * rnd * rnd2)
-                    options.velocity.set(0, 0, (end - start) / len / 40.0);
-                }
+                options.position.set(xys.x, 0.15, xys.y)
+                 if (s.horizontal)
+                     options.velocity.set((end - start) / len / 50.0, 0, 0);
+                 else
+                     options.velocity.set(0, 0, (end - start) / len / 50.0);
                 particles.spawnParticle(options);
             }
             particles.update(tick);

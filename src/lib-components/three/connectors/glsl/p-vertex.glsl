@@ -3,7 +3,6 @@ uniform float uScale;
 uniform vec3 uColor;
 
 attribute vec3 velocity;
-//attribute vec3 color;
 attribute vec2 minMax;
 attribute float startTime;
 attribute float size;
@@ -23,17 +22,17 @@ void main() {
     gl_PointSize = 30.0*uScale * size * lifeLeft;
     pos = position + velocity * timeElapsed;
 
-    if (velocity.z > -0.001 && velocity.z < 0.001) {
-        pos.x = clamp(pos.x, minMax.x, minMax.y);
-        if (pos.x == minMax.x || pos.x == minMax.y) {
+    if (velocity.z > -0.0001 && velocity.z < 0.0001) {
+        pos.x = clamp(pos.x, minMax.s, minMax.t);
+        if (pos.x == minMax.s || pos.x == minMax.t) {
             timeElapsed = 0.0;
-            gl_PointSize = 0.1;
+            gl_PointSize = 0.01;
         }
     } else {
-        pos.z = clamp(pos.z, minMax.x, minMax.y);
-        if (pos.z == minMax.x || pos.z == minMax.y) {
+        pos.z = clamp(pos.z, minMax.s, minMax.t);
+        if (pos.z == minMax.s || pos.z == minMax.t) {
             timeElapsed = 0.0;
-            gl_PointSize = 0.1;
+            gl_PointSize = 0.01;
         }
     }
 
@@ -41,8 +40,8 @@ void main() {
         gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
     }
     else {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
         lifeLeft = 0.0;
-        gl_PointSize = 0.1;
+        gl_PointSize = 0.01;
     }
 }

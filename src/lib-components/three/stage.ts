@@ -108,7 +108,10 @@ export class VuetrexStage extends Scene implements VxStage {
     }
 
     createGroundMirror(scene: THREE.Scene) {
-        if ((this.settings.mirrorOpacity ?? 1) < 0.99) {
+        if (this.settings.mirrorOpacity === undefined) {
+            this.settings.mirrorOpacity = 0.95;
+        }
+        if (this.settings.mirrorOpacity < 0.999) {
             const geometry = new THREE.PlaneGeometry(100, 100);
             const groundMirror = new THREEx.Reflector(geometry, {
                 clipBias: 0.003,
@@ -140,7 +143,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
         let material = new THREE.MeshStandardMaterial({
             color: '#f0f0f0',
-            roughness: 0.1,
+            roughness: 0.7,
             metalness: 0.5,
             opacity: 0.999,
             transparent: true,

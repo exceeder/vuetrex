@@ -77,6 +77,7 @@ export class VuetrexParticles extends Object3D implements FastRandom {
         this.particleShaderMat = new THREE.ShaderMaterial({
             transparent: true,
             depthWrite: false,
+            depthTest: true,
             uniforms: {
                 'uTime': {
                     value: 0.0

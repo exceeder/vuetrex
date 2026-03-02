@@ -60,7 +60,6 @@ export default class Scene extends LifeCycle {
         //scene
         this.scene = this.createScene();
         this.scene.background = new Color('#808080');
-        // this.scene.background = new Color('#ffffff');
 
         //composer for mirror and other effects
         this.composer = new THREEx.EffectComposer(this.renderer)
@@ -128,8 +127,6 @@ export default class Scene extends LifeCycle {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
         renderer.shadowMap.enabled = true;
-        //renderer.shadowMap.type = THREE.PCFShadowMap;
-        //renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.shadowMap.type = THREE.VSMShadowMap;
         return renderer;
     }
@@ -180,20 +177,30 @@ export default class Scene extends LifeCycle {
         // the following line would stop any other event handler from firing
         // (such as the mouse's TrackballControls)
         // event.preventDefault();
-        if (event.metaKey && event.buttons === 1) {
-            //const phi = Math.sin(timer / 2000);
-            //const dist = 2.0; //this.cameraBase.distanceTo(this.cameraTarget);
-            const xx = (event.offsetX / this.domParent.offsetWidth) * 2 - 1 + this.mouse.x;
-            const yy = - (event.offsetY / this.domParent.offsetHeight) * 2 + 1 - this.mouse.y;
-            //console.log(xx, yy);
-            this.retargetCamera(new THREE.Vector3(0.0, 0.0, 1.5), new THREE.Vector3(this.cameraBase.x + xx, this.cameraBase.y, this.cameraBase.z + yy))
-            //this.cameraBase.x = 0.0 - dist * Math.cos(2 * Math.PI * xx);
-            //this.cameraBase.z = 0.0 + dist * Math.sin(2 * Math.PI * yy);
-        } else {
-            this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
-            this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
-        }
 
+        if (event.metaKey && event.buttons === 1) {
+            this.orbitalRetarget(event);
+        }
+        this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
+        this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
+    }
+
+    private orbitalRetarget(event: MouseEvent) {
+        const mouseX = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
+        const mouseY = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
+        const dx = mouseX - this.mouse.x;
+        const dy = mouseY - this.mouse.y;
+
+        const radius = this.cameraBase.distanceTo(this.cameraTarget);
+        const theta = Math.atan2(this.cameraBase.x - this.cameraTarget.x, this.cameraBase.z - this.cameraTarget.z);
+        const phi = Math.acos(THREE.MathUtils.clamp((this.cameraBase.y - this.cameraTarget.y) / radius, -1, 1));
+
+        const newTheta = theta - dx * 2;
+        const newPhi = THREE.MathUtils.clamp(phi - dy * 2, 0.1, Math.PI - 0.1);
+
+        this.cameraBase.x = this.cameraTarget.x + radius * Math.sin(newPhi) * Math.sin(newTheta);
+        this.cameraBase.y = this.cameraTarget.y + radius * Math.cos(newPhi);
+        this.cameraBase.z = this.cameraTarget.z + radius * Math.sin(newPhi) * Math.cos(newTheta);
     }
 
     onCanvasClick(event: MouseEvent) {
@@ -208,7 +215,7 @@ export default class Scene extends LifeCycle {
         const x = this.cameraBase.x + event.deltaY / 300 * dir.x;
         const y = this.cameraBase.y + event.deltaY / 300 * dir.y;
         const z = this.cameraBase.z + event.deltaY / 300 * dir.z;
-        if (y>0.9 && z>0.9 && y<14 && z<14) {
+        if (y>0.8 && z>0.8 && y<17. && z<17.) {
             this.cameraBase.x = x;
             this.cameraBase.y = y;
             this.cameraBase.z = z;
@@ -310,11 +317,10 @@ export default class Scene extends LifeCycle {
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
 
-        //TODO parallax support possible here via
+        // parallax support possible here via
         // camera.position.x = -window.pageYOffset / 500;
         // camera.position.y = 11 + window.pageYOffset / 1000;
 
-        //camera.lookAt(new THREE.Vector3());
         this.renderer.setSize(width, height);
         this.composer.setSize(width, height);
     }

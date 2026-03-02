@@ -21,6 +21,7 @@ export class Segment {
 
 export class ConnectorPath {
     private segments: Segment[] = [];
+    private totalLength: number = 0;
 
     constructor() {
     }
@@ -54,6 +55,8 @@ export class ConnectorPath {
             this.segments.push(new Segment(false, midx, sy, ty, el1, el2))
             this.segments.push(new Segment(true, ty, midx, tx, el1, el2))
         }
+
+       this.updateLen();
     }
 
     clear() {
@@ -64,9 +67,22 @@ export class ConnectorPath {
         return this.segments.length;
     }
 
+    totaLength() {
+        return this.totalLength;
+    }
+
+    updateLen() {
+        let totalLen = 0;
+        for (const seg of this.segments) {
+            totalLen += seg.len;
+        }
+        this.totalLength = totalLen;
+    }
+
     remove(el: Element3d) : Segment[] {
         const removed = this.segments.filter(s => s.sEl === el || s.tEl === el);
         this.segments = this.segments.filter(s => s.sEl !== el && s.tEl !== el);
+        this.updateLen();
         return removed;
     }
 
@@ -78,30 +94,31 @@ export class ConnectorPath {
      * Sample a position and direction by distance along the polyline.
      * Distance wraps around [0,totalLen).
      */
-    sample(distance: number): { x: number; y: number } {
+    sample(distance: number): { x: number; y: number, s: Segment | null } {
         if (this.segments.length === 0) {
-          return {x:0,y:0};
+            return { x: 0, y: 0, s: null };
+        }
+        const totalLen = this.totalLength;
+
+        // Wrap into [0, totalLen)
+        let d = ((distance % totalLen) + totalLen) % totalLen;
+
+        for (const seg of this.segments) {
+            if (d <= seg.len) {
+                const t = seg.len === 0 ? 0 : d / seg.len;
+                const currentPos = seg.s + (seg.t - seg.s) * t;
+
+                if (seg.horizontal) {
+                    return { x: currentPos, y: seg.mid, s: seg };
+                } else {
+                    return { x: seg.mid, y: currentPos, s: seg };
+                }
+            }
+            d -= seg.len;
         }
 
-       /*
-        const L = this.totalLen;
-        // Wrap into [0, L)
-        let d = ((distance % L) + L) % L;
-
-        // Linear scan is fine for short polylines; upgrade to binary search if needed.
-        let i = 0;
-        while (this.cumLen[i] < d) i++;
-
-        const prev = i === 0 ? 0 : this.cumLen[i - 1];
-        const seg = this.segments[i];
-        const t = (d - prev) / seg.len;
-
-        return {
-            x: seg.a.x + (seg.b.x - seg.a.x) * t,
-            y: seg.a.z + (seg.b.z - seg.a.z) * t
-        };
-        */
-        return {x:0,y:0};
+        const last = this.segments[this.segments.length - 1];
+        return last.horizontal ? { x: last.t, y: last.mid, s: last  } : { x: last.mid, y: last.t, s: last };
     }
 
 }

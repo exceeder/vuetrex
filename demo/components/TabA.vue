@@ -6,20 +6,20 @@
       </row>
       <row>
         <box name="b1" text="I'm lost" @click="dBoxClick"/>
-        <box name="b2" text="busy bee" @click="dBoxClick"/>
-        <box name="b3" @click="dBoxClick"/>
+        <box name="b2" text="busy bee" @click="dBoxClick" connection="a0"/>
+        <box name="b3" @click="dBoxClick"  connection="b2"/>
         <box name="b4" @click="dBoxClick" text="bot"/>
       </row>
       <row>
-        <box name="c1" connection="b1"/>
+        <box name="c1" />
         <cylinder name="c2" :text="'clicks: ' + counter" @click="cylinderClick" connection="b3"/>
         <cylinder name="c3" text="new" />
       </row>
       <row>
-        <box name="d1" size="2" connection="b4"  @click="dBoxClick"/>
+        <box name="d1" size="2" @click="dBoxClick" connection="c2" />
       </row>
       <row v-if="extraRow">
-        <box name="e1" size="1" />
+        <box name="e1" size="1" connection="d1"/>
       </row>
     </layer>
   </vuetrex>
