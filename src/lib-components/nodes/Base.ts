@@ -28,8 +28,10 @@ export abstract class Base {
 
     private mustSync = false;
 
+    isRenderableNode(): boolean { return false; }
+
     readonly elements = computed(() => {
-        return this.children.value.filter(c => ((c as any).state !== undefined))
+        return this.children.value.filter(c => c.isRenderableNode())
     })
 
     public myIdx: ComputedRef<number> = computed(() => {

@@ -1,7 +1,8 @@
 import { Base } from "@/lib-components/nodes/Base";
 import Element3d from "@/lib-components/three/element3d";
-import {VuetrexStage} from "@/lib-components/three/stage";
-import {nextTick, reactive} from "vue";
+import { VuetrexStage } from "@/lib-components/three/stage";
+import { nextTick, reactive } from "vue";
+import * as THREE from "three";
 
 declare type VxEventListener<T extends Event> = (event: T) => void;
 
@@ -15,20 +16,20 @@ type NodeEvents = {
 export abstract class Node extends Base {
     public element: Element3d;
 
-    public readonly stage: VuetrexStage
-    public name: string = Math.floor(Math.random()*100000).toString(32)
-    subscribed: boolean = false
-    public readonly type: string = 'Node'
+    public readonly stage: VuetrexStage;
+    public name: string = Math.floor(Math.random() * 100000).toString(32);
+    protected subscribed: boolean = false;
+    public readonly type: string = 'Node';
 
-    public static readonly CLICK: string = 'click'
+    public static readonly CLICK: string = 'click';
 
     public state = reactive({
         text: ''
-    })
+    });
 
     readonly clickListener = (ev: any) => {
         this.dispatchClick(ev.originalEvent);
-    }
+    };
 
     public _nodeEvents?: NodeEvents = undefined;
 
@@ -37,6 +38,10 @@ export abstract class Node extends Base {
         this.element = new Element3d(stage, this);
         this.stage = stage;
     }
+
+    isRenderableNode(): boolean { return true; }
+
+    isLayer(): boolean { return false; }
 
     public get nodeEvents(): NodeEvents {
         if (!this._nodeEvents) {
@@ -47,18 +52,19 @@ export abstract class Node extends Base {
 
     getLayer(): Node | null {
         let result = this.parent.value as Node;
-        while (result !== null && result.type !== 'Layer') {
+        while (result !== null && !result.isLayer()) {
             result = result.parent.value as Node;
         }
         return result;
     }
 
     getScale(): number {
-        if (this.getLayer() === undefined) return 1.0;
-        return (this.getLayer()?.state as any)?.scale || 1.0;
+        const layer = this.getLayer();
+        if (layer === null) return 1.0;
+        return (layer.state as any)?.scale || 1.0;
     }
 
-    getElevation() {
+    getElevation(): number {
         let result = (this as any).state?.elevation || 0.0;
         let parent = this.getLayer();
         while (parent) {
@@ -68,7 +74,37 @@ export abstract class Node extends Base {
         return result;
     }
 
-    //abstract createModel(): (height:number, size:number) => THREE.Mesh
+    /**
+     * Returns the 3D position of `child` within this container's layout.
+     * Default implementation: grid layout (rows × columns).
+     * Container nodes (Row, Stack) override this to apply their own layout strategy.
+     */
+    layoutPositionOf(child: Node): THREE.Vector3 {
+        const R = this.stage.boxRadius;
+        const D = this.stage.boxDistance;
+        const scale = child.getScale();
+
+        let colIdx = child.myIdx.value;
+        let rowIdx = child.parent.value?.myIdx.value;
+        let cols = child.numColumns.value || 1;
+        let rows = child.numRows.value || 1;
+
+        if (rowIdx === undefined || rowIdx < 0) {
+            rowIdx = 0; colIdx = 0; cols = 1; rows = 1;
+        }
+
+        const layerPos = child.getLayer()?.element.pos ?? new THREE.Vector3();
+        const offX = layerPos.x;
+        const offZ = layerPos.z;
+
+        const rowPosX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX;
+        const rowPosZ = (-cols * (R + D)) / 2 / scale + (R + D) / 2 / scale + offZ;
+        return new THREE.Vector3(
+            rowPosX + (R + D) * rowIdx / scale,
+            child.getElevation(),
+            rowPosZ + (R + D) * colIdx / scale
+        );
+    }
 
     setName(name: string) {
         this.name = name;
@@ -79,21 +115,20 @@ export abstract class Node extends Base {
     }
 
     dispatchClick(e: MouseEvent) {
-        //console.log("dispatching ", (e as any).vxNode, this)
         if (this.nodeEvents.onClick)
-            this.nodeEvents.onClick(e)
+            this.nodeEvents.onClick(e);
 
-        //bubble up
-        let pn : Node = this.parent.value as Node;
+        // bubble up
+        const pn = this.parent.value as Node;
         if (pn) pn.dispatchClick(e);
     }
 
     subscribeEvents() {
         nextTick(() => {
             if (!this.subscribed) {
-                // @ts-ignore //TODO THREE.EventDispatcher allows to dispatch custom events, but TS limits it
-                this.element.mesh?.addEventListener(Node.CLICK, this.clickListener)
-                this.subscribed = true
+                // @ts-ignore — THREE.EventDispatcher supports custom events but TS typing doesn't reflect it
+                this.element.mesh?.addEventListener(Node.CLICK, this.clickListener);
+                this.subscribed = true;
             }
         }).catch(() => {});
     }

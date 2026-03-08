@@ -9,6 +9,8 @@ import * as THREE from "three";
 export class Layer extends Node {
 
     public readonly type: string = 'Layer'
+
+    isLayer(): boolean { return true; }
     public state : {text: string, scale: number, elevation: number, visible: boolean} = reactive({
         text: '',
         scale: 1,

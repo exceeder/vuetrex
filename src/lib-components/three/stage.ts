@@ -65,7 +65,7 @@ export class VuetrexStage extends Scene implements VxStage {
     }
     private captions: Array<{x:number, y:number, text:string}> = []
     boxRadius: number;
-    private boxDistance: number;
+    boxDistance: number;
 
     constructor(domParent: HTMLElement, settings:VxSettings) {
         super(domParent)
