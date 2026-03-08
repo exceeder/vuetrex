@@ -1,0 +1,83 @@
+# Vuetrex Architecture
+
+Vuetrex replaces Vue's DOM renderer with a Three.js scene. Vue templates author 3D diagrams; the custom renderer drives Three.js instead of the browser DOM.
+
+---
+
+## Rendering pipeline
+
+```
+Vue template
+    │ Vue Custom Renderer (nodeOps.ts, patchProp.ts)
+    ▼
+Base / Node tree          ← logical, reactive (Vue refs/computed)
+    │ syncWithThree() + watchEffect
+    ▼
+Three.js scene            ← visual, imperative
+    │ gsap ticker (25 fps)
+    ▼
+WebGL canvas
+```
+
+---
+
+## Key abstractions
+
+### `Base` (`nodes/Base.ts`)
+Tree node skeleton. Owns parent/children refs, `appendChild`/`removeChild`/`insertBefore`, and the deferred sync queue (`registerSync` → `applySync`). No Three.js knowledge. `Comment` and `TextNode` extend this directly.
+
+### `Node` (`nodes/Node.ts`)
+Extends `Base`. Everything that can exist in the 3D scene. Holds:
+- `element: Element3d` — the bridge to Three.js
+- `stage: VuetrexStage` — scene-level services
+- click event dispatch (bubbling)
+- **`layoutPositionOf(child): Vector3`** — default grid layout; container nodes override this
+
+### `MeshNode` (`nodes/MeshNode.ts`)
+Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, `size`, `height`, `connection`), shared `syncWithThree()` lifecycle (watchEffect → `stage.renderMesh`), connection wiring, and `onRemoved()` cleanup. **To add a new shape: extend `MeshNode`, implement `modelGen()`.**
+
+### Concrete nodes
+
+| Class | Role | Key override |
+|-------|------|--------------|
+| `Box` | Rounded-box geometry | `modelGen()` |
+| `Cylinder` | Beveled cylinder / sleeve geometry | `modelGen()`, `flushMode = 'sync'` |
+| `Layer` | Grouping plane with scale/elevation | `isLayer()`, `syncWithThree()` |
+| `Row` | Horizontal layout container | `layoutPositionOf()` — grid or circular |
+| `Stack` | Vertical stacking container | `layoutPositionOf()` — cumulative height |
+| `Root` | Tree root, owns destroy | — |
+
+### `Element3d` (`three/element3d.ts`)
+Thin bridge: holds `mesh: THREE.Object3D` and `pos: Vector3`. `getPosition()` delegates to `node.parent.layoutPositionOf(node)` — no layout logic lives here.
+
+### `VuetrexStage` (`three/stage.ts`)
+Scene infrastructure. Manages floor, mirror, lights, caption texture, connectors, `renderMesh()`, `removeObject()`, camera, raycasting. Exposes `boxRadius` / `boxDistance` (configurable via `VxSettings`).
+
+---
+
+## Layout system
+
+Each container node owns the position calculation for its children via `layoutPositionOf(child: Node): Vector3`. Containers read `stage.boxRadius` / `stage.boxDistance` for spacing.
+
+- **`Node` (default):** grid — rows × columns, offset by parent layer position
+- **`Row`:** circular if `state.layout === 'circular'`, otherwise inherits default
+- **`Stack`:** stacks children on Y axis by cumulative height
+
+Adding a new layout: subclass `Node` (or `Row`), override `layoutPositionOf()`.
+
+---
+
+## Reactive sync
+
+Structural changes (append/remove/insert) call `registerSync()` which batches via `queuePostFlushCb`. After Vue's render flush, `applySync()` calls `syncWithThree()` on each child. `MeshNode.syncWithThree()` installs a `watchEffect` that re-runs whenever reactive state (size, height, position) changes.
+
+---
+
+## Adding a new node type
+
+1. Create `nodes/MyShape.ts`, `extends MeshNode`
+2. Implement `modelGen()` returning a `(height, size) => THREE.Object3D` factory
+3. Override `protected readonly flushMode` if sync timing matters
+4. Register in `nodes/types.ts`: `myshape: MyShape`
+
+For a new container layout: `extends Node`, override `layoutPositionOf(child)`.

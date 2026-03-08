@@ -53,4 +53,5 @@ setup() {
   return {settings}
 }
 ```
-
+## Architecture
+For a terse description of how the library code works, check [architecutre notes](../architecture.md)

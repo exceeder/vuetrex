@@ -7,6 +7,7 @@ import { patchProp } from '@/lib-components/patchProp'
 // are stored inside reactive arrays (the same pattern used by Node.ts).
 class TestNode extends Base {
     public state: Record<string, any> = {}
+    isRenderableNode(): boolean { return true; }
     protected subscribeEvents() {}
 }
 (TestNode.prototype as any)['__v_skip'] = true
