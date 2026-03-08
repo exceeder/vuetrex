@@ -9,3 +9,6 @@ dist/
 dist_types/
 yarn.lock
 .DS_Store
+package-lock.json
+WARP.md
+.yarnrc.yml

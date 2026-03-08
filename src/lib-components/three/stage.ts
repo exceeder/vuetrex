@@ -1,9 +1,9 @@
-import * as THREE from "three";
-import * as THREEx from "@/lib-components/three/three.imports";
-import Scene from "@/lib-components/three/scene";
-import Element3d from "@/lib-components/three/element3d";
-import {Node} from "@/lib-components/nodes/Node";
-import {Connectors} from "@/lib-components/three/connectors/connectors";
+import * as THREE from 'three';
+import * as THREEx from '@/lib-components/three/three.imports.js';
+import Scene from '@/lib-components/three/scene.js';
+import Element3d from '@/lib-components/three/element3d.js';
+import {Node} from '@/lib-components/nodes/Node.js';
+import {Connectors} from '@/lib-components/three/connectors/connectors.js';
 
 //import gsap from 'gsap';
 

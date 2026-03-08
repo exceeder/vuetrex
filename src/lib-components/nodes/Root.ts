@@ -1,5 +1,5 @@
-import {Node} from '@/lib-components/nodes/Node';
-import {Base} from '@/lib-components/nodes/Base';
+import {Node} from '@/lib-components/nodes/Node.js';
+import {Base} from '@/lib-components/nodes/Base.js';
 
 export class Root extends Node {
     constructor(stage: any) {

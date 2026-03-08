@@ -47,7 +47,7 @@ open `src/components/HelloWorld.vue` and add
 </template>
 <script>
 //...
-import { Vuetrex } from "@exceeder/vuetrex";
+import { Vuetrex } from '@exceeder/vuetrex.js';
 
 export default {
   components: {
@@ -161,7 +161,7 @@ If you need to dive deeper, you have access to the ThreeJS scene like this:
 </template>
 
 <script type="ts">
-import {VxStage} from "@exceeder/vuetrex"
+import {VxStage} from '@exceeder/vuetrex.js'
 
 export default {
   setup() {   

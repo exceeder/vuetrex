@@ -1,4 +1,4 @@
-import Element3d from "@/lib-components/three/element3d";
+import Element3d from '@/lib-components/three/element3d.js';
 
 export class Segment {
     horizontal: boolean

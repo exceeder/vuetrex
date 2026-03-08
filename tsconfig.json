@@ -14,10 +14,15 @@
         "skipLibCheck": true,
         "outDir": "dist_types",
         "declaration": true,
-        "declarationMap": true,
+        "emitDeclarationOnly": true,
+        "declarationMap": false,
+        "noEmit": false,
+
         "baseUrl": "./",
         "paths": {
-            "@/*": ["src/*"]
+            "@/*": ["src/*"],
+            "@/lib-components/*": ["src/lib-components/*"],
+            "@/lib-components": ["src/lib-components/index.ts"]
         },
         "types": [
             "vite-plugin-glsl/ext"

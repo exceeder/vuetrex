@@ -1,6 +1,6 @@
-import * as THREE from "three";
-import { VuetrexStage } from "./stage";
-import { Node } from "@/lib-components/nodes/Node";
+import * as THREE from 'three';
+import { VuetrexStage } from './stage.js';
+import { Node } from '@/lib-components/nodes/Node.js';
 
 export default class Element3d {
 

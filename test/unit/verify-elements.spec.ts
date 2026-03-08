@@ -1,9 +1,9 @@
 import { afterEach, describe, it, expect, vi } from 'vitest'
-import { nodeOps } from '@/lib-components/nodeOps'
-import { registerElement, types } from '@/lib-components/nodes/types'
-import { Comment } from '@/lib-components/nodes/Root'
-import { Base } from '@/lib-components/nodes/Base'
-import type { FunctionalComponent, ClassComponent } from '@/lib-components/nodes/types'
+import { nodeOps } from '@/lib-components/nodeOps.js'
+import { registerElement, types } from '@/lib-components/nodes/types.js'
+import { Comment } from '@/lib-components/nodes/Root.js'
+import { Base } from '@/lib-components/nodes/Base.js'
+import type { FunctionalComponent, ClassComponent } from '@/lib-components/nodes/types.js'
 
 // ── Minimal test doubles (no Three.js / stage dependency) ────────────────────
 

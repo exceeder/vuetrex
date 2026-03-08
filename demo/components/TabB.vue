@@ -99,7 +99,7 @@
 
 <script lang="ts">
 import { ref, reactive, nextTick } from 'vue'
-import { Vuetrex, VxSettings, VxStage, VxMouseEvent } from '@/lib-components/index'
+import { Vuetrex, VxSettings, VxStage, VxMouseEvent } from '@/lib-components/index.js'
 import gsap from 'gsap'
 
 export default {

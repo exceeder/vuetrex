@@ -1,7 +1,7 @@
-import Vuetrex from "@/lib-components/vuetrex"
+import Vuetrex from '@/lib-components/vuetrex.js'
 import { shallowMount } from '@vue/test-utils'
 import { describe, it, expect} from 'vitest'
-import { createRendererForStage } from "@/lib-components/renderer";
+import { createRendererForStage } from '@/lib-components/renderer.js';
 
 describe('The Vuetrex Stage object', () => {
 

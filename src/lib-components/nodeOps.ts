@@ -1,8 +1,8 @@
-import { Base } from "@/lib-components/nodes/Base";
-import { Comment, TextNode } from "@/lib-components/nodes/Root";
-import { ElementNamespace, RendererOptions, VNodeProps} from "@vue/runtime-core";
-import { VuetrexStage } from "@/lib-components/three/stage";
-import { types, ElementRegistry, FunctionalComponent, ClassComponent } from "@/lib-components/nodes/types";
+import { Base } from '@/lib-components/nodes/Base.js';
+import { Comment, TextNode } from '@/lib-components/nodes/Root.js';
+import { ElementNamespace, RendererOptions, VNodeProps} from '@vue/runtime-core';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
+import { types, ElementRegistry, FunctionalComponent, ClassComponent } from '@/lib-components/nodes/types.js';
 
 export const nodeOps = (stage: VuetrexStage, extraTypes?: ElementRegistry): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
 

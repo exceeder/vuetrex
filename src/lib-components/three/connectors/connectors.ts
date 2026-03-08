@@ -1,8 +1,8 @@
-import {VuetrexStage} from "../stage";
-import {VuetrexParticles, ParticleOptions} from "@/lib-components/three/connectors/particles";
-import {Segment, ConnectorPath} from "@/lib-components/three/connectors/path";
-import Element3d from "@/lib-components/three/element3d";
-import * as THREE from "three"
+import {VuetrexStage} from '../stage.js';
+import {VuetrexParticles, ParticleOptions} from '@/lib-components/three/connectors/particles.js';
+import {Segment, ConnectorPath} from '@/lib-components/three/connectors/path.js';
+import Element3d from '@/lib-components/three/element3d.js';
+import * as THREE from 'three'
 
 const options: ParticleOptions = {
     position: new THREE.Vector3(-2.5, 0.2, -0.5),

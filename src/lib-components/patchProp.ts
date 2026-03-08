@@ -1,5 +1,5 @@
-import {ComponentInternalInstance, ElementNamespace, SuspenseBoundary, VNode} from "vue";
-import { Base } from "@/lib-components/nodes/Base";
+import {ComponentInternalInstance, ElementNamespace, SuspenseBoundary, VNode} from 'vue';
+import { Base } from '@/lib-components/nodes/Base.js';
 
 /**
  * Executed when a prop is passed to a custom object

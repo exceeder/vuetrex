@@ -48,7 +48,7 @@ open `src/components/HelloWorld.vue` and add
 </template>
 <script>
 //...
-import { Vuetrex } from "@exceeder/vuetrex";
+import { Vuetrex } from '@exceeder/vuetrex.js';
 
 export default {
   components: {

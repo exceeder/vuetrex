@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref} from "vue";
+import {defineComponent, ref} from 'vue';
 import {Vuetrex} from '@/lib-components';
 
 export default defineComponent({

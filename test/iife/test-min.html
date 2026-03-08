@@ -2,11 +2,16 @@
 <meta charset="UTF-8" />
 <head>
   <title>Vuetrex test</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+        "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js"
+      }
+    }
+  </script>
 </head>
 <body>
-<script src="https://unpkg.com/vue@next/dist/vue.global.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
-<script src="../../dist/vuetrex.min.js"></script>
 <div id="app">
   <h1>Testing Vuetrex</h1>
   <span>{{msg}}</span>
@@ -25,13 +30,15 @@
   </Vuetrex>
 </div>
 <script type="module">
-    const {createApp, ref, onMounted} = Vue;
+    import { createApp, ref, onMounted} from 'vue';
+    import { Vuetrex } from '../../dist/vuetrex.es.js';
+
     const RootComponent = {
         components: {
-            Vuetrex: vuetrex.Vuetrex
+            Vuetrex: Vuetrex
         },
         setup() {
-            console.log("Vuetrex loaded:",vuetrex)
+            console.log("Vuetrex loaded:",Vuetrex)
 
             const msg = ref("loading")
             const counter = ref(0)

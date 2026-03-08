@@ -13,7 +13,7 @@
   </div>
 </template>
 <script lang="ts">
-import {defineComponent, watch, onMounted, provide, reactive, toRefs, VNode} from "vue";
+import {defineComponent, watch, onMounted, provide, reactive, toRefs, VNode} from 'vue';
 
 interface TabProps {
   name: string;

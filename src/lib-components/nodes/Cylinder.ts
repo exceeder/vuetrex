@@ -1,5 +1,5 @@
-import { MeshNode } from '@/lib-components/nodes/MeshNode';
-import { VuetrexStage } from '@/lib-components/three/stage';
+import { MeshNode } from '@/lib-components/nodes/MeshNode.js';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
 import * as THREE from 'three';
 
 export class Cylinder extends MeshNode {

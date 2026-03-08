@@ -62,8 +62,8 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, SetupContext, ref} from "vue";
-import {Vuetrex, VxSettings} from '@/lib-components/index';
+import {defineComponent, SetupContext, ref} from 'vue';
+import {Vuetrex, VxSettings} from '@/lib-components/index.js';
 
 export default defineComponent({
   components: {

@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import { Vuetrex } from "@exceeder/vuetrex";
+import { Vuetrex } from '@exceeder/vuetrex';
 import { getCurrentInstance } from 'vue';
 export default {
   components: {

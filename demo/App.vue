@@ -42,7 +42,7 @@ import TabC from './components/TabC.vue';
 import TabD from './components/TabD.vue';
 import Tabs from './components/Tabs.vue';
 import Tab from './components/Tab.vue';
-import {defineComponent, ref, reactive} from "vue";
+import {defineComponent, ref, reactive} from 'vue';
 
 export default defineComponent( {
   components: {

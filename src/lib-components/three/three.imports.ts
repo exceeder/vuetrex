@@ -6,4 +6,4 @@ export { EffectComposer }    from 'three/examples/jsm/postprocessing/EffectCompo
 export { RenderPass }        from 'three/examples/jsm/postprocessing/RenderPass.js';
 export { Reflector }         from 'three/examples/jsm/objects/Reflector.js';
 export { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-export { DynamicTexture }    from './external/DynamicTexture';
+export { DynamicTexture }    from './external/DynamicTexture.js';

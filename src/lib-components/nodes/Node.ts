@@ -1,8 +1,8 @@
-import { Base } from "@/lib-components/nodes/Base";
-import Element3d from "@/lib-components/three/element3d";
-import { VuetrexStage } from "@/lib-components/three/stage";
-import { nextTick, reactive } from "vue";
-import * as THREE from "three";
+import { Base } from '@/lib-components/nodes/Base.js';
+import Element3d from '@/lib-components/three/element3d.js';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
+import { nextTick, reactive } from 'vue';
+import * as THREE from 'three';
 
 declare type VxEventListener<T extends Event> = (event: T) => void;
 

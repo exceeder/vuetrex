@@ -1,7 +1,7 @@
-import { MeshNode } from '@/lib-components/nodes/MeshNode';
-import { VuetrexStage } from '@/lib-components/three/stage';
+import { MeshNode } from '@/lib-components/nodes/MeshNode.js';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
 import * as THREE from 'three';
-import * as THREEx from '@/lib-components/three/three.imports';
+import * as THREEx from '@/lib-components/three/three.imports.js';
 
 export class Box extends MeshNode {
 

@@ -1,4 +1,4 @@
-import {ref, computed, queuePostFlushCb, ComputedRef, Ref, shallowRef} from "vue";
+import {ref, computed, queuePostFlushCb, ComputedRef, Ref, shallowRef} from 'vue';
 
 // defer synchronization until after rendering for all nodes to have complete data about parents and children
 const pendingSyncBase: Base[] = [];

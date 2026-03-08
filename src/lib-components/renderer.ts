@@ -1,9 +1,9 @@
-import { createRenderer, RootRenderFunction } from "vue";
-import { nodeOps } from "@/lib-components/nodeOps";
-import { patchProp } from "@/lib-components/patchProp";
-import { VuetrexStage } from "@/lib-components/three/stage";
-import { Base } from "@/lib-components/nodes/Base";
-import { ElementRegistry } from "@/lib-components/nodes/types";
+import { createRenderer, RootRenderFunction } from 'vue';
+import { nodeOps } from '@/lib-components/nodeOps.js';
+import { patchProp } from '@/lib-components/patchProp.js';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
+import { Base } from '@/lib-components/nodes/Base.js';
+import { ElementRegistry } from '@/lib-components/nodes/types.js';
 
 /**
  * Vuetrex Stage requires implementation of Vue's Custom Renderer to hijack painting of boxes and cylinders and other

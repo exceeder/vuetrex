@@ -24,15 +24,15 @@ import * as THREE from 'three';
 console.log(THREE.Vector3);
 
 import {ref} from 'vue';
-import {Vuetrex, VxStage, VxSettings, VxMouseEvent} from '@/lib-components/index';
+import {Vuetrex, VxStage, VxSettings, VxMouseEvent} from '@/lib-components/index.js';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
 // noinspection TypeScriptCheckImport
 import {Text} from 'troika-three-text';
 import gsap from 'gsap';
 
-//import {PI} from "three/examples/jsm/nodes/math/MathNode";
-import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
-//import {AdditiveBlending} from "three";
+//import {PI} from 'three/examples/jsm/nodes/math/MathNode';
+import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader';
+//import {AdditiveBlending} from 'three';
 
 export default {
   components: {

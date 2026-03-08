@@ -1,7 +1,7 @@
-import * as THREE from "three";
-import * as THREEx from "@/lib-components/three/three.imports";
-import LifeCycle from "@/lib-components/three/lifecycle";
-import {Color} from "three";
+import * as THREE from 'three';
+import * as THREEx from '@/lib-components/three/three.imports.js';
+import LifeCycle from '@/lib-components/three/lifecycle.js';
+import {Color} from 'three';
 
 interface MousePosition {
     x: number

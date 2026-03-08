@@ -26,8 +26,8 @@
 </template>
 
 <script lang="ts">
-import {ref} from "vue";
-import {Vuetrex} from '@/lib-components/index';
+import {ref} from 'vue';
+import {Vuetrex} from '@/lib-components/index.js';
 
 export default {
   components: {

@@ -1,7 +1,7 @@
 import {reactive, watchEffect, WatchStopHandle} from 'vue';
-import {Node} from '@/lib-components/nodes/Node';
-import {VuetrexStage} from "@/lib-components/three/stage";
-import * as THREE from "three";
+import {Node} from '@/lib-components/nodes/Node.js';
+import {VuetrexStage} from '@/lib-components/three/stage.js';
+import * as THREE from 'three';
 
 /**
  * Layer class

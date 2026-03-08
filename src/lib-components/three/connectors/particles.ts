@@ -8,8 +8,8 @@
  *  Charlie Hoey - http://charliehoey.com
  */
 
-import * as THREE from "three"
-import {Object3D} from "three";
+import * as THREE from 'three'
+import {Object3D} from 'three';
 import fragmentShader from './glsl/p-fragment.glsl';
 import vertexShader from './glsl/p-vertex.glsl';
 

@@ -1,4 +1,4 @@
-import path from 'node:path'
+import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import glsl from 'vite-plugin-glsl'
@@ -19,7 +19,7 @@ export default defineConfig({
         lib: {
             entry: path.resolve(__dirname, 'src/lib-components/index.ts'),
             name: 'Vuetrex',
-            formats: ['es', 'umd'],
+            formats: ['es'],
             fileName: (format: string) => `vuetrex.${format}.js`,
         },
         rollupOptions: {

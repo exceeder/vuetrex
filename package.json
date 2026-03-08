@@ -6,14 +6,10 @@
   "main": "dist/vuetrex.umd.cjs",
   "module": "dist/vuetrex.js",
   "unpkg": "dist/vuetrex.min.js",
-  "typings": "./dist_types/vuetrex.d.ts",
-  "files": [
-    "dist"
-  ],
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "clean": "rm -rf ./dist && rm -rf ./dist_types",
+    "clean": "rm -rf ./dist && rm -rf ./dist_types && rm -rf ./coverage",
     "build": "vue-tsc --declaration --emitDeclarationOnly && vite build",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest",
@@ -26,10 +22,13 @@
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs"
   },
+  "files": [
+    "dist", "dist_types"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/vuetrex.js",
-      "require": "./dist/vuetrex.umd.js"
+      "import": "./dist/vuetrex.es.js",
+      "types": "./dist_types/vuetrex.d.ts"
     }
   },
   "repository": {
@@ -55,25 +54,26 @@
     "troika-three-text": "^0.52.4"
   },
   "devDependencies": {
-    "@types/three": "^0.183.0",
+    "@types/node": "^25.3.5",
+    "@types/three": "^0.183.1",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
     "@vue/test-utils": "^2.4.6",
-    "happy-dom": "^20.7.0",
+    "happy-dom": "^20.8.3",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-glsl": "^1.5.5",
     "vitepress": "^2.0.0-alpha.16",
     "vitest": "^4.0.18",
     "vue": "^3.5.29",
-    "vue-tsc": "^2.2.12"
+    "vue-tsc": "^3.2.5"
   },
   "peerDependenciesMeta": {
-    "troika-three-text": {
+    "gsap": {
       "optional": true
     },
-    "gsap": {
+    "troika-three-text": {
       "optional": true
     }
   },

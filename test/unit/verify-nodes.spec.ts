@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { Base } from '@/lib-components/nodes/Base'
-import { patchProp } from '@/lib-components/patchProp'
+import { Base } from '@/lib-components/nodes/Base.js'
+import { patchProp } from '@/lib-components/patchProp.js'
 
 // Minimal concrete subclass — no Three.js dependency.
 // __v_skip prevents Vue from wrapping instances in a reactive Proxy when they

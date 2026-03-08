@@ -30,7 +30,7 @@ npm install three @exceeder/vuetrex
 #### Usage
 In the script section of your .vue component:
 ```
-import {Vuetrex} from "@exceeder/vuetrex";
+import {Vuetrex} from '@exceeder/vuetrex.js';
 ...
 components: {
  Vuetrex

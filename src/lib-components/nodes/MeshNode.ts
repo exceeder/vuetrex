@@ -1,6 +1,6 @@
 import { reactive, watchEffect, WatchStopHandle, nextTick } from 'vue';
-import { Node } from '@/lib-components/nodes/Node';
-import { VuetrexStage } from '@/lib-components/three/stage';
+import { Node } from '@/lib-components/nodes/Node.js';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
 import * as THREE from 'three';
 
 export interface MeshState {
