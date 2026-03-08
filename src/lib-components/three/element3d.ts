@@ -9,7 +9,7 @@ export default class Element3d {
 
     private readonly stage: VuetrexStage;
     public node: Node;
-    public mesh: THREE.Mesh | null = null;
+    public mesh: THREE.Object3D | null = null;
     public pos: THREE.Vector3 | null = null;
 
     constructor(stage: VuetrexStage, node: Node) {

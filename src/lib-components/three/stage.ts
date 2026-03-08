@@ -64,14 +64,16 @@ export class VuetrexStage extends Scene implements VxStage {
         updateFn: () => {}
     }
     private captions: Array<{x:number, y:number, text:string}> = []
+    boxRadius: number;
+    private boxDistance: number;
 
     constructor(domParent: HTMLElement, settings:VxSettings) {
         super(domParent)
         this.subscribers = []
         this.settings = settings
 
-        BOX_RADIUS = settings.unit || BOX_RADIUS
-        BOX_DISTANCE = settings.distance || BOX_DISTANCE
+        this.boxRadius = settings.unit || BOX_RADIUS
+        this.boxDistance = settings.distance || BOX_DISTANCE
         this.colorMain = new THREE.Color(settings.color || 0x555555);
         this.colorHighlight = new THREE.Color(settings.highlightColor || 0x4c7fb2);
     }
@@ -175,7 +177,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
             const x = c.x * scale
             const y = c.y * scale
-            texture.drawText(c.text, x + textureSize / 2 - w / 2, y + textureSize / 2 + BOX_RADIUS/4*scale,
+            texture.drawText(c.text, x + textureSize / 2 - w / 2, y + textureSize / 2 + this.boxRadius/4*scale,
                 '#'+(this.settings.captionColor || 0xffffff).toString(16))
         })
 
@@ -258,114 +260,7 @@ export class VuetrexStage extends Scene implements VxStage {
         }
     }
 
-    meshCreator(type: string): (height:number, size:number) => THREE.Mesh {
-        switch (type) {
-            case 'plane': {
-                return (height, size) => {
-                    let bMaterial = this.createElementMaterial();
-                    bMaterial.transparent = true;
-                    bMaterial.opacity = 0.75;
-                    bMaterial.flatShading = true;
-                    bMaterial.side = THREE.DoubleSide;
-                    bMaterial.color.setRGB(255,255,255)
-                    const result = new THREE.Mesh(
-                        new THREE.PlaneGeometry(size, size, 2, 2),
-                        bMaterial
-                    );
-                    result.rotateX(Math.PI/2)
-                    return result;
-                }
-            }
-            case 'cylinder': {
-                return (height, size) => {
-                    let bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(
-                        new THREE.CylinderGeometry(size / 2, size / 2 * 1.05, height, 32),
-                        bMaterial
-                    );
-                }
-            }
-            case 'cylinder-shape': {
-                return (height, size) => {
-                    let bMaterial = this.createElementMaterial();
-                    const width = size/2 || 1.0;
-                    const r = width;
-
-                    const shape = new THREE.Shape();
-                    shape.moveTo(r, 0);
-                    shape.absarc(0,0, width, 0, Math.PI/2, false);
-                    shape.absarc(0,0, width, Math.PI/2, Math.PI, false);
-                    shape.absarc(0,0, width, Math.PI, Math.PI*3/2, false);
-                    shape.absarc(0,0, width, Math.PI*3/2, Math.PI*1.99, false);
-                    shape.closePath();
-
-                    const extrudeSettings = {
-                        steps: 1,
-                        depth: BOX_RADIUS/4,
-                        bevelEnabled: true,
-                        bevelThickness: 0.05,
-                        bevelSize: 0.07,
-                        bevelOffset: 0,
-                        bevelSegments: 5
-                    };
-
-                    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-                    geometry.rotateX(Math.PI/2)
-                    geometry.translate(0,0.19,0)
-                    return new THREE.Mesh(geometry, bMaterial);
-                };
-            }
-            case 'rbox-shape': {
-                return (height, size) => {
-                    let bMaterial = this.createElementMaterial();
-                    const width = size;
-                    const length = BOX_RADIUS * 0.975;
-
-                    const shape = new THREE.Shape();
-                    shape.moveTo(-length/2, -width/2);
-                    shape.lineTo(-length/2, width/2);
-                    shape.lineTo(length/2, width/2);
-                    shape.lineTo(length/2, -width/2);
-                    shape.lineTo(-length/2, -width/2);
-
-                    const extrudeSettings = {
-                        steps: 2,
-                        depth: BOX_RADIUS/2,
-                        bevelEnabled: true,
-                        bevelThickness: 0.05,
-                        bevelSize: 0.05,
-                        bevelOffset: 0,
-                        bevelSegments: 5
-                    };
-
-                    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-                    geometry.rotateX(Math.PI/2)
-                    geometry.translate(0,BOX_RADIUS/4,0)
-                    const mesh = new THREE.Mesh(geometry, bMaterial);
-                    mesh.castShadow = true;
-                    return mesh;
-                }
-
-            }
-            case 'rbox': {
-                return (height, size) => {
-                    const bMaterial = this.createElementMaterial();
-                    const bGeometry = new THREEx.RoundedBoxGeometry(size, height, size,  5, .05);
-                    return new THREE.Mesh(bGeometry, bMaterial);
-                }
-
-            }
-            default:
-            case 'box': {
-                return (height, size) => {
-                    let bMaterial = this.createElementMaterial();
-                    return new THREE.Mesh(new THREE.BoxGeometry(BOX_RADIUS*0.9, BOX_RADIUS / 2, size), bMaterial);
-                }
-            }
-        }
-    }
-
-    addCaption(el: THREE.Mesh, size: number, caption: string) {
+    addCaption(el: THREE.Object3D, size: number, caption: string) {
         const c = {
             x: el.position.x,
             y: el.position.z + size / 2.0,
@@ -377,7 +272,7 @@ export class VuetrexStage extends Scene implements VxStage {
         return c;
     }
 
-    renderMesh(el: Element3d, height: number, size: number = BOX_RADIUS, gen: (height:number, size:number) => THREE.Mesh) {
+    renderMesh(el: Element3d, height: number, size: number = this.boxRadius, gen: (height:number, size:number) => THREE.Object3D) {
         const scene = this.scene;
 
         if (el.mesh !== null) {
@@ -392,19 +287,19 @@ export class VuetrexStage extends Scene implements VxStage {
             return;
         }
 
-        const mesh = gen(height, size);
+        const model = gen(height, size);
         const scale = el.node.getScale();
-        mesh.scale.set(1/scale, 1/scale, 1/scale);
-        mesh.geometry.translate(0,height/2,0)
-        mesh.name = "el-" + el.node.name;
-        mesh.castShadow = true;
-        mesh.receiveShadow = false;
+        model.scale.set(1/scale, 1/scale, 1/scale);
+        model.translateY(height/2);
+        model.name = "el-" + el.node.name;
+        model.castShadow = true;
+        model.receiveShadow = false;
         //todo this.tween(el, ...)
-        mesh.position.copy(el.getPosition());
-        mesh.userData.caption = this.addCaption(mesh, size/scale, el.getCaption())
-        scene.add(mesh);
-        el.mesh = mesh;
-        mesh.userData.el = el;
+        model.position.copy(el.getPosition());
+        model.userData.caption = this.addCaption(model, size/scale, el.getCaption())
+        scene.add(model);
+        el.mesh = model;
+        model.userData.el = el;
     }
 
     connect(el1: Element3d, el2: Element3d) {

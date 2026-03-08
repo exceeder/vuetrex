@@ -1,6 +1,7 @@
 import {reactive, watchEffect, WatchStopHandle} from 'vue';
 import {Node} from '@/lib-components/nodes/Node';
 import {VuetrexStage} from "@/lib-components/three/stage";
+import * as THREE from "three";
 
 /**
  * Layer class
@@ -21,16 +22,33 @@ export class Layer extends Node {
         super(stage)
     }
 
+    modelGen(): (height:number, size:number) => THREE.Mesh {
+        return (_, size) => {
+            let bMaterial = this.stage.createElementMaterial();
+            bMaterial.transparent = true;
+            bMaterial.opacity = 0.75;
+            bMaterial.flatShading = true;
+            bMaterial.side = THREE.DoubleSide;
+            bMaterial.color.setRGB(255,255,255)
+            const result = new THREE.Mesh(
+                new THREE.PlaneGeometry(size, size, 2, 2),
+                bMaterial
+            );
+            result.rotateX(Math.PI/2)
+            return result;
+        }
+    }
+
     syncWithThree() {
         if (this.stopHandle) return
         this.stopHandle = watchEffect(() => {
-                if (this.getLayer()) {
-                    this.element.pos = this.element.getPosition();
-                    this.state.scale = (this.getLayer() as Layer)?.state.scale + 1;
-                }
-                if (this.state.visible) {
-                    this.stage.renderMesh(this.element, 1.0, 10.0, this.stage.meshCreator('plane'));
-                }
+            if (this.getLayer()) {
+                this.element.pos = this.element.getPosition();
+                this.state.scale = (this.getLayer() as Layer)?.state.scale + 1;
+            }
+            if (this.state.visible) {
+                this.stage.renderMesh(this.element, 1.0, 10.0, this.modelGen());
+            }
         })
     }
 

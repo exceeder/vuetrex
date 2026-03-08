@@ -97,7 +97,7 @@ export default {
             const sceneGroup = gltf.scene;
             thing = sceneGroup;
             sceneGroup.scale.set(0.75,0.75,0.75);
-            sceneGroup.position.set(0.0, -0.30,-1.0);
+            sceneGroup.position.set(0.0, -0.30,-0.3);
             sceneGroup.rotation.set(0.0,0.50,0.0);
 
 

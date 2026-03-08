@@ -1,7 +1,8 @@
 import {reactive, watchEffect, WatchStopHandle, nextTick} from 'vue';
 import {Node} from '@/lib-components/nodes/Node';
 import {VuetrexStage} from "@/lib-components/three/stage";
-
+import * as THREE from "three";
+import * as THREEx from "@/lib-components/three/three.imports";
 
 export class Box extends Node {
 
@@ -18,11 +19,22 @@ export class Box extends Node {
         super(stage);
     }
 
+    modelGen(): (height:number, size:number) => THREE.Mesh {
+        return (height, size) => {
+            const bMaterial = this.stage.createElementMaterial();
+            const bGeometry = new THREEx.RoundedBoxGeometry(size, height, size,  5, .05);
+            const mesh = new THREE.Mesh(bGeometry, bMaterial);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            return mesh;
+        }
+    }
+
     syncWithThree() {
         if (this.stopHandle) return;
         this.stopHandle = watchEffect(() => {
             if (this.myIdx.value >= 0) {
-                this.stage.renderMesh(this.element, this.state.height, this.state.size, this.stage.meshCreator('rbox'));
+                this.stage.renderMesh(this.element, this.state.height, this.state.size, this.modelGen());
             }
 
             if (this.state.connection) {

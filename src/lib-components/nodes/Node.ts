@@ -12,7 +12,7 @@ type NodeEvents = {
 /**
  * Named node in the ThreeJS tree hierarchy of Vuetrex renderer.
  */
-export class Node extends Base {
+export abstract class Node extends Base {
     public element: Element3d;
 
     public readonly stage: VuetrexStage
@@ -67,6 +67,8 @@ export class Node extends Base {
         }
         return result;
     }
+
+    //abstract createModel(): (height:number, size:number) => THREE.Mesh
 
     setName(name: string) {
         this.name = name;
