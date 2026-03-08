@@ -120,9 +120,9 @@ export default {
     }
 
     const podCounts = reactive<Record<string, number>>({
-      'api-gw':      1,
-      'auth-svc':    1,
-      'product-svc': 1,
+      'api-gw':      2,
+      'auth-svc':    3,
+      'product-svc': 3,
       'order-svc':   1,
       'mongo':       1,
       'redis':       1,

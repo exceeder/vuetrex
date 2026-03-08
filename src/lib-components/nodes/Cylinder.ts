@@ -41,7 +41,7 @@ export class Cylinder extends MeshNode {
         shape.closePath();
         return new THREE.ExtrudeGeometry(shape, {
             steps: 1,
-            depth: this.stage.boxRadius / 5,
+            depth: this.stage.boxRadius / 6,
             bevelEnabled: true,
             bevelThickness: 0.05,
             bevelSize: 0.07,

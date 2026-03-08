@@ -25,7 +25,7 @@ export class Stack extends Node {
         const height = this.elements.value
             .slice(0, colIdx)
             .map(el => (el as any).state?.height || 0)
-            .reduce((a: number, b: number) => a + b, 0);
+            .reduce((a: number, b: number) => a + b + 0.1, 0);
 
         const rowIdx = this.parent.value?.myIdx.value ?? 0;
         const rows = this.numRows.value || 1;
