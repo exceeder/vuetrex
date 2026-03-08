@@ -136,57 +136,49 @@ export default {
       return stage?.getById(svc)?.mesh ?? null
     }
 
-    function bouncePods(svc: string, baseDelay = 0) {
+    // Gentle upward lift — pods rise a small amount and settle back smoothly.
+    function liftPods(svc: string, baseDelay = 0) {
       const count = podCounts[svc]
       for (let i = 1; i <= count; i++) {
         const mesh = getPodMesh(svc, i)
         if (!mesh) continue
         const origY = mesh.position.y
-        gsap.timeline({ delay: baseDelay + (i - 1) * 0.07 })
-          .to(mesh.position, { duration: 0.18, y: origY + 0.55, ease: 'power2.out' })
-          .to(mesh.position, { duration: 0.32, y: origY, ease: 'bounce.out' })
+        gsap.timeline({ delay: baseDelay + (i - 1) * 0.1 })
+          .to(mesh.position, { duration: 0.45, y: origY + 0.13, ease: 'sine.out' })
+          .to(mesh.position, { duration: 0.55, y: origY, ease: 'sine.inOut' })
       }
     }
 
-    function shakeBox(svc: string) {
-      const mesh = getDeployMesh(svc)
-      if (!mesh) return
-      const ox = mesh.position.x
-      gsap.timeline()
-        .to(mesh.position, { duration: 0.05, x: ox - 0.13 })
-        .to(mesh.position, { duration: 0.05, x: ox + 0.13 })
-        .to(mesh.position, { duration: 0.05, x: ox - 0.09 })
-        .to(mesh.position, { duration: 0.05, x: ox + 0.09 })
-        .to(mesh.position, { duration: 0.07, x: ox })
-    }
-
-    function pulseBox(svc: string) {
+    // Subtle scale accent — used for both selection and restart feedback.
+    function accentBox(svc: string) {
       const mesh = getDeployMesh(svc)
       if (!mesh) return
       gsap.timeline()
-        .to(mesh.scale, { duration: 0.15, x: 1.18, z: 1.18, ease: 'power2.out' })
-        .to(mesh.scale, { duration: 0.3, x: 1.0, z: 1.0, ease: 'elastic.out(1, 0.4)' })
+        .to(mesh.scale, { duration: 0.35, x: 1.07, z: 1.07, ease: 'sine.out' })
+        .to(mesh.scale, { duration: 0.5, x: 1.0, z: 1.0, ease: 'sine.inOut' })
     }
 
+    // New pod slides in from slightly above with a clean power ease — no bounce.
     function podEntranceAnim(svc: string, podIdx: number) {
       nextTick(() => {
         const mesh = getPodMesh(svc, podIdx)
         if (!mesh) return
         const finalY = mesh.position.y
-        mesh.position.y = finalY + 1.8
+        mesh.position.y = finalY + 0.4
         mesh.scale.set(0.05, 0.05, 0.05)
         gsap.timeline()
-          .to(mesh.position, { duration: 0.4, y: finalY, ease: 'bounce.out' })
-          .to(mesh.scale, { duration: 0.35, x: 1, y: 1, z: 1, ease: 'elastic.out(1, 0.5)' }, '<')
+          .to(mesh.position, { duration: 0.55, y: finalY, ease: 'power2.out' })
+          .to(mesh.scale, { duration: 0.5, x: 1, y: 1, z: 1, ease: 'power2.out' }, '<')
       })
     }
 
+    // Pod shrinks and drops away quietly.
     function podExitAnim(svc: string, podIdx: number, onDone: () => void) {
       const mesh = getPodMesh(svc, podIdx)
       if (!mesh) { onDone(); return }
       gsap.timeline({ onComplete: onDone })
-        .to(mesh.scale, { duration: 0.22, x: 0.05, y: 0.05, z: 0.05, ease: 'power2.in' })
-        .to(mesh.position, { duration: 0.18, y: mesh.position.y + 1.0, ease: 'power2.in' }, '<')
+        .to(mesh.scale, { duration: 0.4, x: 0.05, y: 0.05, z: 0.05, ease: 'power2.inOut' })
+        .to(mesh.position, { duration: 0.4, y: mesh.position.y - 0.2, ease: 'power2.inOut' }, '<')
     }
 
     function onDeployClick(ev: VxMouseEvent) {
@@ -197,20 +189,20 @@ export default {
         // Second click: rolling restart — cascade on API GW, self-restart otherwise
         if (svc === 'api-gw') {
           ;['auth-svc', 'product-svc', 'order-svc'].forEach((s, i) => {
-            gsap.delayedCall(i * 0.3, () => {
-              shakeBox(s)
-              bouncePods(s)
+            gsap.delayedCall(i * 0.5, () => {
+              accentBox(s)
+              liftPods(s)
             })
           })
         } else {
-          shakeBox(svc)
-          bouncePods(svc)
+          accentBox(svc)
+          liftPods(svc)
         }
       } else {
         selected.value = svc
         camera.value = svc
-        pulseBox(svc)
-        bouncePods(svc)
+        accentBox(svc)
+        liftPods(svc)
       }
     }
 
@@ -243,8 +235,8 @@ export default {
 
     function triggerRestart() {
       if (!selected.value) return
-      shakeBox(selected.value)
-      bouncePods(selected.value)
+      accentBox(selected.value)
+      liftPods(selected.value)
     }
 
     function deselectAll() {
