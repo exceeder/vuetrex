@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as THREEx from '@/lib-components/three/three.imports.js';
 import Scene from '@/lib-components/three/scene.js';
-import Element3d from '@/lib-components/three/element3d.js';
+import {Element3d, VxEventMap} from '@/lib-components/three/element3d.js';
 import {Node} from '@/lib-components/nodes/Node.js';
 import {Connectors} from '@/lib-components/three/connectors/connectors.js';
 
@@ -35,11 +35,6 @@ export interface VxSettings {
 export interface VxMouseEvent extends MouseEvent {
     vxNode: Node;
     vxPosition: any;
-}
-
-interface EvType {
-    type: string
-    originalEvent: MouseEvent
 }
 
 let BOX_RADIUS = 1.3;
@@ -298,7 +293,7 @@ export class VuetrexStage extends Scene implements VxStage {
         model.position.copy(el.getPosition());
         model.userData.caption = this.addCaption(model, size/scale, el.getCaption())
         scene.add(model);
-        el.mesh = model;
+        el.mesh = model as THREE.Object3D<VxEventMap>;
         model.userData.el = el;
     }
 
@@ -321,9 +316,7 @@ export class VuetrexStage extends Scene implements VxStage {
             const ev = event as VxMouseEvent;
             ev.vxNode = el3d.node;
             ev.vxPosition = el3d.mesh?.position.clone();
-            const clickEvent = {type: 'click', originalEvent: ev };
-            // @ts-ignore //TODO THREE.EventDispatcher allows to dispatch custom events, but TS limits it
-            el3d.mesh?.dispatchEvent(clickEvent);
+            el3d.mesh?.dispatchEvent({ type: 'click', originalEvent: ev });
         }
     }
 

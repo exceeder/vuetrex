@@ -1,10 +1,10 @@
 import {VuetrexStage} from '@/lib-components/three/stage.js';
 import {Base} from '@/lib-components/nodes/Base.js';
-import {Box} from '@/lib-components/nodes/Box.js';
+import {Box} from '@/lib-components/nodes/shapes/Box.js';
 import {Layer} from '@/lib-components/nodes/Layer.js';
 import {Row} from '@/lib-components/nodes/Row.js';
 import {Stack} from '@/lib-components/nodes/Stack.js';
-import {Cylinder} from '@/lib-components/nodes/Cylinder.js';
+import {Cylinder} from '@/lib-components/nodes/shapes/Cylinder.js';
 
 export interface FunctionalComponent {
     setup(stage: VuetrexStage): Base

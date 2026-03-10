@@ -55,7 +55,6 @@ export abstract class MeshNode extends Node {
             this.stopHandle = undefined;
         }
         if (this.subscribed) {
-            // @ts-ignore — THREE.EventDispatcher supports custom events but TS typing doesn't reflect it
             this.element.mesh?.removeEventListener(Node.CLICK, this.clickListener);
         }
         this.stage.removeObject(this.element);

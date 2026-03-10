@@ -1,5 +1,5 @@
 import { Base } from '@/lib-components/nodes/Base.js';
-import Element3d from '@/lib-components/three/element3d.js';
+import { Element3d, VxEventMap } from '@/lib-components/three/element3d.js';
 import { VuetrexStage } from '@/lib-components/three/stage.js';
 import { nextTick, reactive } from 'vue';
 import * as THREE from 'three';
@@ -21,13 +21,13 @@ export abstract class Node extends Base {
     protected subscribed: boolean = false;
     public readonly type: string = 'Node';
 
-    public static readonly CLICK: string = 'click';
+    public static readonly CLICK = 'click' as const;
 
     public state = reactive({
         text: ''
     });
 
-    readonly clickListener = (ev: any) => {
+    readonly clickListener: THREE.EventListener<VxEventMap['click'], 'click', THREE.Object3D<VxEventMap>> = (ev) => {
         this.dispatchClick(ev.originalEvent);
     };
 
@@ -126,7 +126,6 @@ export abstract class Node extends Base {
     subscribeEvents() {
         nextTick(() => {
             if (!this.subscribed) {
-                // @ts-ignore — THREE.EventDispatcher supports custom events but TS typing doesn't reflect it
                 this.element.mesh?.addEventListener(Node.CLICK, this.clickListener);
                 this.subscribed = true;
             }
