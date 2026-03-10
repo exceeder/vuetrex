@@ -8,6 +8,9 @@ declare type VxEventListener<T extends Event> = (event: T) => void;
 
 type NodeEvents = {
     onClick?: VxEventListener<Event>;
+    onDblclick?: VxEventListener<Event>;
+    onPointerenter?: VxEventListener<Event>;
+    onPointerleave?: VxEventListener<Event>;
 }
 
 /**
@@ -22,6 +25,9 @@ export abstract class Node extends Base {
     public readonly type: string = 'Node';
 
     public static readonly CLICK = 'click' as const;
+    public static readonly DBLCLICK = 'dblclick' as const;
+    public static readonly MOUSE_OVER = 'mouseOver' as const;
+    public static readonly MOUSE_OUT = 'mouseOut' as const;
 
     public state = reactive({
         text: ''
@@ -29,6 +35,18 @@ export abstract class Node extends Base {
 
     readonly clickListener: THREE.EventListener<VxEventMap['click'], 'click', THREE.Object3D<VxEventMap>> = (ev) => {
         this.dispatchClick(ev.originalEvent);
+    };
+
+    readonly dblclickListener: THREE.EventListener<VxEventMap['dblclick'], 'dblclick', THREE.Object3D<VxEventMap>> = (ev) => {
+        this.dispatchDblclick(ev.originalEvent);
+    };
+
+    readonly mouseOverListener: THREE.EventListener<VxEventMap['mouseOver'], 'mouseOver', THREE.Object3D<VxEventMap>> = (ev) => {
+        this.dispatchPointerenter(ev.originalEvent);
+    };
+
+    readonly mouseOutListener: THREE.EventListener<VxEventMap['mouseOut'], 'mouseOut', THREE.Object3D<VxEventMap>> = (ev) => {
+        this.dispatchPointerleave(ev.originalEvent);
     };
 
     public _nodeEvents?: NodeEvents = undefined;
@@ -114,19 +132,50 @@ export abstract class Node extends Base {
         this.nodeEvents.onClick = e;
     }
 
+    set onDblclick(e: VxEventListener<Event> | undefined) {
+        this.nodeEvents.onDblclick = e;
+    }
+
+    set onPointerenter(e: VxEventListener<Event> | undefined) {
+        this.nodeEvents.onPointerenter = e;
+    }
+
+    set onPointerleave(e: VxEventListener<Event> | undefined) {
+        this.nodeEvents.onPointerleave = e;
+    }
+
     dispatchClick(e: MouseEvent) {
         if (this.nodeEvents.onClick)
             this.nodeEvents.onClick(e);
-
-        // bubble up
         const pn = this.parent.value as Node;
         if (pn) pn.dispatchClick(e);
+    }
+
+    dispatchDblclick(e: MouseEvent) {
+        if (this.nodeEvents.onDblclick)
+            this.nodeEvents.onDblclick(e);
+        const pn = this.parent.value as Node;
+        if (pn) pn.dispatchDblclick(e);
+    }
+
+    // pointerenter/pointerleave do not bubble by design
+    dispatchPointerenter(e: MouseEvent) {
+        if (this.nodeEvents.onPointerenter)
+            this.nodeEvents.onPointerenter(e);
+    }
+
+    dispatchPointerleave(e: MouseEvent) {
+        if (this.nodeEvents.onPointerleave)
+            this.nodeEvents.onPointerleave(e);
     }
 
     subscribeEvents() {
         nextTick(() => {
             if (!this.subscribed) {
                 this.element.mesh?.addEventListener(Node.CLICK, this.clickListener);
+                this.element.mesh?.addEventListener(Node.DBLCLICK, this.dblclickListener);
+                this.element.mesh?.addEventListener(Node.MOUSE_OVER, this.mouseOverListener);
+                this.element.mesh?.addEventListener(Node.MOUSE_OUT, this.mouseOutListener);
                 this.subscribed = true;
             }
         }).catch(() => {});

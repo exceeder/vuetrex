@@ -14,6 +14,9 @@
           <button class="k8s-close" @click="deselectAll">&#x2715;</button>
         </div>
       </div>
+      <div v-else-if="hovered" class="k8s-hint k8s-hint--hover">
+        {{ services[hovered].label }} &mdash; {{ podCounts[hovered] }} pods &nbsp;·&nbsp; dblclick to burst-scale
+      </div>
       <div v-else class="k8s-hint">Click a deployment to inspect &mdash; click its pods to drain</div>
     </div>
 
@@ -23,13 +26,20 @@
         <!-- API Gateway -->
         <row>
           <stack>
-            <box name="api-gw" text="api-gateway" size="1.8" @click="onDeployClick" />
+            <box name="api-gw" text="api-gateway" size="1.8"
+              @click="onDeployClick"
+              @dblclick="onDeployBurst"
+              @pointerenter="onDeployHoverIn"
+              @pointerleave="onDeployHoverOut"
+            />
             <cylinder
               v-for="i in podCounts['api-gw']"
               :key="'api-gw-pod-' + i"
               :name="'api-gw-pod-' + i"
               text="" height="0.22" size="0.9"
               @click="onPodClick"
+              @pointerenter="onPodHoverIn"
+              @pointerleave="onPodHoverOut"
             />
           </stack>
         </row>
@@ -37,33 +47,54 @@
         <!-- Microservices -->
         <row>
           <stack>
-            <box name="auth-svc" text="auth-svc" connection="api-gw" @click="onDeployClick" />
+            <box name="auth-svc" text="auth-svc" connection="api-gw"
+              @click="onDeployClick"
+              @dblclick="onDeployBurst"
+              @pointerenter="onDeployHoverIn"
+              @pointerleave="onDeployHoverOut"
+            />
             <cylinder
               v-for="i in podCounts['auth-svc']"
               :key="'auth-svc-pod-' + i"
               :name="'auth-svc-pod-' + i"
               text="" height="0.22" size="0.85"
               @click="onPodClick"
+              @pointerenter="onPodHoverIn"
+              @pointerleave="onPodHoverOut"
             />
           </stack>
           <stack>
-            <box name="product-svc" text="product-svc" connection="api-gw" @click="onDeployClick" />
+            <box name="product-svc" text="product-svc" connection="api-gw"
+              @click="onDeployClick"
+              @dblclick="onDeployBurst"
+              @pointerenter="onDeployHoverIn"
+              @pointerleave="onDeployHoverOut"
+            />
             <cylinder
               v-for="i in podCounts['product-svc']"
               :key="'product-svc-pod-' + i"
               :name="'product-svc-pod-' + i"
               text="" height="0.22" size="0.85"
               @click="onPodClick"
+              @pointerenter="onPodHoverIn"
+              @pointerleave="onPodHoverOut"
             />
           </stack>
           <stack>
-            <box name="order-svc" text="order-svc" connection="api-gw" @click="onDeployClick" />
+            <box name="order-svc" text="order-svc" connection="api-gw"
+              @click="onDeployClick"
+              @dblclick="onDeployBurst"
+              @pointerenter="onDeployHoverIn"
+              @pointerleave="onDeployHoverOut"
+            />
             <cylinder
               v-for="i in podCounts['order-svc']"
               :key="'order-svc-pod-' + i"
               :name="'order-svc-pod-' + i"
               text="" height="0.22" size="0.85"
               @click="onPodClick"
+              @pointerenter="onPodHoverIn"
+              @pointerleave="onPodHoverOut"
             />
           </stack>
         </row>
@@ -71,23 +102,37 @@
         <!-- Data layer -->
         <row>
           <stack>
-            <box name="mongo" text="MongoDB" size="1.4" connection="product-svc" @click="onDeployClick" />
+            <box name="mongo" text="MongoDB" size="1.4" connection="product-svc"
+              @click="onDeployClick"
+              @dblclick="onDeployBurst"
+              @pointerenter="onDeployHoverIn"
+              @pointerleave="onDeployHoverOut"
+            />
             <cylinder
               v-for="i in podCounts['mongo']"
               :key="'mongo-pod-' + i"
               :name="'mongo-pod-' + i"
               text="" height="0.22" size="0.75"
               @click="onPodClick"
+              @pointerenter="onPodHoverIn"
+              @pointerleave="onPodHoverOut"
             />
           </stack>
           <stack>
-            <box name="redis" text="Redis" size="1.4" connection="order-svc" @click="onDeployClick" />
+            <box name="redis" text="Redis" size="1.4" connection="order-svc"
+              @click="onDeployClick"
+              @dblclick="onDeployBurst"
+              @pointerenter="onDeployHoverIn"
+              @pointerleave="onDeployHoverOut"
+            />
             <cylinder
               v-for="i in podCounts['redis']"
               :key="'redis-pod-' + i"
               :name="'redis-pod-' + i"
               text="" height="0.22" size="0.75"
               @click="onPodClick"
+              @pointerenter="onPodHoverIn"
+              @pointerleave="onPodHoverOut"
             />
           </stack>
         </row>
@@ -108,6 +153,7 @@ export default {
   setup() {
     const camera = ref('scene')
     const selected = ref<string | null>(null)
+    const hovered = ref<string | null>(null)
     let stage: any = null
 
     const services: Record<string, { label: string }> = {
@@ -181,6 +227,47 @@ export default {
         .to(mesh.position, { duration: 0.4, y: mesh.position.y - 0.2, ease: 'power2.inOut' }, '<')
     }
 
+    // Double-click: burst-scale — add 2 pods in rapid succession (fast deploy surge)
+    function onDeployBurst(ev: VxMouseEvent) {
+      const svc = ev.vxNode.name
+      if (!services[svc]) return
+      const burst = Math.min(2, 8 - podCounts[svc])
+      if (burst <= 0) return
+      for (let i = 0; i < burst; i++) {
+        gsap.delayedCall(i * 0.18, () => {
+          podCounts[svc]++
+          podEntranceAnim(svc, podCounts[svc])
+        })
+      }
+    }
+
+    // pointerenter on deployment: health ping — pods pulse to signal liveness, HUD previews the service
+    function onDeployHoverIn(ev: VxMouseEvent) {
+      const svc = ev.vxNode.name
+      if (!services[svc] || selected.value) return
+      hovered.value = svc
+      liftPods(svc)
+    }
+
+    // pointerleave on deployment: dismiss hover preview
+    function onDeployHoverOut(ev: VxMouseEvent) {
+      if (!selected.value) hovered.value = null
+    }
+
+    // pointerenter on pod: scale up to signal "this would be drained on click"
+    function onPodHoverIn(ev: VxMouseEvent) {
+      const mesh = stage?.getById(ev.vxNode.name)?.mesh
+      if (!mesh) return
+      gsap.to(mesh.scale, { duration: 0.18, x: 1.18, y: 1.18, z: 1.18, ease: 'sine.out' })
+    }
+
+    // pointerleave on pod: restore normal scale
+    function onPodHoverOut(ev: VxMouseEvent) {
+      const mesh = stage?.getById(ev.vxNode.name)?.mesh
+      if (!mesh) return
+      gsap.to(mesh.scale, { duration: 0.22, x: 1, y: 1, z: 1, ease: 'sine.inOut' })
+    }
+
     function onDeployClick(ev: VxMouseEvent) {
       const svc = ev.vxNode.name
       if (!services[svc]) return
@@ -200,6 +287,7 @@ export default {
         }
       } else {
         selected.value = svc
+        hovered.value = null
         camera.value = svc
         accentBox(svc)
         liftPods(svc)
@@ -241,6 +329,7 @@ export default {
 
     function deselectAll() {
       selected.value = null
+      hovered.value = null
       camera.value = 'scene'
     }
 
@@ -275,8 +364,9 @@ export default {
     }
 
     return {
-      camera, selected, services, podCounts,
-      onDeployClick, onPodClick,
+      camera, selected, hovered, services, podCounts,
+      onDeployClick, onDeployBurst, onDeployHoverIn, onDeployHoverOut,
+      onPodClick, onPodHoverIn, onPodHoverOut,
       triggerScaleUp, triggerScaleDown, triggerRestart, deselectAll,
       onStageReady,
     }
@@ -354,5 +444,9 @@ export default {
   color: rgba(63, 168, 255, 0.4);
   font-size: 12px;
   padding: 4px 0;
+}
+
+.k8s-hint--hover {
+  color: rgba(63, 168, 255, 0.7);
 }
 </style>

@@ -4,6 +4,7 @@ import { Node } from '@/lib-components/nodes/Node.js';
 
 export type VxEventMap = THREE.Object3DEventMap & {
     click: { originalEvent: MouseEvent };
+    dblclick: { originalEvent: MouseEvent };
     mouseOver: { originalEvent: MouseEvent };
     mouseOut: { originalEvent: MouseEvent };
 };

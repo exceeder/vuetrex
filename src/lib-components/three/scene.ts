@@ -23,6 +23,7 @@ export default class Scene extends LifeCycle {
     readonly cameraMotion: THREE.Vector3 = new THREE.Vector3(0.5, 0, 0.5);
 
     private readonly mouse: MousePosition
+    protected lastMouseEvent: MouseEvent | null = null;
 
     readonly camera: THREE.PerspectiveCamera
     readonly scene: THREE.Scene
@@ -76,6 +77,7 @@ export default class Scene extends LifeCycle {
         const wheeler = (e:WheelEvent) => this.onMouseWheel(e)
         const mouseListener = (e:MouseEvent) => this.onCanvasMouseMove(e)
         const clickListener = (e:MouseEvent) => this.onCanvasClick(e)
+        const dblclickListener = (e:MouseEvent) => this.onCanvasDblClick(e)
 
         const resizeObserver = new ResizeObserver(entries => {
             resizer();
@@ -84,13 +86,15 @@ export default class Scene extends LifeCycle {
         //window.addEventListener("resize", resizer, false)
         window.addEventListener('wheel', wheeler, false)
         domParent.addEventListener("mousemove", mouseListener)
-        domParent.addEventListener("mousedown", clickListener )
+        domParent.addEventListener("mousedown", clickListener)
+        domParent.addEventListener("dblclick", dblclickListener)
 
         this.removeEventListeners = ()  => {
             window.removeEventListener("resize", resizer)
             window.removeEventListener("wheel", wheeler)
             domParent.removeEventListener("mousemove", mouseListener)
             domParent.removeEventListener("mousedown", clickListener)
+            domParent.removeEventListener("dblclick", dblclickListener)
         }
     }
 
@@ -181,6 +185,7 @@ export default class Scene extends LifeCycle {
         if (event.metaKey && event.buttons === 1) {
             this.orbitalRetarget(event);
         }
+        this.lastMouseEvent = event;
         this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
         this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
     }
@@ -206,6 +211,14 @@ export default class Scene extends LifeCycle {
     onCanvasClick(event: MouseEvent) {
         //todo
     }
+
+    onCanvasDblClick(event: MouseEvent) {
+        //todo
+    }
+
+    protected onMouseOver(mesh: THREE.Mesh, event: MouseEvent) {}
+
+    protected onMouseOut(mesh: THREE.Mesh, event: MouseEvent) {}
 
     onMouseWheel(event: WheelEvent) {
         //event.preventDefault();
@@ -248,14 +261,17 @@ export default class Scene extends LifeCycle {
                     if (this.selectedObject) {
                         const m = <THREE.MeshBasicMaterial>this.selectedObject.material;
                         m.color.set(this.colorMain);
+                        if (this.lastMouseEvent) this.onMouseOut(this.selectedObject, this.lastMouseEvent);
                     }
                     this.selectedObject = labelObject;
                     const m = <THREE.MeshBasicMaterial>labelObject.material;
                     m.color.setHex(this.colorHighlight.getHex());
+                    if (this.lastMouseEvent) this.onMouseOver(labelObject, this.lastMouseEvent);
                 }
             }
             if (!found && this.selectedObject) {
                 (<THREE.MeshBasicMaterial>this.selectedObject.material).color.set(this.colorMain);
+                if (this.lastMouseEvent) this.onMouseOut(this.selectedObject, this.lastMouseEvent);
                 this.selectedObject = null;
             }
         };

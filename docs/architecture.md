@@ -73,6 +73,22 @@ Structural changes (append/remove/insert) call `registerSync()` which batches vi
 
 ---
 
+## Events
+
+### click:
+1. DOM mousedown → `scene.ts:bindEvents` → `stage.ts:onCanvasClick` → `el3d.mesh.dispatchEvent({type:'click'})` → Three.js event on mesh
+2. `Node.subscribeEvents()` binds clickListener on the mesh → calls `dispatchClick()` → `nodeEvents.onClick(e)`
+3. `patchProp.ts` sets `el.onClick = handler` via the set onClick() setter on Node
+
+### dblclick is like click 
+DOM event → raycast → Three.js mesh event → node dispatch → bubbles up the tree
+
+### pointerenter/pointerleave 
+Driven by the existing per-frame hover tracker in mouseAnimationFn (maintains selectedObject). They call new 
+onMouseOver/onMouseOut hooks that stage.ts overrides, keeping scene.ts generic. These don't bubble, matching DOM semantics
+
+---
+
 ## Adding a new node type
 
 1. Create `nodes/MyShape.ts`, `extends MeshNode`

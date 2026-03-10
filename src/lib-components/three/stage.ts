@@ -310,7 +310,6 @@ export class VuetrexStage extends Scene implements VxStage {
 
     onCanvasClick(event: MouseEvent) {
         event.preventDefault();
-        //display info below
         if (this.selectedObject) {
             const el3d = this.selectedObject.userData.el as Element3d;
             const ev = event as VxMouseEvent;
@@ -318,6 +317,35 @@ export class VuetrexStage extends Scene implements VxStage {
             ev.vxPosition = el3d.mesh?.position.clone();
             el3d.mesh?.dispatchEvent({ type: 'click', originalEvent: ev });
         }
+    }
+
+    onCanvasDblClick(event: MouseEvent) {
+        event.preventDefault();
+        if (this.selectedObject) {
+            const el3d = this.selectedObject.userData.el as Element3d;
+            const ev = event as VxMouseEvent;
+            ev.vxNode = el3d.node;
+            ev.vxPosition = el3d.mesh?.position.clone();
+            el3d.mesh?.dispatchEvent({ type: 'dblclick', originalEvent: ev });
+        }
+    }
+
+    protected onMouseOver(mesh: THREE.Mesh, event: MouseEvent) {
+        const el3d = mesh.userData.el as Element3d;
+        if (!el3d) return;
+        const ev = event as VxMouseEvent;
+        ev.vxNode = el3d.node;
+        ev.vxPosition = el3d.mesh?.position.clone();
+        el3d.mesh?.dispatchEvent({ type: 'mouseOver', originalEvent: ev });
+    }
+
+    protected onMouseOut(mesh: THREE.Mesh, event: MouseEvent) {
+        const el3d = mesh.userData.el as Element3d;
+        if (!el3d) return;
+        const ev = event as VxMouseEvent;
+        ev.vxNode = el3d.node;
+        ev.vxPosition = el3d.mesh?.position.clone();
+        el3d.mesh?.dispatchEvent({ type: 'mouseOut', originalEvent: ev });
     }
 
     onShowAnnotation(mesh: THREE.Mesh) {

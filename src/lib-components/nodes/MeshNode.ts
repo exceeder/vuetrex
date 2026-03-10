@@ -56,6 +56,9 @@ export abstract class MeshNode extends Node {
         }
         if (this.subscribed) {
             this.element.mesh?.removeEventListener(Node.CLICK, this.clickListener);
+            this.element.mesh?.removeEventListener(Node.DBLCLICK, this.dblclickListener);
+            this.element.mesh?.removeEventListener(Node.MOUSE_OVER, this.mouseOverListener);
+            this.element.mesh?.removeEventListener(Node.MOUSE_OUT, this.mouseOutListener);
         }
         this.stage.removeObject(this.element);
         this.state.connection = null;
