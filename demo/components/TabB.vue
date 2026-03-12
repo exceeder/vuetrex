@@ -32,7 +32,7 @@
               @pointerleave="onDeployHoverOut"
             />
             <layer :elevation="0.25">
-              <ring>
+              <ring size="0.8">
                 <wedge
                   v-for="i in podCounts['api-gw']"
                   :key="'api-gw-pod-' + i"
@@ -449,7 +449,7 @@ export default {
 }
 
 .k8s-hint {
-  color: rgba(63, 168, 255, 0.4);
+  color: rgba(168, 213, 255, 0.53);
   font-size: 12px;
   padding: 4px 0;
 }

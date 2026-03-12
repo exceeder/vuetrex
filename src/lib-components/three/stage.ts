@@ -142,7 +142,7 @@ export class VuetrexStage extends Scene implements VxStage {
             color: '#f0f0f0',
             roughness: 0.7,
             metalness: 0.5,
-            opacity: 0.999,
+            opacity: 1.0,
             transparent: true,
             map: texture.texture
         });
@@ -176,17 +176,24 @@ export class VuetrexStage extends Scene implements VxStage {
                 '#'+(this.settings.captionColor || 0xffffff).toString(16))
         })
 
-        texture.fillStyle = '0x5070f0'
+        //grid lines
+        texture.setGlobalAlpha(0.02)
+        for (let i=0; i<100; i++) {
+            texture.fillRect(100, 100 + 20*i, 1897, 2)
+        }
+        for (let i=0; i<100; i++) {
+            texture.fillRect(100 + 20*i, 100, 2, 1987)
+        }
         texture.setGlobalAlpha(0.1)
         for (let i=0; i<20; i++) {
             texture.fillRect(100, 100 + 100*i, 1897, 2)
         }
-        texture.setGlobalAlpha(0.1)
         for (let i=0; i<20; i++) {
-            texture.fillRect(100 + 100*i, 100,2, 1897)
+            texture.fillRect(100 + 100*i, 100, 2, 1897)
         }
         //texture.drawText("Bonjour", 110, 1980, '#eeffff')
         texture.setGlobalAlpha(1.0)
+        //texture.drawText("This could be base layer text", 100, 80, '#eeffff')
 
         // const size = 2048;
         // const stops = [0.75,0.6,0.4,0.25]
@@ -267,7 +274,7 @@ export class VuetrexStage extends Scene implements VxStage {
         return c;
     }
 
-    renderMesh(el: Element3d, height: number, size: number = this.boxRadius, gen: (height:number, size:number) => THREE.Object3D) {
+    renderMesh(el: Element3d, height: number, size: number = this.boxRadius, gen: (height:number, size:number) => THREE.Mesh) {
         const scene = this.scene;
 
         if (el.mesh !== null) {
@@ -282,13 +289,12 @@ export class VuetrexStage extends Scene implements VxStage {
 
         const model = gen(height, size);
         const scale = el.node.getScale();
-        model.scale.set(1/scale, 1/scale, 1/scale);
+        model.geometry.scale(scale, scale, scale);
         model.translateY(height/2);
         model.name = "el-" + el.node.name;
         model.castShadow = true;
-        //todo this.tween(el, ...)
         model.position.copy(el.getPosition());
-        model.userData.caption = this.addCaption(model, size/scale, el.getCaption())
+        model.userData.caption = this.addCaption(model, size*scale, el.getCaption())
         scene.add(model);
         el.mesh = model as THREE.Object3D<VxEventMap>;
         model.userData.el = el;

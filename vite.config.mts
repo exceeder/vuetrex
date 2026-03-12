@@ -44,7 +44,7 @@ export default defineConfig({
         vue({
         template: {
             compilerOptions: {
-                isCustomElement: (tag:string) => /^layer|^box|^row|^cylinder|^wedge|^ring/.test(tag)
+                isCustomElement: (tag:string) => /^layer|^box|^row|^cylinder|^wedge|^ring|^stack/.test(tag)
             }
         }}),
         glsl()

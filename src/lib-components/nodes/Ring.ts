@@ -7,8 +7,9 @@ export class Ring extends Node {
 
     public readonly type: string = 'Ring';
 
-    public state: { text: string } = reactive({
+    public state: { text: string, size: number } = reactive({
         text: '',
+        size: 1.0
     });
 
     constructor(stage: VuetrexStage) {
@@ -17,9 +18,8 @@ export class Ring extends Node {
 
 
     layoutPositionOf(child: Node): THREE.Vector3 {
-        const R = this.stage.boxRadius / 8;
-        const D = this.stage.boxDistance;
-        const scale = child.getScale();
+        const D = this.stage.boxDistance * this.state.size;
+        const scale = child.getScale()*this.getScale();
         const colIdx = child.myIdx.value;
         const cols = child.numColumns.value  || 1;
         const rows = child.numRows.value || 1;
@@ -30,14 +30,11 @@ export class Ring extends Node {
         const offZ = layerPos.z;
 
         //ring center
-        const posX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX;
-        const posY = (-(R + D)) / 2 / scale + (R + D) / 2 / scale + offZ;
-        //todo this circular offset doesn't work with wedge
-
+        const posX = offX;
+        const posY = offZ;
         const alpha = colIdx * 2.0 * Math.PI / cols;
-        const xx = (R + D) * Math.sin(alpha) / scale;
-        const zz = (R + D) * Math.cos(alpha) / scale;
-        //let xx=0, zz=0;
+        const xx = (D) * Math.sin(alpha) * scale;
+        const zz = (D) * Math.cos(alpha) * scale;
         return new THREE.Vector3(posX + xx, child.getElevation(), posY + zz);
     }
 

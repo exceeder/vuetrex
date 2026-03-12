@@ -23,15 +23,11 @@
         </stack>
       </row>
       <row>
-        <layer :elevation="-0.5">
+        <layer :elevation="0.05" visible="false" size="5.5">
           <ring>
             <box text="a1" />
             <box text="a2" />
             <box text="a3" />
-            <box text="a4" />
-            <box text="a5" />
-            <box text="a6" />
-            <box text="a7" />
           </ring>
         </layer>
       </row>

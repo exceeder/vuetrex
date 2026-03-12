@@ -26,7 +26,7 @@ export abstract class MeshNode extends Node {
         this.state = reactive({ text: '', size: 1.0, height: 0.5, connection: null, ...stateDefaults });
     }
 
-    abstract modelGen(): (height: number, size: number) => THREE.Object3D;
+    abstract modelGen(): (height: number, size: number) => THREE.Mesh;
 
     setSize(size: number) { this.state.size = size; }
     setHeight(height: number) { this.state.height = height; }

@@ -31,9 +31,18 @@ export class Wedge extends MeshNode {
             bevelSegments: 5
         });
 
-        geometry.translate(0,0,-height/2)
+        geometry.translate(0, 0, -height / 2);
         geometry.rotateX(Math.PI / 2);
         geometry.rotateY(-Math.PI / 2);
+        // Center the arc at the mesh's local origin so that scale/position
+        // animations (GSAP mesh.scale, mesh.position) pivot from the visual
+        // centre of the wedge rather than from the ring's centre point.
+        // The bounding-box midpoint of the arc (not the radius midpoint) is
+        // (rr·cos(θ/2) + RR) / 2 — this accounts for the arc endpoints
+        // pulling the near edge inward for large segment spans.
+        geometry.translate(0, 0, -(rr * Math.cos(theta / 2) + RR) / 2);
+        const scale = this.getScale()
+        geometry.scale(scale, scale, scale);
         return geometry;
     }
 
@@ -45,13 +54,9 @@ export class Wedge extends MeshNode {
             //using N=siblings+1 so that segments have visual gaps
             const geometry = this.cylindricalSleeveSegment(height, size, N);
 
-
             const mesh = new THREE.Mesh(geometry, this.material);
-            //this rotates wedge to the right segment index position, but it should be handled by the ring layout (todo)
-            const alpha = i * (Math.PI*2) / N;
-            geometry.rotateY(alpha );
-            geometry.translate(-size * Math.sin(alpha), 0, -size * Math.cos(alpha))
-
+            const alpha = i * (Math.PI * 2) / N;
+            geometry.rotateY(alpha);
             return mesh;
         };
     }

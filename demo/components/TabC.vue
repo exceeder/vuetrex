@@ -21,7 +21,6 @@
 let rs = {}
 
 import * as THREE from 'three';
-console.log(THREE.Vector3);
 
 import {ref} from 'vue';
 import {Vuetrex, VxStage, VxSettings, VxMouseEvent} from '@/lib-components/index.js';
