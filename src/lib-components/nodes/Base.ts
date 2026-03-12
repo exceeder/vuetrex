@@ -51,7 +51,7 @@ export abstract class Base {
 
     public numRows: ComputedRef<number> = computed(() => (this.parent.value?.parent.value?.renderSize.value || 1));
 
-    public abstract get state():  { [id: string] : any };
+    protected abstract get state():  { [id: string] : any };
     protected abstract subscribeEvents(): void;
 
     public readonly nextSibling : ComputedRef<Base | null> = computed(() => {

@@ -5,15 +5,17 @@ import * as THREEx from '@/lib-components/three/three.imports.js';
 
 export class Box extends MeshNode {
 
+    readonly material: THREE.Material;
+
     constructor(stage: VuetrexStage) {
         super(stage);
+        this.material = stage.createElementMaterial();
     }
 
     modelGen(): (height: number, size: number) => THREE.Mesh {
         return (height, size) => {
-            const bMaterial = this.stage.createElementMaterial();
             const bGeometry = new THREEx.RoundedBoxGeometry(size, height, size, 5, 0.05);
-            const mesh = new THREE.Mesh(bGeometry, bMaterial);
+            const mesh = new THREE.Mesh(bGeometry, this.material);
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             return mesh;

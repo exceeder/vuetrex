@@ -24,7 +24,7 @@
       </row>
       <row>
         <layer :elevation="-0.5">
-          <row layout="circular">
+          <ring>
             <box text="a1" />
             <box text="a2" />
             <box text="a3" />
@@ -32,7 +32,7 @@
             <box text="a5" />
             <box text="a6" />
             <box text="a7" />
-          </row>
+          </ring>
         </layer>
       </row>
       <row>

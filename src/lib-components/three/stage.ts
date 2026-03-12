@@ -272,8 +272,6 @@ export class VuetrexStage extends Scene implements VxStage {
 
         if (el.mesh !== null) {
             el.mesh.position.copy(el.getPosition())
-            // const m = gen(height, size);
-            // el.mesh.geometry = m.geometry;
             this.connectors?.update(el);
             el.mesh.userData.caption.x = el.mesh.position.x
             el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0
@@ -288,7 +286,6 @@ export class VuetrexStage extends Scene implements VxStage {
         model.translateY(height/2);
         model.name = "el-" + el.node.name;
         model.castShadow = true;
-        model.receiveShadow = false;
         //todo this.tween(el, ...)
         model.position.copy(el.getPosition());
         model.userData.caption = this.addCaption(model, size/scale, el.getCaption())

@@ -1,10 +1,14 @@
 import {VuetrexStage} from '@/lib-components/three/stage.js';
 import {Base} from '@/lib-components/nodes/Base.js';
-import {Box} from '@/lib-components/nodes/shapes/Box.js';
 import {Layer} from '@/lib-components/nodes/Layer.js';
 import {Row} from '@/lib-components/nodes/Row.js';
 import {Stack} from '@/lib-components/nodes/Stack.js';
+import {Ring} from '@/lib-components/nodes/Ring.js';
+
+import {Box} from '@/lib-components/nodes/shapes/Box.js';
 import {Cylinder} from '@/lib-components/nodes/shapes/Cylinder.js';
+import {Wedge} from '@/lib-components/nodes/shapes/Wedge.js';
+
 
 export interface FunctionalComponent {
     setup(stage: VuetrexStage): Base
@@ -21,10 +25,15 @@ export type ElementRegistry = Record<string, ClassComponent | FunctionalComponen
  */
 const builtins: ElementRegistry = {
     layer: Layer,
+    //layout
     row: Row,
+    stack: Stack,
+    ring: Ring,
+    //models
     box: Box,
     cylinder: Cylinder,
-    stack: Stack
+    wedge: Wedge,
+
 }
 
 /**

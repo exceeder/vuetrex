@@ -9,6 +9,11 @@ export type VxEventMap = THREE.Object3DEventMap & {
     mouseOut: { originalEvent: MouseEvent };
 };
 
+/**
+ * Represents a 3D element within a scene. This class holds references to its stage,
+ * associated node, and optional 3D mesh and position. It provides methods to interact
+ * with and retrieve information about the underlying node and its stage.
+ */
 export class Element3d {
 
     private readonly stage: VuetrexStage;
@@ -22,7 +27,7 @@ export class Element3d {
     }
 
     getCaption(): string {
-        return this.node.state.text;
+        return this.node.getCaption();
     }
 
     getStage(): VuetrexStage {

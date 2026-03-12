@@ -17,9 +17,9 @@ export interface MeshState {
  */
 export abstract class MeshNode extends Node {
 
-    public state: MeshState;
+    protected state: MeshState;
     protected stopHandle?: WatchStopHandle;
-    protected readonly flushMode: 'post' | 'sync' = 'post';
+    protected readonly flushMode: 'post' | 'sync' = 'post'; // see Vue's WatchEffectOptions, Callback Flush Timing
 
     constructor(stage: VuetrexStage, stateDefaults: Partial<MeshState> = {}) {
         super(stage);
@@ -44,7 +44,7 @@ export abstract class MeshNode extends Node {
                     if (this.element && otherEnd) {
                         this.stage.connect(this.element, otherEnd);
                     }
-                }).catch(r => console.log(r));
+                }).catch(r => console.warn(r));
             }
         }, { flush: this.flushMode });
     }

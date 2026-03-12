@@ -15,6 +15,7 @@ type NodeEvents = {
 
 /**
  * Named node in the ThreeJS tree hierarchy of Vuetrex renderer.
+ * Supports grid layout of the box (i.e., children x grandchildren = rows x columns)
  */
 export abstract class Node extends Base {
     public element: Element3d;
@@ -29,7 +30,7 @@ export abstract class Node extends Base {
     public static readonly MOUSE_OVER = 'mouseOver' as const;
     public static readonly MOUSE_OUT = 'mouseOut' as const;
 
-    public state = reactive({
+    protected state = reactive({
         text: ''
     });
 
@@ -92,10 +93,14 @@ export abstract class Node extends Base {
         return result;
     }
 
+    getCaption(): string {
+        return this.state.text;
+    }
+
     /**
      * Returns the 3D position of `child` within this container's layout.
      * Default implementation: grid layout (rows × columns).
-     * Container nodes (Row, Stack) override this to apply their own layout strategy.
+     * Containers (Ring, Stack) override this to apply their own layout strategy.
      */
     layoutPositionOf(child: Node): THREE.Vector3 {
         const R = this.stage.boxRadius;

@@ -38,14 +38,16 @@ Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, 
 
 ### Concrete nodes
 
-| Class | Role | Key override |
-|-------|------|--------------|
-| `Box` | Rounded-box geometry | `modelGen()` |
-| `Cylinder` | Beveled cylinder / sleeve geometry | `modelGen()`, `flushMode = 'sync'` |
-| `Layer` | Grouping plane with scale/elevation | `isLayer()`, `syncWithThree()` |
-| `Row` | Horizontal layout container | `layoutPositionOf()` — grid or circular |
-| `Stack` | Vertical stacking container | `layoutPositionOf()` — cumulative height |
-| `Root` | Tree root, owns destroy | — |
+| Class      | Role                                | Key override                             |
+|------------|-------------------------------------|------------------------------------------|
+| `Box`      | Rounded-box geometry                | `modelGen()`                             |
+| `Cylinder` | Beveled cylinder                    | `modelGen()`, `flushMode = 'sync'`       |
+| `Wedge`    | Beveled ring segment                | `modelGen()`, `flushMode = 'sync'`       |
+| `Layer`    | Grouping plane with scale/elevation | `isLayer()`, `syncWithThree()`           |
+| `Row`      | Horizontal layout container         | `layoutPositionOf()` — grid              |
+| `Stack`    | Vertical stacking container         | `layoutPositionOf()` — cumulative height |
+| `Ring`     | Circular layout container           | `layoutPositionOf()` — circular          |
+| `Root`     | Tree root, owns destroy             | —                                        |
 
 ### `Element3d` (`three/element3d.ts`)
 Thin bridge: holds `mesh: THREE.Object3D` and `pos: Vector3`. `getPosition()` delegates to `node.parent.layoutPositionOf(node)` — no layout logic lives here.
@@ -91,7 +93,7 @@ onMouseOver/onMouseOut hooks that stage.ts overrides, keeping scene.ts generic. 
 
 ## Adding a new node type
 
-1. Create `nodes/MyShape.ts`, `extends MeshNode`
+1. Create `nodes/shapes/MyShape.ts`, `extends MeshNode`
 2. Implement `modelGen()` returning a `(height, size) => THREE.Object3D` factory
 3. Override `protected readonly flushMode` if sync timing matters
 4. Register in `nodes/types.ts`: `myshape: MyShape`

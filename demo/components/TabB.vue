@@ -1,5 +1,5 @@
 <template>
-  <div style="position:relative">
+  <div class="k8s-root">
     <div class="k8s-hud">
       <div v-if="selected" class="k8s-panel">
         <div class="k8s-title">{{ services[selected].label }}</div>
@@ -22,7 +22,6 @@
 
     <vuetrex height="75vh" :camera="camera"  @ready="onStageReady">
       <layer>
-
         <!-- API Gateway -->
         <row>
           <stack>
@@ -32,15 +31,20 @@
               @pointerenter="onDeployHoverIn"
               @pointerleave="onDeployHoverOut"
             />
-            <cylinder
-              v-for="i in podCounts['api-gw']"
-              :key="'api-gw-pod-' + i"
-              :name="'api-gw-pod-' + i"
-              text="" height="0.22" size="0.9"
-              @click="onPodClick"
-              @pointerenter="onPodHoverIn"
-              @pointerleave="onPodHoverOut"
-            />
+            <layer :elevation="0.25">
+              <ring>
+                <wedge
+                  v-for="i in podCounts['api-gw']"
+                  :key="'api-gw-pod-' + i"
+                  :name="'api-gw-pod-' + i"
+                  text="" height="0.75" size="1.5"
+                  @click="onPodClick"
+                  @pointerenter="onPodHoverIn"
+                  @pointerleave="onPodHoverOut"
+                />
+              </ring>
+            </layer>
+
           </stack>
         </row>
 
@@ -166,9 +170,9 @@ export default {
     }
 
     const podCounts = reactive<Record<string, number>>({
-      'api-gw':      2,
-      'auth-svc':    3,
-      'product-svc': 3,
+      'api-gw':      3,
+      'auth-svc':    2,
+      'product-svc': 2,
       'order-svc':   1,
       'mongo':       1,
       'redis':       1,
@@ -246,7 +250,7 @@ export default {
       const svc = ev.vxNode.name
       if (!services[svc] || selected.value) return
       hovered.value = svc
-      liftPods(svc)
+      //liftPods(svc)
     }
 
     // pointerleave on deployment: dismiss hover preview
@@ -375,6 +379,10 @@ export default {
 </script>
 
 <style scoped>
+.k8s-root {
+  position:relative;
+}
+
 .k8s-hud {
   position: absolute;
   top: 12px;
