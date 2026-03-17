@@ -1,31 +1,54 @@
-import { Base } from "@/lib-components/nodes/Base";
-import Element3d from "@/lib-components/three/element3d";
-import {VuetrexStage} from "@/lib-components/three/stage";
-import {nextTick, reactive} from "vue";
+import { Base } from '@/lib-components/nodes/Base.js';
+import { Element3d, VxEventMap } from '@/lib-components/three/element3d.js';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
+import { nextTick, reactive } from 'vue';
+import * as THREE from 'three';
 
-declare type VxEventListener<T extends Event> = (event: T) => any;
+declare type VxEventListener<T extends Event> = (event: T) => void;
 
 type NodeEvents = {
     onClick?: VxEventListener<Event>;
+    onDblclick?: VxEventListener<Event>;
+    onPointerenter?: VxEventListener<Event>;
+    onPointerleave?: VxEventListener<Event>;
 }
 
 /**
- * Named node in the tree hierarchy of Vuetrex renderer.
+ * Named node in the ThreeJS tree hierarchy of Vuetrex renderer.
+ * Supports grid layout of the box (i.e., children x grandchildren = rows x columns)
  */
-export class Node extends Base {
+export abstract class Node extends Base {
     public element: Element3d;
 
-    public readonly stage: VuetrexStage
-    public name: string = Math.floor(Math.random()*100000).toString(32)
-    subscribed: boolean = false
+    public readonly stage: VuetrexStage;
+    public name: string = Math.floor(Math.random() * 100000).toString(32);
+    protected subscribed: boolean = false;
+    public readonly type: string = 'Node';
 
-    public state = reactive({
+    public static readonly CLICK = 'click' as const;
+    public static readonly DBLCLICK = 'dblclick' as const;
+    public static readonly MOUSE_OVER = 'mouseOver' as const;
+    public static readonly MOUSE_OUT = 'mouseOut' as const;
+
+    protected state = reactive({
         text: ''
-    })
+    });
 
-    readonly clickListener = (ev: any) => {
+    readonly clickListener: THREE.EventListener<VxEventMap['click'], 'click', THREE.Object3D<VxEventMap>> = (ev) => {
         this.dispatchClick(ev.originalEvent);
-    }
+    };
+
+    readonly dblclickListener: THREE.EventListener<VxEventMap['dblclick'], 'dblclick', THREE.Object3D<VxEventMap>> = (ev) => {
+        this.dispatchDblclick(ev.originalEvent);
+    };
+
+    readonly mouseOverListener: THREE.EventListener<VxEventMap['mouseOver'], 'mouseOver', THREE.Object3D<VxEventMap>> = (ev) => {
+        this.dispatchPointerenter(ev.originalEvent);
+    };
+
+    readonly mouseOutListener: THREE.EventListener<VxEventMap['mouseOut'], 'mouseOut', THREE.Object3D<VxEventMap>> = (ev) => {
+        this.dispatchPointerleave(ev.originalEvent);
+    };
 
     public _nodeEvents?: NodeEvents = undefined;
 
@@ -35,6 +58,10 @@ export class Node extends Base {
         this.stage = stage;
     }
 
+    isRenderableNode(): boolean { return true; }
+
+    isLayer(): boolean { return false; }
+
     public get nodeEvents(): NodeEvents {
         if (!this._nodeEvents) {
             this._nodeEvents = {};
@@ -43,15 +70,20 @@ export class Node extends Base {
     }
 
     getLayer(): Node | null {
-        return this.parent.value?.parent.value as Node;
+        let result = this.parent.value as Node;
+        while (result !== null && !result.isLayer()) {
+            result = result.parent.value as Node;
+        }
+        return result;
     }
 
     getScale(): number {
-        if (this.getLayer() === undefined) return 1.0;
-        return (this.getLayer()?.state as any)?.scale || 1.0;
+        const layer = this.getLayer();
+        if (layer === null) return 1.0;
+        return (layer.state as any)?.scale || 1.0;
     }
 
-    getElevation() {
+    getElevation(): number {
         let result = (this as any).state?.elevation || 0.0;
         let parent = this.getLayer();
         while (parent) {
@@ -59,6 +91,42 @@ export class Node extends Base {
             parent = parent.getLayer();
         }
         return result;
+    }
+
+    getCaption(): string {
+        return this.state.text;
+    }
+
+    /**
+     * Returns the 3D position of `child` within this container's layout.
+     * Default implementation: grid layout (rows × columns).
+     * Containers (Ring, Stack) override this to apply their own layout strategy.
+     */
+    layoutPositionOf(child: Node): THREE.Vector3 {
+        const R = this.stage.boxRadius;
+        const D = this.stage.boxDistance;
+        const scale = child.getScale();
+
+        let colIdx = child.myIdx.value;
+        let rowIdx = child.parent.value?.myIdx.value;
+        let cols = child.numColumns.value || 1;
+        let rows = child.numRows.value || 1;
+
+        if (rowIdx === undefined || rowIdx < 0) {
+            rowIdx = 0; colIdx = 0; cols = 1; rows = 1;
+        }
+
+        const layerPos = child.getLayer()?.element.pos ?? new THREE.Vector3();
+        const offX = layerPos.x;
+        const offZ = layerPos.z;
+
+        const rowPosX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX;
+        const rowPosZ = (-cols * (R + D)) / 2 / scale + (R + D) / 2 / scale + offZ;
+        return new THREE.Vector3(
+            rowPosX + (R + D) * rowIdx / scale,
+            child.getElevation(),
+            rowPosZ + (R + D) * colIdx / scale
+        );
     }
 
     setName(name: string) {
@@ -69,19 +137,53 @@ export class Node extends Base {
         this.nodeEvents.onClick = e;
     }
 
-    dispatchClick(e: MouseEvent) {
-        if (this.nodeEvents.onClick)
-            this.nodeEvents.onClick(e)
+    set onDblclick(e: VxEventListener<Event> | undefined) {
+        this.nodeEvents.onDblclick = e;
     }
 
-    syncWithThree() {
+    set onPointerenter(e: VxEventListener<Event> | undefined) {
+        this.nodeEvents.onPointerenter = e;
+    }
+
+    set onPointerleave(e: VxEventListener<Event> | undefined) {
+        this.nodeEvents.onPointerleave = e;
+    }
+
+    dispatchClick(e: MouseEvent) {
+        if (this.nodeEvents.onClick)
+            this.nodeEvents.onClick(e);
+        const pn = this.parent.value as Node;
+        if (pn) pn.dispatchClick(e);
+    }
+
+    dispatchDblclick(e: MouseEvent) {
+        if (this.nodeEvents.onDblclick)
+            this.nodeEvents.onDblclick(e);
+        const pn = this.parent.value as Node;
+        if (pn) pn.dispatchDblclick(e);
+    }
+
+    // pointerenter/pointerleave do not bubble by design
+    dispatchPointerenter(e: MouseEvent) {
+        if (this.nodeEvents.onPointerenter)
+            this.nodeEvents.onPointerenter(e);
+    }
+
+    dispatchPointerleave(e: MouseEvent) {
+        if (this.nodeEvents.onPointerleave)
+            this.nodeEvents.onPointerleave(e);
+    }
+
+    subscribeEvents() {
         nextTick(() => {
-            if (this.nodeEvents.onClick && !this.subscribed) {
-                this.element.mesh?.addEventListener('click', this.clickListener)
-                this.subscribed = true
+            if (!this.subscribed) {
+                this.element.mesh?.addEventListener(Node.CLICK, this.clickListener);
+                this.element.mesh?.addEventListener(Node.DBLCLICK, this.dblclickListener);
+                this.element.mesh?.addEventListener(Node.MOUSE_OVER, this.mouseOverListener);
+                this.element.mesh?.addEventListener(Node.MOUSE_OUT, this.mouseOutListener);
+                this.subscribed = true;
             }
-        });
-        super.syncWithThree();
+        }).catch(() => {});
     }
 }
 

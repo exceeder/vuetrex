@@ -1,27 +1,35 @@
 {
   "name": "@exceeder/vuetrex",
-  "version": "0.3.0",
+  "type": "module",
+  "version": "0.7.0",
   "description": "WebGL animated diagram visualizations in 3D for Vue 3",
-  "main": "dist/vuetrex.umd.js",
-  "browser": "dist/vuetrex.esm.js",
-  "module": "dist/vuetrex.esm.js",
+  "main": "dist/vuetrex.umd.cjs",
+  "module": "dist/vuetrex.js",
   "unpkg": "dist/vuetrex.min.js",
-  "types": "vuetrex.d.ts",
-  "files": [
-    "dist/*",
-    "vuetrex.d.ts",
-    "src/**/*.vue"
-  ],
   "sideEffects": false,
   "scripts": {
-    "serve": "vue-cli-service serve dev/serve.ts",
-    "test": "vue-cli-service test:unit",
-    "test:esm-project": "node tests/esm-module/testNewProject.js",
+    "dev": "vite",
+    "clean": "rm -rf ./dist && rm -rf ./dist_types && rm -rf ./coverage",
+    "build": "vue-tsc --declaration --emitDeclarationOnly && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:esm-project": "node test/esm-module/testNewProject.js",
     "tsc": "tsc",
-    "build": "tsc && cross-env NODE_ENV=production rollup --config build/rollup.config.js",
-    "build:umd": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format umd",
-    "build:es": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format es",
-    "build:unpkg": "cross-env NODE_ENV=production rollup --config build/rollup.config.js --format iife"
+    "docs:dev": "vite build && vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs"
+  },
+  "files": [
+    "dist", "dist_types"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/vuetrex.es.js",
+      "types": "./dist_types/vuetrex.d.ts"
+    }
   },
   "repository": {
     "type": "git",
@@ -41,44 +49,41 @@
   },
   "homepage": "https://github.com/exceeder/vuetrex#readme",
   "dependencies": {
-    "three": "^0.128.0",
-    "vue": "^3.0.3"
+    "gsap": "^3.14.2",
+    "three": "^0.183.2",
+    "troika-three-text": "^0.52.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "@babel/preset-env": "^7.12.17",
-    "@babel/preset-typescript": "^7.12.17",
-    "@rollup/plugin-alias": "^3.1.2",
-    "@rollup/plugin-babel": "^5.2.3",
-    "@rollup/plugin-commonjs": "^18.0.0",
-    "@rollup/plugin-node-resolve": "^11.2.1",
-    "@rollup/plugin-replace": "^2.4.2",
-    "@types/jest": "^26.0.23",
-    "@types/three": "^0.127.1",
-    "@vue/cli-plugin-babel": "^4.5.12",
-    "@vue/cli-plugin-typescript": "^4.5.12",
-    "@vue/cli-plugin-unit-jest": "^4.5.12",
-    "@vue/cli-service": "^4.5.12",
-    "@vue/compiler-sfc": "^3.0.11",
-    "@vue/test-utils": "^2.0.0-rc.6",
-    "babel-loader": "^8.2.2",
-    "chai": "^4.3.4",
-    "cross-env": "^7.0.2",
-    "minimist": "^1.2.5",
-    "rollup": "^2.34.2",
-    "rollup-plugin-postcss": "^4.0.0",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-vue": "^6.0.0",
-    "ts-node": "^9.1.1s",
-    "typescript": "^4.2.4",
-    "vue-loader": "^16.2.0"
+    "@types/node": "^25.3.5",
+    "@types/three": "^0.183.1",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.8.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-glsl": "^1.5.5",
+    "vitepress": "^2.0.0-alpha.16",
+    "vitest": "^4.0.18",
+    "vue": "^3.5.29",
+    "vue-tsc": "^3.2.5"
+  },
+  "peerDependenciesMeta": {
+    "gsap": {
+      "optional": true
+    },
+    "troika-three-text": {
+      "optional": true
+    }
   },
   "peerDependencies": {
-    "three": "^0.128.0",
-    "vue": "^3.0.3"
+    "gsap": "^3.14.2",
+    "three": "^0.183.2",
+    "vue": "^3.5.29"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=22"
   },
   "eslintConfig": {
     "rules": {

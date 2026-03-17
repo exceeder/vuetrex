@@ -1,0 +1,8 @@
+{
+    "note": "Vite uses tsconfig.json, this file is just for IntelliJ / VSCode to resolve the paths in demo/",
+    "compilerOptions": {
+        "paths": {
+            "@/*": ["./src/*"]
+        }
+    }
+}

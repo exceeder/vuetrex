@@ -1,5 +1,5 @@
-import { ComponentInternalInstance, SuspenseBoundary, VNode } from "vue";
-import { Base } from "@/lib-components/nodes/Base";
+import {ComponentInternalInstance, ElementNamespace, SuspenseBoundary, VNode} from 'vue';
+import { Base } from '@/lib-components/nodes/Base.js';
 
 /**
  * Executed when a prop is passed to a custom object
@@ -9,11 +9,8 @@ export function patchProp(
     key: string,
     prevValue: any,
     nextValue: any,
-    isSVG: boolean,
-    prevChildren?: VNode[],
-    parentComponent?: ComponentInternalInstance,
-    parentSuspense?: SuspenseBoundary,
-    unmountChildren?: any,
+    namespace?: ElementNamespace,
+    parentComponent?: ComponentInternalInstance | null
 ) {
   getSetter(key)(el, nextValue);
 }
@@ -25,17 +22,14 @@ const setterCache: Record<string, SetterFunction> = {};
 const getSetter = (key: string) => {
   if (!setterCache[key]) {
     setterCache[key] = (el, value) => {
-      // @ts-ignore
-      if (el.state !== undefined && el.state[key] !== undefined) { // @ts-ignore
-        if (typeof el.state[key] === 'boolean') // @ts-ignore
-          el.state[key] = "true" == value; // @ts-ignore
-        else if (typeof el.state[key] === 'number') // @ts-ignore
-          el.state[key] = Number.parseFloat(value);
-        else // @ts-ignore
-          el.state[key] = value;
+      if (el.state !== undefined && el.state[key] !== undefined) {
+        switch (typeof el.state[key]) {
+          case 'boolean': el.state[key] = "true" == value; break;
+          case 'number':  el.state[key] = Number.parseFloat(value); break;
+          default: el.state[key] = value;
+        }
       } else {
-        // @ts-ignore
-        el[key] = value
+        (el as any)[key] = value
       }
     }
   }
