@@ -1,7 +1,6 @@
 import { MeshNode } from '@/lib-components/nodes/MeshNode.js';
 import { VuetrexStage } from '@/lib-components/three/stage.js';
 import * as THREE from 'three';
-import {Node} from '@/lib-components/nodes/Node.js';
 
 export class Wedge extends MeshNode {
 
@@ -46,17 +45,12 @@ export class Wedge extends MeshNode {
         return geometry;
     }
 
-    modelGen(): (height: number, size: number) => THREE.Object3D {
+    modelGen(): (height: number, size: number) => THREE.Mesh {
+        const { myIdx: i, siblingCount: N } = this.layoutContext.value;
         return (height, size) => {
-            const N = (this.parent.value as Node).renderSize.value; //number of visible siblings
-            const i = this.myIdx.value
-
-            //using N=siblings+1 so that segments have visual gaps
             const geometry = this.cylindricalSleeveSegment(height, size, N);
-
             const mesh = new THREE.Mesh(geometry, this.material);
-            const alpha = i * (Math.PI * 2) / N;
-            geometry.rotateY(alpha);
+            geometry.rotateY(i * (Math.PI * 2) / N);
             return mesh;
         };
     }
