@@ -4,12 +4,42 @@ import Scene from '@/lib-components/three/scene.js';
 import {Element3d, VxEventMap} from '@/lib-components/three/element3d.js';
 import {Node} from '@/lib-components/nodes/Node.js';
 import {Connectors} from '@/lib-components/three/connectors/connectors.js';
+import gsap from 'gsap';
 
-//import gsap from 'gsap';
+/**
+ * Target transform values for animateTo(). Each field is optional — only
+ * specified fields are animated; the rest are left unchanged.
+ *
+ * `scale` is a uniform shorthand; `scaleX/Y/Z` override it per-axis.
+ */
+export interface VxAnimProps {
+    positionY?: number
+    scale?: number
+    scaleX?: number
+    scaleY?: number
+    scaleZ?: number
+}
+
+/**
+ * Controls the timing and easing of an animateTo() call.
+ * Accepts any GSAP ease string for `ease` (e.g. 'sine.out', 'power2.inOut').
+ */
+export interface VxAnimOptions {
+    duration?: number
+    ease?: string
+    delay?: number
+    onComplete?: () => void
+}
 
 export interface VxStage {
     getScene(): THREE.Scene
     onEachFrame(fn: (time: number, tick:number) => void): void
+    /**
+     * Animate the named node's transform to the given target values.
+     * Isolates callers from Three.js internals — use this instead of
+     * accessing mesh.position / mesh.scale directly.
+     */
+    animateTo(id: string, props: VxAnimProps, opts?: VxAnimOptions): void
 }
 
 export interface VxSettings {
@@ -302,6 +332,25 @@ export class VuetrexStage extends Scene implements VxStage {
 
     connect(el1: Element3d, el2: Element3d) {
         this.connectors?.connect(el1,el2);
+    }
+
+    animateTo(id: string, props: VxAnimProps, opts: VxAnimOptions = {}) {
+        const mesh = this.getById(id)?.mesh;
+        if (!mesh) return;
+
+        const { duration = 0.4, ease = 'power2.out', delay, onComplete } = opts;
+        const tweenBase: gsap.TweenVars = { duration, ease, ...(delay !== undefined && { delay }), ...(onComplete && { onComplete }) };
+
+        const posProps: Record<string, number> = {};
+        if (props.positionY !== undefined) posProps.y = props.positionY;
+        if (Object.keys(posProps).length) gsap.to(mesh.position, { ...posProps, ...tweenBase });
+
+        const scaleProps: Record<string, number> = {};
+        if (props.scale !== undefined) { scaleProps.x = scaleProps.y = scaleProps.z = props.scale; }
+        if (props.scaleX !== undefined) scaleProps.x = props.scaleX;
+        if (props.scaleY !== undefined) scaleProps.y = props.scaleY;
+        if (props.scaleZ !== undefined) scaleProps.z = props.scaleZ;
+        if (Object.keys(scaleProps).length) gsap.to(mesh.scale, { ...scaleProps, ...tweenBase });
     }
 
     destroy() {

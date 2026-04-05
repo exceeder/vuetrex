@@ -1,4 +1,5 @@
 export type { VxStage, VxSettings, VxMouseEvent } from '@/lib-components/vuetrex.js';
+export type { VxAnimProps, VxAnimOptions } from '@/lib-components/three/stage.js';
 export { default as Vuetrex } from '@/lib-components/vuetrex.js';
 
 export { registerElement } from '@/lib-components/nodes/types.js';

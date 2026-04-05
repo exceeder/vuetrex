@@ -31,7 +31,7 @@ export class Cylinder extends MeshNode {
         });
     }
 
-    modelGen(): (height: number, size: number) => THREE.Object3D {
+    modelGen(): (height: number, size: number) => THREE.Mesh {
         return (_height, size) => {
             const geometry = this.beveledCylinder(size);
             geometry.rotateX(Math.PI / 2);
