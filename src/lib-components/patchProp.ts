@@ -22,7 +22,7 @@ const setterCache: Record<string, SetterFunction> = {};
 const getSetter = (key: string) => {
   if (!setterCache[key]) {
     setterCache[key] = (el, value) => {
-      if (el.state !== undefined && el.state[key] !== undefined) {
+      if (el.state !== undefined && key in el.state) {
         switch (typeof el.state[key]) {
           case 'boolean': el.state[key] = "true" == value; break;
           case 'number':  el.state[key] = Number.parseFloat(value); break;

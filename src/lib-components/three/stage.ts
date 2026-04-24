@@ -250,8 +250,9 @@ export class VuetrexStage extends Scene implements VxStage {
         light2.castShadow = true;
         const d = 8;
         light2.shadow.camera = new THREE.OrthographicCamera( -d, d, d, -d,  0.5, 55);
-        light2.shadow.radius = 11;
-        light2.shadow.bias = -0.003;
+        light2.shadow.radius = 7;
+        light2.shadow.bias = -0.004;
+        light2.shadow.normalBias = 0;
         (light2.shadow as any).blurSamples = 16;
         light2.shadow.mapSize.width = light2.shadow.mapSize.height = 512;
 
@@ -339,18 +340,28 @@ export class VuetrexStage extends Scene implements VxStage {
         if (!mesh) return;
 
         const { duration = 0.4, ease = 'power2.out', delay, onComplete } = opts;
-        const tweenBase: gsap.TweenVars = { duration, ease, ...(delay !== undefined && { delay }), ...(onComplete && { onComplete }) };
+        const tweenBase: gsap.TweenVars = { duration, ease, ...(delay !== undefined && { delay }) };
 
         const posProps: Record<string, number> = {};
         if (props.positionY !== undefined) posProps.y = props.positionY;
-        if (Object.keys(posProps).length) gsap.to(mesh.position, { ...posProps, ...tweenBase });
 
         const scaleProps: Record<string, number> = {};
         if (props.scale !== undefined) { scaleProps.x = scaleProps.y = scaleProps.z = props.scale; }
         if (props.scaleX !== undefined) scaleProps.x = props.scaleX;
         if (props.scaleY !== undefined) scaleProps.y = props.scaleY;
         if (props.scaleZ !== undefined) scaleProps.z = props.scaleZ;
-        if (Object.keys(scaleProps).length) gsap.to(mesh.scale, { ...scaleProps, ...tweenBase });
+
+        if (!Object.keys(posProps).length && !Object.keys(scaleProps).length) return;
+
+        const tl = gsap.timeline({ ...(onComplete && { onComplete }) });
+
+        if (Object.keys(posProps).length) {
+            tl.to(mesh.position, { ...posProps, ...tweenBase }, 0);
+        }
+
+        if (Object.keys(scaleProps).length) {
+            tl.to(mesh.scale, { ...scaleProps, ...tweenBase }, 0);
+        }
     }
 
     destroy() {

@@ -26,10 +26,11 @@
         <row>
           <stack>
             <box name="api-gw" text="api-gateway" size="1.8"
+              :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
-              @pointerenter="onDeployHoverIn"
-              @pointerleave="onDeployHoverOut"
+              @pointerenter="!selected ? (hovered = 'api-gw') : null"
+              @pointerleave="!selected ? (hovered = null) : null"
             />
             <layer :elevation="0.25">
               <ring size="0.8">
@@ -38,9 +39,8 @@
                   :key="'api-gw-pod-' + i"
                   :name="'api-gw-pod-' + i"
                   text="" height="0.75" size="1.5"
+                  :hover="{ scale: 1.18, transition: 0.18, color: 0x4c7fb2 }"
                   @click="onPodClick"
-                  @pointerenter="onPodHoverIn"
-                  @pointerleave="onPodHoverOut"
                 />
               </ring>
             </layer>
@@ -52,53 +52,53 @@
         <row>
           <stack>
             <box name="auth-svc" text="auth-svc" connection="api-gw"
+              :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
-              @pointerenter="onDeployHoverIn"
-              @pointerleave="onDeployHoverOut"
+              @pointerenter="!selected ? (hovered = 'auth-svc') : null"
+              @pointerleave="!selected ? (hovered = null) : null"
             />
             <cylinder
               v-for="i in podCounts['auth-svc']"
               :key="'auth-svc-pod-' + i"
               :name="'auth-svc-pod-' + i"
               text="" height="0.22" size="0.85"
+              :hover="{ scale: 1.18, transition: 0.18 }"
               @click="onPodClick"
-              @pointerenter="onPodHoverIn"
-              @pointerleave="onPodHoverOut"
             />
           </stack>
           <stack>
             <box name="product-svc" text="product-svc" connection="api-gw"
+              :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
-              @pointerenter="onDeployHoverIn"
-              @pointerleave="onDeployHoverOut"
+              @pointerenter="!selected ? (hovered = 'product-svc') : null"
+              @pointerleave="!selected ? (hovered = null) : null"
             />
             <cylinder
               v-for="i in podCounts['product-svc']"
               :key="'product-svc-pod-' + i"
               :name="'product-svc-pod-' + i"
               text="" height="0.22" size="0.85"
+              :hover="{ scale: 1.18, transition: 0.18 }"
               @click="onPodClick"
-              @pointerenter="onPodHoverIn"
-              @pointerleave="onPodHoverOut"
             />
           </stack>
           <stack>
             <box name="order-svc" text="order-svc" connection="api-gw"
+              :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
-              @pointerenter="onDeployHoverIn"
-              @pointerleave="onDeployHoverOut"
+              @pointerenter="!selected ? (hovered = 'order-svc') : null"
+              @pointerleave="!selected ? (hovered = null) : null"
             />
             <cylinder
               v-for="i in podCounts['order-svc']"
               :key="'order-svc-pod-' + i"
               :name="'order-svc-pod-' + i"
               text="" height="0.22" size="0.85"
+              :hover="{ scale: 1.18, transition: 0.18 }"
               @click="onPodClick"
-              @pointerenter="onPodHoverIn"
-              @pointerleave="onPodHoverOut"
             />
           </stack>
         </row>
@@ -107,36 +107,37 @@
         <row>
           <stack>
             <box name="mongo" text="MongoDB" size="1.4" connection="product-svc"
+                 :material="{color:0x333333}"
+                 :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
-              @pointerenter="onDeployHoverIn"
-              @pointerleave="onDeployHoverOut"
+              @pointerenter="!selected ? (hovered = 'mongo') : null"
+              @pointerleave="!selected ? (hovered = null) : null"
             />
             <cylinder
               v-for="i in podCounts['mongo']"
               :key="'mongo-pod-' + i"
               :name="'mongo-pod-' + i"
               text="" height="0.22" size="0.75"
+              :hover="{ scale: 1.18, transition: 0.18, color: 0x4c7fb2 }"
               @click="onPodClick"
-              @pointerenter="onPodHoverIn"
-              @pointerleave="onPodHoverOut"
             />
           </stack>
           <stack>
             <box name="redis" text="Redis" size="1.4" connection="order-svc"
+                 :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
-              @pointerenter="onDeployHoverIn"
-              @pointerleave="onDeployHoverOut"
+              @pointerenter="!selected ? (hovered = 'redis') : null"
+              @pointerleave="!selected ? (hovered = null) : null"
             />
             <cylinder
               v-for="i in podCounts['redis']"
               :key="'redis-pod-' + i"
               :name="'redis-pod-' + i"
               text="" height="0.22" size="0.75"
+              :hover="{ scale: 1.18, transition: 0.18 }"
               @click="onPodClick"
-              @pointerenter="onPodHoverIn"
-              @pointerleave="onPodHoverOut"
             />
           </stack>
         </row>
@@ -149,7 +150,6 @@
 <script lang="ts">
 import { ref, reactive, nextTick } from 'vue'
 import { Vuetrex, VxSettings, VxStage, VxMouseEvent } from '@/lib-components/index.js'
-import gsap from 'gsap'
 
 export default {
   components: { Vuetrex },
@@ -160,14 +160,14 @@ export default {
     const hovered = ref<string | null>(null)
     let stage: any = null
 
-    const services: Record<string, { label: string }> = {
+    const services = {
       'api-gw':      { label: 'api-gateway' },
       'auth-svc':    { label: 'auth-svc' },
       'product-svc': { label: 'product-svc' },
       'order-svc':   { label: 'order-svc' },
       'mongo':       { label: 'MongoDB' },
       'redis':       { label: 'Redis' },
-    }
+    } as Record<string, { label: string }>
 
     const podCounts = reactive<Record<string, number>>({
       'api-gw':      3,
@@ -190,45 +190,56 @@ export default {
     function liftPods(svc: string, baseDelay = 0) {
       const count = podCounts[svc]
       for (let i = 1; i <= count; i++) {
+        const id = `${svc}-pod-${i}`
         const mesh = getPodMesh(svc, i)
         if (!mesh) continue
         const origY = mesh.position.y
-        gsap.timeline({ delay: baseDelay + (i - 1) * 0.1 })
-          .to(mesh.position, { duration: 0.45, y: origY + 0.13, ease: 'sine.out' })
-          .to(mesh.position, { duration: 0.55, y: origY, ease: 'sine.inOut' })
+        stage.animateTo(id, { positionY: origY + 0.13 }, {
+          duration: 0.45,
+          ease: 'sine.out',
+          delay: baseDelay + (i - 1) * 0.1,
+          onComplete: () => {
+            stage.animateTo(id, { positionY: origY }, { duration: 0.55, ease: 'sine.inOut' })
+          }
+        })
       }
     }
 
     // Subtle scale accent — used for both selection and restart feedback.
     function accentBox(svc: string) {
-      const mesh = getDeployMesh(svc)
-      if (!mesh) return
-      gsap.timeline()
-        .to(mesh.scale, { duration: 0.35, x: 1.07, z: 1.07, ease: 'sine.out' })
-        .to(mesh.scale, { duration: 0.5, x: 1.0, z: 1.0, ease: 'sine.inOut' })
+      stage.animateTo(svc, { scaleX: 1.07, scaleZ: 1.07 }, {
+        duration: 0.35,
+        ease: 'sine.out',
+        onComplete: () => {
+          stage.animateTo(svc, { scale: 1.0 }, { duration: 0.5, ease: 'sine.inOut' })
+        }
+      })
     }
 
     // New pod slides in from slightly above with a clean power ease — no bounce.
     function podEntranceAnim(svc: string, podIdx: number) {
       nextTick(() => {
+        const id = `${svc}-pod-${podIdx}`
         const mesh = getPodMesh(svc, podIdx)
         if (!mesh) return
         const finalY = mesh.position.y
         mesh.position.y = finalY + 0.4
         mesh.scale.set(0.05, 0.05, 0.05)
-        gsap.timeline()
-          .to(mesh.position, { duration: 0.55, y: finalY, ease: 'power2.out' })
-          .to(mesh.scale, { duration: 0.5, x: 1, y: 1, z: 1, ease: 'power2.out' }, '<')
+
+        stage.animateTo(id, { positionY: finalY, scale: 1 }, { duration: 0.55, ease: 'power2.out' })
       })
     }
 
     // Pod shrinks and drops away quietly.
     function podExitAnim(svc: string, podIdx: number, onDone: () => void) {
+      const id = `${svc}-pod-${podIdx}`
       const mesh = getPodMesh(svc, podIdx)
       if (!mesh) { onDone(); return }
-      gsap.timeline({ onComplete: onDone })
-        .to(mesh.scale, { duration: 0.4, x: 0.05, y: 0.05, z: 0.05, ease: 'power2.inOut' })
-        .to(mesh.position, { duration: 0.4, y: mesh.position.y - 0.2, ease: 'power2.inOut' }, '<')
+      stage.animateTo(id, { scale: 0.05, positionY: mesh.position.y - 0.2 }, {
+        duration: 0.4,
+        ease: 'power2.inOut',
+        onComplete: onDone
+      })
     }
 
     // Double-click: burst-scale — add 2 pods in rapid succession (fast deploy surge)
@@ -238,38 +249,11 @@ export default {
       const burst = Math.min(2, 8 - podCounts[svc])
       if (burst <= 0) return
       for (let i = 0; i < burst; i++) {
-        gsap.delayedCall(i * 0.18, () => {
+        setTimeout(() => {
           podCounts[svc]++
           podEntranceAnim(svc, podCounts[svc])
-        })
+        }, i * 180)
       }
-    }
-
-    // pointerenter on deployment: health ping — pods pulse to signal liveness, HUD previews the service
-    function onDeployHoverIn(ev: VxMouseEvent) {
-      const svc = ev.vxNode.name
-      if (!services[svc] || selected.value) return
-      hovered.value = svc
-      //liftPods(svc)
-    }
-
-    // pointerleave on deployment: dismiss hover preview
-    function onDeployHoverOut(ev: VxMouseEvent) {
-      if (!selected.value) hovered.value = null
-    }
-
-    // pointerenter on pod: scale up to signal "this would be drained on click"
-    function onPodHoverIn(ev: VxMouseEvent) {
-      const mesh = stage?.getById(ev.vxNode.name)?.mesh
-      if (!mesh) return
-      gsap.to(mesh.scale, { duration: 0.18, x: 1.18, y: 1.18, z: 1.18, ease: 'sine.out' })
-    }
-
-    // pointerleave on pod: restore normal scale
-    function onPodHoverOut(ev: VxMouseEvent) {
-      const mesh = stage?.getById(ev.vxNode.name)?.mesh
-      if (!mesh) return
-      gsap.to(mesh.scale, { duration: 0.22, x: 1, y: 1, z: 1, ease: 'sine.inOut' })
     }
 
     function onDeployClick(ev: VxMouseEvent) {
@@ -280,10 +264,10 @@ export default {
         // Second click: rolling restart — cascade on API GW, self-restart otherwise
         if (svc === 'api-gw') {
           ;['auth-svc', 'product-svc', 'order-svc'].forEach((s, i) => {
-            gsap.delayedCall(i * 0.5, () => {
+            setTimeout(() => {
               accentBox(s)
               liftPods(s)
-            })
+            }, i * 500)
           })
         } else {
           accentBox(svc)
@@ -337,21 +321,6 @@ export default {
       camera.value = 'scene'
     }
 
-    // const vsSettings: VxSettings = {
-    //   color:          0x1e3a5f,
-    //   highlightColor: 0x3fa8ff,
-    //   floorColor:     0x0a1628,
-    //   captionColor:   0x7fc4ff,
-    //   particleColor:  0x3fa8ff,
-    //   lightColor1:    0x5599ff,
-    //   lightColor2:    0xffffff,
-    //   mirrorOpacity:  0.82,
-    //   particleSpread: 0.025,
-    //   particleVolume: 8,
-    //   unit:           1.3,
-    //   distance:       1.6,
-    // }
-
     function onStageReady(s: VxStage) {
       stage = s
       // Add cross-cutting connections once all meshes have been placed
@@ -369,8 +338,8 @@ export default {
 
     return {
       camera, selected, hovered, services, podCounts,
-      onDeployClick, onDeployBurst, onDeployHoverIn, onDeployHoverOut,
-      onPodClick, onPodHoverIn, onPodHoverOut,
+      onDeployClick, onDeployBurst,
+      onPodClick,
       triggerScaleUp, triggerScaleDown, triggerRestart, deselectAll,
       onStageReady,
     }

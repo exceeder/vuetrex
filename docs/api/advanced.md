@@ -54,4 +54,4 @@ setup() {
 }
 ```
 ## Architecture
-For a terse description of how the library code works, check [architecutre notes](../architecture.md)
+For a terse description of how the library code works, check [architecture notes](../architecture.md)

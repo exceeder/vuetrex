@@ -122,6 +122,7 @@ export default class Scene extends LifeCycle {
     createRenderer(width:number, height:number, devicePixelRatio:number) {
         const renderer = new THREE.WebGLRenderer({
             antialias: true,
+            powerPreference: 'high-performance',
             precision: "highp",
             logarithmicDepthBuffer: false
         });
@@ -259,18 +260,13 @@ export default class Scene extends LifeCycle {
                 const labelObject = <THREE.Mesh> (found && found.object);
                 if (labelObject && labelObject !== this.selectedObject) {
                     if (this.selectedObject) {
-                        const m = <THREE.MeshBasicMaterial>this.selectedObject.material;
-                        m.color.set(this.colorMain);
                         if (this.lastMouseEvent) this.onMouseOut(this.selectedObject, this.lastMouseEvent);
                     }
                     this.selectedObject = labelObject;
-                    const m = <THREE.MeshBasicMaterial>labelObject.material;
-                    m.color.setHex(this.colorHighlight.getHex());
                     if (this.lastMouseEvent) this.onMouseOver(labelObject, this.lastMouseEvent);
                 }
             }
             if (!found && this.selectedObject) {
-                (<THREE.MeshBasicMaterial>this.selectedObject.material).color.set(this.colorMain);
                 if (this.lastMouseEvent) this.onMouseOut(this.selectedObject, this.lastMouseEvent);
                 this.selectedObject = null;
             }

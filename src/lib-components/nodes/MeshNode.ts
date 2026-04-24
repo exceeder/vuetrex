@@ -1,13 +1,17 @@
 import { reactive, watchEffect, WatchStopHandle, nextTick, computed, ComputedRef } from 'vue';
 import { Node } from '@/lib-components/nodes/Node.js';
 import { VuetrexStage } from '@/lib-components/three/stage.js';
+import { VxMaterialProps, VxHoverProps, applyMaterialProps } from '@/lib-components/nodes/material.js';
 import * as THREE from 'three';
+import gsap from 'gsap';
 
 export interface MeshState {
     text: string;
     size: number;
     height: number;
     connection: string | null;
+    material?: VxMaterialProps;
+    hover?: VxHoverProps;
 }
 
 /**
@@ -25,25 +29,46 @@ export interface LayoutContext {
     siblingCount: number;
 }
 
+function captureProps(mat: THREE.MeshStandardMaterial): VxMaterialProps {
+    return {
+        color: mat.color.getHex(),
+        opacity: mat.opacity,
+        transparent: mat.transparent,
+        roughness: mat.roughness,
+        metalness: mat.metalness,
+        emissive: mat.emissive.getHex(),
+        emissiveIntensity: mat.emissiveIntensity,
+        wireframe: mat.wireframe,
+    };
+}
+
 /**
  * Base class for all geometry nodes (Box, Cylinder, etc.).
- * Handles reactive sync with Three.js, connection wiring, and cleanup.
+ * Owns the Three.js material and handles reactive material prop sync,
+ * built-in hover animation, connection wiring, and cleanup.
  * Subclasses only need to implement modelGen().
  */
 export abstract class MeshNode extends Node {
 
     protected state: MeshState;
     protected stopHandle?: WatchStopHandle;
+    private materialStopHandle?: WatchStopHandle;
     protected readonly flushMode: 'post' | 'sync' = 'post'; // see Vue's WatchEffectOptions, Callback Flush Timing
+
+    readonly material: THREE.MeshStandardMaterial;
+
+    private baseProps: VxMaterialProps = {};
+    private isHovered = false;
 
     protected layoutContext: ComputedRef<LayoutContext> = computed(() => ({
         myIdx: this.myIdx.value,
         siblingCount: this.numColumns.value,
     }));
 
-    constructor(stage: VuetrexStage, stateDefaults: Partial<MeshState> = {}) {
+    protected constructor(stage: VuetrexStage, stateDefaults: Partial<MeshState> = {}) {
         super(stage);
-        this.state = reactive({ text: '', size: 1.0, height: 0.5, connection: null, ...stateDefaults });
+        this.state = reactive({ text: '', size: 1.0, height: 0.5, connection: null, material: undefined, hover: undefined, ...stateDefaults });
+        this.material = stage.createElementMaterial();
     }
 
     abstract modelGen(): (height: number, size: number) => THREE.Mesh;
@@ -70,6 +95,13 @@ export abstract class MeshNode extends Node {
 
     syncWithThree() {
         if (this.stopHandle) return;
+
+        // Capture creation-time material defaults as the initial restore target.
+        // By this point Box (or any subclass) has already overwritten this.material
+        // in its own constructor, so we read the final material here.
+        this.baseProps = captureProps(this.material as THREE.MeshStandardMaterial);
+
+        // Geometry watchEffect — rebuilds mesh when layout or geometry params change.
         this.stopHandle = watchEffect(() => {
             const { myIdx } = this.layoutContext.value;
             if (myIdx >= 0) {
@@ -87,12 +119,110 @@ export abstract class MeshNode extends Node {
                 }).catch(r => console.warn(r));
             }
         }, { flush: this.flushMode });
+
+        // Material watchEffect — applies material prop changes without rebuilding geometry
+        // and keeps baseProps in sync so restoreHover always targets the design-time state.
+        this.materialStopHandle = watchEffect(() => {
+            if (this.state.material) {
+                applyMaterialProps(this.material, this.state.material);
+                this.baseProps = { ...this.baseProps, ...this.state.material };
+            }
+        });
+    }
+
+    override dispatchPointerenter(e: MouseEvent) {
+        if (this.state.hover) this.applyHover(this.state.hover);
+        super.dispatchPointerenter(e);
+    }
+
+    override dispatchPointerleave(e: MouseEvent) {
+        if (this.state.hover && this.isHovered) this.restoreHover();
+        super.dispatchPointerleave(e);
+    }
+
+    private applyHover(hover: VxHoverProps) {
+        const mesh = this.element.mesh as THREE.Mesh | null;
+        if (!mesh) return;
+
+        const t = hover.transition ?? 0.18;
+        const mat = this.material as THREE.MeshStandardMaterial;
+
+        gsap.killTweensOf(mat.color);
+        gsap.killTweensOf(mat);
+        gsap.killTweensOf(mesh.scale);
+
+        this.isHovered = true;
+
+        if (hover.color !== undefined) {
+            const c = new THREE.Color(hover.color);
+            gsap.to(mat.color, { r: c.r, g: c.g, b: c.b, duration: t });
+        }
+        if (hover.opacity !== undefined) {
+            if (hover.opacity < 1 || hover.transparent) mat.transparent = true;
+            gsap.to(mat, { opacity: hover.opacity, duration: t });
+        }
+        if (hover.roughness !== undefined) gsap.to(mat, { roughness: hover.roughness, duration: t });
+        if (hover.metalness !== undefined) gsap.to(mat, { metalness: hover.metalness, duration: t });
+        if (hover.emissive !== undefined) {
+            const c = new THREE.Color(hover.emissive);
+            gsap.to(mat.emissive, { r: c.r, g: c.g, b: c.b, duration: t });
+        }
+        if (hover.emissiveIntensity !== undefined) gsap.to(mat, { emissiveIntensity: hover.emissiveIntensity, duration: t });
+        if (hover.scale !== undefined) {
+            gsap.to(mesh.scale, { x: hover.scale, y: hover.scale, z: hover.scale, duration: t, ease: 'sine.out' });
+        }
+    }
+
+    private restoreHover() {
+        const mesh = this.element.mesh as THREE.Mesh | null;
+        if (!mesh) return;
+
+        const t = this.state.hover!.transition ?? 0.18;
+        const mat = this.material as THREE.MeshStandardMaterial;
+        const hover = this.state.hover!;
+        const base = this.baseProps;
+
+        gsap.killTweensOf(mat.color);
+        gsap.killTweensOf(mat);
+        gsap.killTweensOf(mesh.scale);
+
+        this.isHovered = false;
+
+        if (hover.color !== undefined && base.color !== undefined) {
+            const c = new THREE.Color(base.color);
+            gsap.to(mat.color, { r: c.r, g: c.g, b: c.b, duration: t });
+        }
+        if (hover.opacity !== undefined && base.opacity !== undefined) {
+            gsap.to(mat, { opacity: base.opacity, duration: t,
+                onComplete: () => { mat.transparent = base.transparent ?? false; }
+            });
+        }
+        if (hover.roughness !== undefined && base.roughness !== undefined) {
+            gsap.to(mat, { roughness: base.roughness, duration: t });
+        }
+        if (hover.metalness !== undefined && base.metalness !== undefined) {
+            gsap.to(mat, { metalness: base.metalness, duration: t });
+        }
+        if (hover.emissive !== undefined && base.emissive !== undefined) {
+            const c = new THREE.Color(base.emissive);
+            gsap.to(mat.emissive, { r: c.r, g: c.g, b: c.b, duration: t });
+        }
+        if (hover.emissiveIntensity !== undefined && base.emissiveIntensity !== undefined) {
+            gsap.to(mat, { emissiveIntensity: base.emissiveIntensity, duration: t });
+        }
+        if (hover.scale !== undefined) {
+            gsap.to(mesh.scale, { x: 1, y: 1, z: 1, duration: t, ease: 'sine.inOut' });
+        }
     }
 
     onRemoved() {
         if (this.stopHandle) {
             this.stopHandle();
             this.stopHandle = undefined;
+        }
+        if (this.materialStopHandle) {
+            this.materialStopHandle();
+            this.materialStopHandle = undefined;
         }
         this.clearMesh();
         this.state.connection = null;

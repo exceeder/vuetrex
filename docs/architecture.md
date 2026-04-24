@@ -34,7 +34,13 @@ Extends `Base`. Everything that can exist in the 3D scene. Holds:
 - **`layoutPositionOf(child): Vector3`** — default grid layout; container nodes override this
 
 ### `MeshNode` (`nodes/MeshNode.ts`)
-Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, `size`, `height`, `connection`), shared `syncWithThree()` lifecycle (watchEffect → `stage.renderMesh`), connection wiring, and `onRemoved()` cleanup. **To add a new shape: extend `MeshNode`, implement `modelGen()`.**
+Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, `size`, `height`, `connection`, `material`, `hover`), shared `syncWithThree()` lifecycle (watchEffect → `stage.renderMesh`), connection wiring, and `onRemoved()` cleanup. **To add a new shape: extend `MeshNode`, implement `modelGen()`.**
+
+### Material & Interaction (`nodes/material.ts`)
+
+- **`VxMaterialProps`:** reactive material state (color, opacity, roughness, metalness, emissive, etc.)
+- **`VxHoverProps`:** hover overrides (`VxMaterialProps` + `scale`, `transition`)
+- **`MeshNode` hover:** manages snapshots of base material, applies overrides on `onMouseOver` using `gsap` for smooth transitions, and restores from snapshot on `onMouseOut`.
 
 ### Concrete nodes
 
@@ -54,6 +60,10 @@ Thin bridge: holds `mesh: THREE.Object3D` and `pos: Vector3`. `getPosition()` de
 
 ### `VuetrexStage` (`three/stage.ts`)
 Scene infrastructure. Manages floor, mirror, lights, caption texture, connectors, `renderMesh()`, `removeObject()`, camera, raycasting. Exposes `boxRadius` / `boxDistance` (configurable via `VxSettings`).
+
+- **`VxAnimProps`:** target transform values for `animateTo()` (positionY, scale, etc.)
+- **`VxAnimOptions`:** animation timing and easing (duration, ease, delay, onComplete)
+- **`animateTo(id, props, opts)`:** programmatically animates a node's transform, isolating callers from Three.js internals.
 
 ---
 
