@@ -26,6 +26,9 @@ export abstract class Base {
     public parent: Ref<Base | null> = shallowRef(null);
     protected children: Ref<Base[]> = ref([]);
 
+    protected abstract get state():  { [id: string] : any };
+    protected abstract subscribeEvents(): void;
+
     private mustSync = false;
 
     isRenderableNode(): boolean { return false; }
@@ -50,9 +53,6 @@ export abstract class Base {
     });
 
     public numRows: ComputedRef<number> = computed(() => (this.parent.value?.parent.value?.renderSize.value || 1));
-
-    public abstract get state():  { [id: string] : any };
-    protected abstract subscribeEvents(): void;
 
     public readonly nextSibling : ComputedRef<Base | null> = computed(() => {
             if (this.parent.value === null) {
@@ -117,6 +117,18 @@ export abstract class Base {
 
     setElementText(text: string) {
         // Default: ignore text.
+    }
+
+    public setStateValue(key: string, value:any): void {
+        if (this.state !== undefined && key in this.state) {
+            switch (typeof this.state[key]) {
+                case 'boolean': this.state[key] = "true" == value; break;
+                case 'number':  this.state[key] = Number.parseFloat(value); break;
+                default: this.state[key] = value;
+            }
+        } else {
+            (this as any)[key] = value
+        }
     }
 
     onRemoved() {}

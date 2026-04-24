@@ -21,17 +21,7 @@ const setterCache: Record<string, SetterFunction> = {};
 
 const getSetter = (key: string) => {
   if (!setterCache[key]) {
-    setterCache[key] = (el, value) => {
-      if (el.state !== undefined && key in el.state) {
-        switch (typeof el.state[key]) {
-          case 'boolean': el.state[key] = "true" == value; break;
-          case 'number':  el.state[key] = Number.parseFloat(value); break;
-          default: el.state[key] = value;
-        }
-      } else {
-        (el as any)[key] = value
-      }
-    }
+    setterCache[key] = (el, value) => el.setStateValue(key, value);
   }
   return setterCache[key];
 };

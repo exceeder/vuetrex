@@ -4,7 +4,7 @@ import * as THREE from 'three';
 
 export class Cylinder extends MeshNode {
 
-    readonly material: THREE.Material;
+    readonly material: THREE.MeshStandardMaterial;
 
     constructor(stage: VuetrexStage) {
         super(stage, { height: 0.33 });
