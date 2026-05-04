@@ -30,7 +30,7 @@ Tree node skeleton. Owns parent/children refs, `appendChild`/`removeChild`/`inse
 Extends `Base`. Everything that can exist in the 3D scene. Holds:
 - `element: Element3d` — the bridge to Three.js
 - `stage: VuetrexStage` — scene-level services
-- click event dispatch (bubbling)
+- click / dblclick bubbling and pointer enter/leave dispatch
 - **`layoutPositionOf(child): Vector3`** — returns local coordinates for children
 - **`nearestAncestorObject()`** — finds the closest `THREE.Group` in the parent chain
 
@@ -38,7 +38,10 @@ Extends `Base`. Everything that can exist in the 3D scene. Holds:
 Extends `Node`. Establish local coordinate spaces in the Three.js scene graph. Owns a `THREE.Group` where its children are parented. Containers (`Row`, `Ring`, `Stack`, `Layer`) extend this.
 
 ### `MeshNode` (`nodes/MeshNode.ts`)
-Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, `size`, `height`, `material`, `hover`), shared `syncWithThree()` lifecycle (watchEffect → `stage.renderMesh`), and `onRemoved()` cleanup. **To add a new shape: extend `MeshNode`, implement `modelGen()`.**
+Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, `size`, `height`, `connection`, `material`, `hover`), shared `syncWithThree()` lifecycle (geometry/material/connection watchEffects → `stage.renderMesh()` / `stage.connect()` / `stage.reconcileConnections()`), and `onRemoved()` cleanup. **To add a new shape: extend `MeshNode`, implement `modelGen()`.**
+
+### `ConnectorNode` (`nodes/ConnectorNode.ts`)
+Extends `Node`. Declarative connector record independent of any shape node. Reactive `from`, `to`, `layout`, and `type` props register connections through `stage.connect()`. This complements `MeshNode.state.connection`, which is still the shorthand for "connect this node to target id".
 
 ### Material & Interaction (`nodes/material.ts`)
 
@@ -58,7 +61,7 @@ Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, 
 | `Row`       | Horizontal layout container         | `layoutPositionOf()` — grid              |
 | `Stack`     | Vertical stacking container         | `layoutPositionOf()` — cumulative height |
 | `Ring`     | Circular layout container           | `layoutPositionOf()` — circular          |
-| `Connector` | Declarative link between nodes      | `syncWithThree()`                        |
+| `ConnectorNode` | Declarative link between nodes  | `syncWithThree()`                        |
 | `Root`      | Tree root, owns destroy             | —                                        |
 
 ### `Element3d` (`three/element3d.ts`)
@@ -66,6 +69,11 @@ Thin bridge: holds `mesh: THREE.Object3D` and `pos: Vector3`. `getPosition()` de
 
 ### `VuetrexStage` (`three/stage.ts`)
 Scene infrastructure. Manages floor, mirror, lights, caption texture, connectors, `renderMesh()`, `removeObject()`, camera, raycasting. Exposes `boxRadius` / `boxDistance` (configurable via `VxSettings`).
+
+`renderMesh()` can parent meshes either under the scene root or under a container's `THREE.Group`. Connection declarations are registered first, then `reconcileConnections()` resolves them against live `Element3d` instances after sync.
+
+- **Connector renderers:** `particles` and `line`
+- **Connector strategies:** `orthogonal` and `straight`
 
 - **`VxAnimProps`:** target transform values for `animateTo()` (positionY, scale, etc.)
 - **`VxAnimOptions`:** animation timing and easing (duration, ease, delay, onComplete)
@@ -78,7 +86,7 @@ Scene infrastructure. Manages floor, mirror, lights, caption texture, connectors
 Each container node (extending `GroupNode`) owns the position calculation for its children via `layoutPositionOf(child: Node): Vector3`. These calculations return coordinates in the container's **local space**.
 
 - **`Node` (default):** grid — rows × columns
-- **`GroupNode`:** base implementation for nesting; defaults to origin (0,0,0)
+- **`GroupNode`:** base implementation for nesting; defaults to origin `(0, 0, 0)`
 - **`Row`:** grid layout (default)
 - **`Ring`:** circular layout around the container's center
 - **`Stack`:** stacks children on Y axis by cumulative height
@@ -91,7 +99,7 @@ Adding a new layout: subclass `GroupNode`, override `layoutPositionOf()`.
 
 ## Reactive sync
 
-Structural changes (append/remove/insert) call `registerSync()` which batches via `queuePostFlushCb`. After Vue's render flush, `applySync()` calls `syncWithThree()` on each child. `MeshNode.syncWithThree()` installs a `watchEffect` that re-runs whenever reactive state (size, height, position) changes.
+Structural changes (append/remove/insert) call `registerSync()` which batches via `queuePostFlushCb`. After Vue's render flush, `applySync()` calls `syncWithThree()` on each child. `MeshNode.syncWithThree()` installs watchEffects for geometry, material, and connection/text updates. `Root` adds an after-flush hook that schedules `stage.reconcileConnections()` on the next tick so connectors settle after the tree has finished syncing.
 
 ---
 
