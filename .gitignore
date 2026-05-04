@@ -5,6 +5,11 @@ coverage/
 .history/
 .vscode/
 .parcel-cache/
+.playwright-cli/
+.playwright-mcp/
+.claude/
+.yarn/
+.air/
 dist/
 dist_types/
 yarn.lock
