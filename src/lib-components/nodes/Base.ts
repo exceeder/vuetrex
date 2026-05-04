@@ -5,9 +5,15 @@ const pendingSyncBase: Base[] = [];
 let pending = false;
 
 const flushChanges = () => {
-    pendingSyncBase.forEach(b => b.applySync())
+    const afterFlushHooks = new Set<() => void>() //needed if multiple vuetrex scenes exist on one page
+    pendingSyncBase.forEach(base => {
+        base.applySync()
+        const hook = base.getAfterFlushHook()
+        if (hook) afterFlushHooks.add(hook)
+    })
     pendingSyncBase.length = 0
     pending = false
+    afterFlushHooks.forEach(hook => hook())
 };
 
 const registerUpdatedBase = (base: Base) => {
@@ -52,6 +58,11 @@ export abstract class Base {
         return res || 0
     });
 
+    getAfterFlushHook(): (() => void) | null {
+        //runner to the Root
+        return this.parent.value?.getAfterFlushHook() ?? null
+    }
+
     public numRows: ComputedRef<number> = computed(() => (this.parent.value?.parent.value?.renderSize.value || 1));
 
     public readonly nextSibling : ComputedRef<Base | null> = computed(() => {
@@ -79,6 +90,12 @@ export abstract class Base {
         if (idx >= 0) {
             this.children.value.splice(idx, 1);
             child.onRemoved();
+            if (child.isRenderableNode()) {
+                const node = child as any;
+                if (node.stage && node.element) {
+                    node.stage.connectors.remove(node.element);
+                }
+            }
             const grandChildren = child.children.value;
             while (grandChildren && grandChildren.length > 0)
                 child.removeChild(grandChildren[grandChildren.length - 1]);

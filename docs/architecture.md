@@ -31,10 +31,14 @@ Extends `Base`. Everything that can exist in the 3D scene. Holds:
 - `element: Element3d` — the bridge to Three.js
 - `stage: VuetrexStage` — scene-level services
 - click event dispatch (bubbling)
-- **`layoutPositionOf(child): Vector3`** — default grid layout; container nodes override this
+- **`layoutPositionOf(child): Vector3`** — returns local coordinates for children
+- **`nearestAncestorObject()`** — finds the closest `THREE.Group` in the parent chain
+
+### `GroupNode` (`nodes/GroupNode.ts`)
+Extends `Node`. Establish local coordinate spaces in the Three.js scene graph. Owns a `THREE.Group` where its children are parented. Containers (`Row`, `Ring`, `Stack`, `Layer`) extend this.
 
 ### `MeshNode` (`nodes/MeshNode.ts`)
-Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, `size`, `height`, `connection`, `material`, `hover`), shared `syncWithThree()` lifecycle (watchEffect → `stage.renderMesh`), connection wiring, and `onRemoved()` cleanup. **To add a new shape: extend `MeshNode`, implement `modelGen()`.**
+Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, `size`, `height`, `material`, `hover`), shared `syncWithThree()` lifecycle (watchEffect → `stage.renderMesh`), and `onRemoved()` cleanup. **To add a new shape: extend `MeshNode`, implement `modelGen()`.**
 
 ### Material & Interaction (`nodes/material.ts`)
 
@@ -44,16 +48,18 @@ Extends `Node`. Base for all geometry nodes. Provides reactive `state` (`text`, 
 
 ### Concrete nodes
 
-| Class      | Role                                | Key override                             |
-|------------|-------------------------------------|------------------------------------------|
-| `Box`      | Rounded-box geometry                | `modelGen()`                             |
-| `Cylinder` | Beveled cylinder                    | `modelGen()`, `flushMode = 'sync'`       |
-| `Wedge`    | Beveled ring segment                | `modelGen()`, `flushMode = 'sync'`       |
-| `Layer`    | Grouping plane with scale/elevation | `isLayer()`, `syncWithThree()`           |
-| `Row`      | Horizontal layout container         | `layoutPositionOf()` — grid              |
-| `Stack`    | Vertical stacking container         | `layoutPositionOf()` — cumulative height |
+| Class       | Role                                | Key override                             |
+|-------------|-------------------------------------|------------------------------------------|
+| `Box`       | Rounded-box geometry                | `modelGen()`                             |
+| `Cylinder`  | Beveled cylinder                    | `modelGen()`, `flushMode = 'sync'`       |
+| `Wedge`     | Beveled ring segment                | `modelGen()`, `flushMode = 'sync'`       |
+| `Layer`     | World anchor / visual plane         | `isLayer()`, `syncWithThree()`           |
+| `GroupNode` | Base for local coordinate spaces    | `layoutPositionOf()`                     |
+| `Row`       | Horizontal layout container         | `layoutPositionOf()` — grid              |
+| `Stack`     | Vertical stacking container         | `layoutPositionOf()` — cumulative height |
 | `Ring`     | Circular layout container           | `layoutPositionOf()` — circular          |
-| `Root`     | Tree root, owns destroy             | —                                        |
+| `Connector` | Declarative link between nodes      | `syncWithThree()`                        |
+| `Root`      | Tree root, owns destroy             | —                                        |
 
 ### `Element3d` (`three/element3d.ts`)
 Thin bridge: holds `mesh: THREE.Object3D` and `pos: Vector3`. `getPosition()` delegates to `node.parent.layoutPositionOf(node)` — no layout logic lives here.
@@ -69,13 +75,17 @@ Scene infrastructure. Manages floor, mirror, lights, caption texture, connectors
 
 ## Layout system
 
-Each container node owns the position calculation for its children via `layoutPositionOf(child: Node): Vector3`. Containers read `stage.boxRadius` / `stage.boxDistance` for spacing.
+Each container node (extending `GroupNode`) owns the position calculation for its children via `layoutPositionOf(child: Node): Vector3`. These calculations return coordinates in the container's **local space**.
 
-- **`Node` (default):** grid — rows × columns, offset by parent layer position
-- **`Row`:** circular if `state.layout === 'circular'`, otherwise inherits default
+- **`Node` (default):** grid — rows × columns
+- **`GroupNode`:** base implementation for nesting; defaults to origin (0,0,0)
+- **`Row`:** grid layout (default)
+- **`Ring`:** circular layout around the container's center
 - **`Stack`:** stacks children on Y axis by cumulative height
 
-Adding a new layout: subclass `Node` (or `Row`), override `layoutPositionOf()`.
+Children meshes are automatically parented to the nearest ancestor's `THREE.Group` via `nearestAncestorObject()`. This enables recursive nesting of containers.
+
+Adding a new layout: subclass `GroupNode`, override `layoutPositionOf()`.
 
 ---
 
@@ -108,4 +118,4 @@ onMouseOver/onMouseOut hooks that stage.ts overrides, keeping scene.ts generic. 
 3. Override `protected readonly flushMode` if sync timing matters
 4. Register in `nodes/types.ts`: `myshape: MyShape`
 
-For a new container layout: `extends Node`, override `layoutPositionOf(child)`.
+For a new container layout: `extends GroupNode`, override `layoutPositionOf(child)`.

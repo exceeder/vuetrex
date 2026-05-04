@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import {MeshStandardMaterial} from 'three';
 
 export interface VxMaterialProps {
     color?: number
@@ -21,7 +21,7 @@ export interface VxHoverProps extends VxMaterialProps {
     transition?: number
 }
 
-export function applyMaterialProps(mat: THREE.MeshStandardMaterial, props: VxMaterialProps): void {
+export function applyMaterialProps(mat: MeshStandardMaterial, props: VxMaterialProps): void {
     if (props.color !== undefined) mat.color.setHex(props.color);
     if (props.opacity !== undefined) mat.opacity = props.opacity;
     if (props.transparent !== undefined) mat.transparent = props.transparent;

@@ -1,9 +1,10 @@
+import { GroupNode } from '@/lib-components/nodes/GroupNode.js';
 import { Node } from '@/lib-components/nodes/Node.js';
 import { VuetrexStage } from '@/lib-components/three/stage.js';
 import { reactive } from 'vue';
 import * as THREE from 'three';
 
-export class Stack extends Node {
+export class Stack extends GroupNode {
 
     public readonly type: string = 'Stack';
 
@@ -32,16 +33,8 @@ export class Stack extends Node {
         const cols = this.numColumns.value || 1;
         const stackIdx = this.myIdx.value;
 
-        const layerPos = child.getLayer()?.element.pos ?? new THREE.Vector3();
-        const offX = layerPos.x;
-        const offZ = layerPos.z;
-
-        const rowPosX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX + (R + D) * rowIdx / scale;
-        const rowPosZ = (-cols * (R + D)) / 2 / scale + (R + D) / 2 / scale + offZ + (R + D) * stackIdx / scale;
+        const rowPosZ = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + (R + D) * rowIdx / scale;
+        const rowPosX = (-cols * (R + D)) / 2 / scale + (R + D) / 2 / scale + (R + D) * stackIdx / scale;
         return new THREE.Vector3(rowPosX, child.getElevation() + height - 0.25, rowPosZ);
-    }
-
-    onRemoved() {
-        this.children.value.forEach(c => c.onRemoved());
     }
 }

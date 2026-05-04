@@ -1,9 +1,10 @@
+import { GroupNode } from '@/lib-components/nodes/GroupNode.js';
 import { Node } from '@/lib-components/nodes/Node.js';
 import { VuetrexStage } from '@/lib-components/three/stage.js';
 import {reactive} from 'vue';
 import * as THREE from 'three';
 
-export class Ring extends Node {
+export class Ring extends GroupNode {
 
     public readonly type: string = 'Ring';
 
@@ -22,23 +23,11 @@ export class Ring extends Node {
         const scale = child.getScale()*this.getScale();
         const colIdx = child.myIdx.value;
         const cols = child.numColumns.value  || 1;
-        const rows = child.numRows.value || 1;
-        const rowIdx = child.parent.value?.myIdx.value ?? 0;
 
-        const layerPos = child.getLayer()?.element.pos ?? new THREE.Vector3();
-        const offX = layerPos.x;
-        const offZ = layerPos.z;
-
-        //ring center
-        const posX = offX;
-        const posY = offZ;
+        //ring center is local (0,0)
         const alpha = colIdx * 2.0 * Math.PI / cols;
         const xx = (D) * Math.sin(alpha) * scale;
         const zz = (D) * Math.cos(alpha) * scale;
-        return new THREE.Vector3(posX + xx, child.getElevation(), posY + zz);
-    }
-
-    onRemoved() {
-        this.children.value.forEach(c => c.onRemoved());
+        return new THREE.Vector3(xx, child.getElevation(), zz);
     }
 }

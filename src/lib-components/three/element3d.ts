@@ -39,4 +39,11 @@ export class Element3d {
         if (!parent) return new THREE.Vector3();
         return parent.layoutPositionOf(this.node);
     }
+
+    getWorldPosition(): THREE.Vector3 {
+        if (!this.mesh) return new THREE.Vector3();
+        const worldPos = new THREE.Vector3();
+        this.mesh.getWorldPosition(worldPos);
+        return worldPos;
+    }
 }

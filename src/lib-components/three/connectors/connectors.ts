@@ -1,70 +1,98 @@
 import {VuetrexStage} from '../stage.js';
-import {VuetrexParticles, ParticleOptions} from '@/lib-components/three/connectors/particles.js';
-import {Segment, ConnectorPath} from '@/lib-components/three/connectors/path.js';
+import {Segment, ConnectorPath, OrthogonalStrategy, StraightStrategy} from '@/lib-components/three/connectors/path.js';
 import {Element3d} from '@/lib-components/three/element3d.js';
-import * as THREE from 'three'
+import {ConnectorRenderer, ConnectorStrategy} from '@/lib-components/three/connectors/types.js';
+import {ParticleRenderer} from '@/lib-components/three/connectors/ParticleRenderer.js';
+import {LineRenderer} from '@/lib-components/three/connectors/LineRenderer.js';
 
-const options: ParticleOptions = {
-    position: new THREE.Vector3(-2.5, 0.2, -0.5),
-    positionRandomness: 1.05,
-    velocity: new THREE.Vector3(0.1,0,0),
-    minMax: new THREE.Vector2(-5.0, 5.0),
-    particleSpread: 0.015,
-    lifetime: 50,
-    size: 0.8,
-    sizeRandomness: 0.3
-};
-
-const spawnerOptions = {
-    spawnRate: 10,
-    horizontalSpeed: 0.2,
-    verticalSpeed: 0.2,
-    timeScale: 1.0,
-    maxParticles: 12500
-};
-
-
+type ConnectionRecord = [string, string, string, string]
 /**
  * The Connectors class is responsible for managing connections between elements in a 3D scene,
- * represented by segments and enhanced with particle animations.
+ * represented by segments and enhanced with various renderers.
  */
 export class Connectors {
 
     stage: VuetrexStage;
-    private readonly particleSystem: VuetrexParticles | null = null
-    private segments: ConnectorPath = new ConnectorPath()
+    private connections: Array<ConnectionRecord> = [];
+    private activeConnections = new Map<string, ConnectionRecord>()
+
+    private segments: ConnectorPath = new ConnectorPath();
+    private renderers: Map<string, ConnectorRenderer> = new Map();
+    private strategies: Map<string, ConnectorStrategy> = new Map();
 
     constructor(stage: VuetrexStage) {
         this.stage = stage;
-
-        //particles
-        this.particleSystem = new VuetrexParticles( {
-            blending: stage.settings.particleBlending,
-            maxParticles: spawnerOptions.maxParticles,
-            color: stage.settings.particleColor || 0xa0ffff
-        } );
-        this.stage.scene.add( this.particleSystem );
-        //TODO apply unused spawnerOptions
-        this.stage.registerAnimation(this.animateParticles());
-        options.particleSpread  = stage.settings.particleSpread || 0.035;
-        spawnerOptions.spawnRate  = stage.settings.particleVolume || 50;
     }
 
-    connect(el1: Element3d, el2: Element3d) {
-       this.segments.connect(el1, el2);
+    mount() {
+        // Default renderers
+        this.renderers.set('particles', new ParticleRenderer(this.stage));
+        this.renderers.set('line', new LineRenderer(this.stage));
+
+        // Default strategies
+        this.strategies.set('orthogonal', new OrthogonalStrategy());
+        this.strategies.set('straight', new StraightStrategy());
+
+        this.stage.registerAnimation(this.animate());
+    }
+
+    register(el1: string, el2: string, layout: string = 'orthogonal', type: string = 'particles') {
+        this.connections.push([el1, el2, layout, type]);
+    }
+
+    connect(el1: Element3d, el2: Element3d, layout: string = 'orthogonal', type: string = 'particles') {
+       const strategy = this.strategies.get(layout) || this.strategies.get('orthogonal')!;
+       this.segments.setStrategy(strategy);
+       this.removePair(el1, el2);
+       this.segments.connect(el1, el2, type);
+    }
+
+    reconcileConnections() {
+        const next = new Map<string, ConnectionRecord>()
+
+        for (const record of this.connections) {
+          const [a, b, layout, type] = record
+          const fromEl = this.stage.getById(a)
+          const toEl = this.stage.getById(b)
+
+          if (!fromEl || !toEl) continue
+
+          const key = `${a}->${b}`
+          next.set(key, record)
+
+          this.connect(fromEl, toEl, layout, type)
+        }
+
+        for (const key of this.activeConnections.keys()) {
+          if (!next.has(key)) {
+            const [from] = key.split('->')
+            const fromEl = this.stage.getById(from)
+            if (fromEl) this.remove(fromEl)
+          }
+        }
+
+        this.activeConnections = next
+        this.segments.updateLen()
     }
 
     update(el: Element3d) {
         const removed = this.remove(el);
-        //removed has multiple segments per pair, we only need unique pairs
         const processed : string[] = [];
 
         for (let s of removed) {
             const id = s.sEl.mesh?.name + "~"+s.tEl.mesh?.name
             if (processed.indexOf(id) >=0 ) continue;
             processed.push(id);
-            this.connect(s.sEl, s.tEl); //re-calculate the paths in case this object moved
+            // find original connection record to get layout
+            const record = this.connections.find(c => c[0] === s.sEl.mesh?.name?.substring(3) && c[1] === s.tEl.mesh?.name?.substring(3));
+            const layout = record ? record[2] : 'orthogonal';
+            const type = s.type || 'particles';
+            this.connect(s.sEl, s.tEl, layout, type);
         }
+    }
+
+    removePair(el1: Element3d, el2: Element3d) {
+        this.segments.removePair(el1, el2);
     }
 
     remove(el: Element3d): Segment[] {
@@ -72,51 +100,32 @@ export class Connectors {
     }
 
     clear() {
-        this.particleSystem?.dispose();
+        this.renderers.forEach(r => r.dispose());
+        this.renderers.clear();
         this.segments.clear();
     }
 
     /**
-     * Animates particles within a particle system by spawning and updating particles
-     * based on defined spawner options and segment data.
-     *
-     * The method calculates random positions, velocities, and other parameters
-     * for the particles and assigns them to spawn particles in the system. It also
-     * handles the update of particle states over time.
-     *
-     * @return {Function} A function with `timer` and `tick` parameters.
-     * The `timer` parameter represents the elapsed time, and the `tick` parameter
-     * represents the current system update tick. The returned function performs
-     * particle spawning and updates.
+     * Animates all connector renderers.
      */
-    animateParticles(): (timer: number, tick: number) => void {
+    private animate(): (timer: number, tick: number) => void {
         return (timer, tick) => {
-            if (!this.particleSystem) return;
-            const particles = this.particleSystem;
+            if (this.segments.size() === 0) return;
 
-            if (this.segments.size() === 0) {
-                return;
+            const segmentsByRenderer = new Map<string, Segment[]>();
+            for (let i = 0; i < this.segments.size(); i++) {
+                const s = this.segments.getSegment(i);
+                const type = s.type || 'particles';
+                if (!segmentsByRenderer.has(type)) {
+                    segmentsByRenderer.set(type, []);
+                }
+                segmentsByRenderer.get(type)!.push(s);
             }
 
-            for (let idx = 0; idx < spawnerOptions.spawnRate; idx++) {
-                const rnd = particles.random() + 0.5;
-                const rnd2 = particles.random() + 0.85;
-                const xys = this.segments.sample(rnd*this.segments.totaLength()*20);
-                const s = xys.s;
-                if (s === null) continue;
-                const mid = s.mid;
-                let start = s.s;
-                let end = s.t;
-                options.minMax.set(Math.min(start, end), Math.max(start, end))
-                const len = options.minMax.y - options.minMax.x;
-                options.position.set(xys.x, 0.15, xys.y)
-                 if (s.horizontal)
-                     options.velocity.set((end - start) / len / 50.0, 0, 0);
-                 else
-                     options.velocity.set(0, 0, (end - start) / len / 50.0);
-                particles.spawnParticle(options);
-            }
-            particles.update(tick);
+            this.renderers.forEach((renderer, name) => {
+                const segments = segmentsByRenderer.get(name) || [];
+                renderer.update(segments, timer, tick);
+            });
         }
     }
 

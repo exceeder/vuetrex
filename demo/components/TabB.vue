@@ -68,7 +68,7 @@
             />
           </stack>
           <stack>
-            <box name="product-svc" text="product-svc" connection="api-gw"
+            <box name="product-svc" text="product-svc"
               :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
@@ -85,7 +85,7 @@
             />
           </stack>
           <stack>
-            <box name="order-svc" text="order-svc" connection="api-gw"
+            <box name="order-svc" text="order-svc"
               :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
@@ -106,7 +106,7 @@
         <!-- Data layer -->
         <row>
           <stack>
-            <box name="mongo" text="MongoDB" size="1.4" connection="product-svc"
+            <box name="mongo" text="MongoDB" size="1.4"
                  :material="{color:0x333333}"
                  :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
@@ -124,7 +124,7 @@
             />
           </stack>
           <stack>
-            <box name="redis" text="Redis" size="1.4" connection="order-svc"
+            <box name="redis" text="Redis" size="1.4"
                  :hover="{ scale: 1.05, transition: 0.22, color: 0x4c7fb2 }"
               @click="onDeployClick"
               @dblclick="onDeployBurst"
@@ -139,9 +139,9 @@
               :hover="{ scale: 1.18, transition: 0.18 }"
               @click="onPodClick"
             />
+            <connector from="order-svc" to="mongo" type="line" layout="linear" />
           </stack>
         </row>
-
       </layer>
     </vuetrex>
   </div>
@@ -330,9 +330,9 @@ export default {
           const e2 = (stage as any).getById(b)
           if (e1 && e2) (stage as any).connect(e1, e2)
         }
+        connect('auth-svc',  'api-gw')
+        connect('order-svc', 'redis')
         connect('auth-svc',  'mongo')
-        connect('order-svc', 'mongo')
-        connect('auth-svc',  'redis')
       }, 600)
     }
 

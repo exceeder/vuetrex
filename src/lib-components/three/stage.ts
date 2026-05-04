@@ -67,8 +67,8 @@ export interface VxMouseEvent extends MouseEvent {
     vxPosition: any;
 }
 
-let BOX_RADIUS = 1.3;
-let BOX_DISTANCE = 1.5;
+let BOX_RADIUS = 1.0;
+let BOX_DISTANCE = 1.0;
 
 /**
  * Stage is a top level container of Vue-connected nodes. It literally sets the stage for everything happening in 3D.
@@ -77,9 +77,8 @@ let BOX_DISTANCE = 1.5;
  * ThreeJS scene.
  */
 export class VuetrexStage extends Scene implements VxStage {
-    public root: Element3d | null = null;
-    private subscribers: Function[];
-    private connectors: Connectors |  null = null;
+    private subscribers: Function[] = [];
+    public connectors: Connectors;
     settings: VxSettings
     private caps: { repeats: number; size: number; planeSize: number; updateFn: () => void; texture: THREEx.DynamicTexture | null } = {
         planeSize: 256,
@@ -94,7 +93,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
     constructor(domParent: HTMLElement, settings:VxSettings) {
         super(domParent)
-        this.subscribers = []
+        this.connectors = new Connectors(this);
         this.settings = settings
 
         this.boxRadius = settings.unit || BOX_RADIUS
@@ -118,7 +117,7 @@ export class VuetrexStage extends Scene implements VxStage {
         this.createLights(scene);
 
         //particle system
-        this.connectors = new Connectors(this);
+        this.connectors.mount();
 
         //TODO
         //gsap.to(this.camera.position, {duration:2.1, x:0.2, y:1.75, z:2.5,  delay: 0.5});
@@ -282,8 +281,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
     removeObject(el: Element3d) {
         if (el.mesh) {
-            this.scene.remove(el.mesh);
-            this.connectors?.remove(el);
+            el.mesh.removeFromParent();
             const c = el.mesh.userData.caption
             if (c) {
                 this.captions.splice(this.captions.indexOf(c),1)
@@ -293,26 +291,32 @@ export class VuetrexStage extends Scene implements VxStage {
         }
     }
 
-    addCaption(el: THREE.Object3D, size: number, caption: string) {
+    addCaption(el: Element3d, size: number, caption: string) {
+        const pos = el.getWorldPosition();
+        if (el.mesh && pos.length() === 0) {
+            // fallback if mesh exists but matrix not updated
+            el.mesh.updateWorldMatrix(true, false);
+            el.mesh.getWorldPosition(pos);
+        }
         const c = {
-            x: el.position.x,
-            y: el.position.z + size / 2.0,
+            x: pos.x,
+            y: pos.z + size / 2.0,
             text: caption
         }
         this.captions.push(c);
-        el.userData.caption = c;
+        if (el.mesh)
+            el.mesh.userData.caption = c;
         this.caps.updateFn();
         return c;
     }
 
-    renderMesh(el: Element3d, height: number, size: number = this.boxRadius, gen: (height:number, size:number) => THREE.Mesh) {
-        const scene = this.scene;
-
+    renderMesh(el: Element3d, height: number, size: number = this.boxRadius, gen: (height:number, size:number) => THREE.Mesh, parentObject: THREE.Object3D = this.scene) {
         if (el.mesh !== null) {
             el.mesh.position.copy(el.getPosition())
-            this.connectors?.update(el);
-            el.mesh.userData.caption.x = el.mesh.position.x
-            el.mesh.userData.caption.y = el.mesh.position.z + size / 2.0
+            this.connectors.update(el);
+            const worldPos = el.getWorldPosition();
+            el.mesh.userData.caption.x = worldPos.x
+            el.mesh.userData.caption.y = worldPos.z + size / 2.0
             el.mesh.userData.caption.text = el.getCaption()
             this.caps.updateFn();
             return;
@@ -320,19 +324,27 @@ export class VuetrexStage extends Scene implements VxStage {
 
         const model = gen(height, size);
         const scale = el.node.getScale();
-        model.geometry.scale(scale, scale, scale);
-        model.translateY(height/2);
         model.name = "el-" + el.node.name;
         model.castShadow = true;
         model.position.copy(el.getPosition());
-        model.userData.caption = this.addCaption(model, size*scale, el.getCaption())
-        scene.add(model);
+        parentObject.add(model);
         el.mesh = model as THREE.Object3D<VxEventMap>;
+        model.userData.caption = this.addCaption(el, size * scale, el.getCaption())
         model.userData.el = el;
+        this.connectors.update(el);
     }
 
-    connect(el1: Element3d, el2: Element3d) {
-        this.connectors?.connect(el1,el2);
+    connect(el1: string, el2: string, layout?: string, type?: string) {
+        this.connectors.register(el1, el2, layout, type);
+    }
+
+    public reconcileConnections() {
+        this.connectors.reconcileConnections();
+    }
+
+    disconnect(el1: Element3d, el2: Element3d) {
+        el1 && this.connectors.remove(el1);
+        el2 && this.connectors.remove(el2);
     }
 
     animateTo(id: string, props: VxAnimProps, opts: VxAnimOptions = {}) {
@@ -366,7 +378,7 @@ export class VuetrexStage extends Scene implements VxStage {
 
     destroy() {
         super.destroy();
-        this.connectors?.clear();
+        this.connectors.clear();
     }
 
     // --- events ---

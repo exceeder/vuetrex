@@ -2,7 +2,7 @@ import { reactive, watchEffect, WatchStopHandle, nextTick, computed, ComputedRef
 import { Node } from '@/lib-components/nodes/Node.js';
 import { VuetrexStage } from '@/lib-components/three/stage.js';
 import { VxMaterialProps, VxHoverProps, applyMaterialProps } from '@/lib-components/nodes/material.js';
-import * as THREE from 'three';
+import { Mesh, MeshStandardMaterial, Color } from 'three';
 import gsap from 'gsap';
 
 export interface MeshState {
@@ -29,7 +29,7 @@ export interface LayoutContext {
     siblingCount: number;
 }
 
-function captureProps(mat: THREE.MeshStandardMaterial): VxMaterialProps {
+function captureProps(mat: MeshStandardMaterial): VxMaterialProps {
     return {
         color: mat.color.getHex(),
         opacity: mat.opacity,
@@ -44,7 +44,7 @@ function captureProps(mat: THREE.MeshStandardMaterial): VxMaterialProps {
 
 /**
  * Base class for all geometry nodes (Box, Cylinder, etc.).
- * Owns the Three.js material and handles reactive material prop sync,
+ * Owns the js material and handles reactive material prop sync,
  * built-in hover animation, connection wiring, and cleanup.
  * Subclasses only need to implement modelGen().
  */
@@ -55,7 +55,7 @@ export abstract class MeshNode extends Node {
     private materialStopHandle?: WatchStopHandle;
     protected readonly flushMode: 'post' | 'sync' = 'post'; // see Vue's WatchEffectOptions, Callback Flush Timing
 
-    readonly material: THREE.MeshStandardMaterial;
+    readonly material: MeshStandardMaterial;
 
     private baseProps: VxMaterialProps = {};
     private isHovered = false;
@@ -71,7 +71,7 @@ export abstract class MeshNode extends Node {
         this.material = stage.createElementMaterial();
     }
 
-    abstract modelGen(): (height: number, size: number) => THREE.Mesh;
+    abstract modelGen(): (height: number, size: number) => Mesh;
 
     setSize(size: number) { this.state.size = size; }
     setHeight(height: number) { this.state.height = height; }
@@ -93,30 +93,34 @@ export abstract class MeshNode extends Node {
         this.stage.removeObject(this.element);
     }
 
+    /**
+     * syncWithThree() is called based on Vue's nodeOps and is idempotent.
+     * It establishes the node’s reactive binding to Three.js.
+     * It must follow these rules:
+     * Each node installs at most one watcher per concern.
+     * Watchers are stopped in onRemoved().
+     * Effects only read reactive state and write to external Three.js state.
+     * Effects do not mutate the same Vue state they depend on.
+     */
     syncWithThree() {
         if (this.stopHandle) return;
 
         // Capture creation-time material defaults as the initial restore target.
         // By this point Box (or any subclass) has already overwritten this.material
         // in its own constructor, so we read the final material here.
-        this.baseProps = captureProps(this.material as THREE.MeshStandardMaterial);
+        this.baseProps = captureProps(this.material as MeshStandardMaterial);
 
         // Geometry watchEffect — rebuilds mesh when layout or geometry params change.
         this.stopHandle = watchEffect(() => {
             const { myIdx } = this.layoutContext.value;
             if (myIdx >= 0) {
+                const { height, size } = this.state;
+                // If height or size changed, we must clear the old mesh because
+                // renderMesh creates new geometry based on these values.
                 this.clearMesh();
-                this.stage.renderMesh(this.element, this.state.height, this.state.size, this.modelGen());
+                const parentObj = this.nearestAncestorObject()
+                this.stage.renderMesh(this.element, height, size, this.modelGen(), parentObj);
                 this.subscribeEvents();
-            }
-            if (this.state.connection) {
-                nextTick(() => {
-                    if (!this.state.connection) return;
-                    const otherEnd = this.stage.getById(this.state.connection);
-                    if (this.element && otherEnd) {
-                        this.stage.connect(this.element, otherEnd);
-                    }
-                }).catch(r => console.warn(r));
             }
         }, { flush: this.flushMode });
 
@@ -128,6 +132,22 @@ export abstract class MeshNode extends Node {
                 this.baseProps = { ...this.baseProps, ...this.state.material };
             }
         });
+
+        // Connection and Text watchEffect
+        watchEffect(() => {
+            const { connection, text } = this.state;
+            if (connection) {
+                this.stage.connect(this.name, connection);
+            }
+            if (this.element.mesh) {
+                // If only text changed, renderMesh (when called via its own watchEffect or here)
+                // will update the caption. We call it here to ensure text-only updates
+                // are reflected immediately without a full mesh rebuild.
+                const { height, size } = this.state;
+                this.stage.renderMesh(this.element, height, size, this.modelGen());
+            }
+            this.stage.reconcileConnections();
+        }, { flush: 'post' });
     }
 
     override dispatchPointerenter(e: MouseEvent) {
@@ -141,11 +161,11 @@ export abstract class MeshNode extends Node {
     }
 
     private applyHover(hover: VxHoverProps) {
-        const mesh = this.element.mesh as THREE.Mesh | null;
+        const mesh = this.element.mesh as Mesh | null;
         if (!mesh) return;
 
         const t = hover.transition ?? 0.18;
-        const mat = this.material as THREE.MeshStandardMaterial;
+        const mat = this.material as MeshStandardMaterial;
 
         gsap.killTweensOf(mat.color);
         gsap.killTweensOf(mat);
@@ -154,7 +174,7 @@ export abstract class MeshNode extends Node {
         this.isHovered = true;
 
         if (hover.color !== undefined) {
-            const c = new THREE.Color(hover.color);
+            const c = new Color(hover.color);
             gsap.to(mat.color, { r: c.r, g: c.g, b: c.b, duration: t });
         }
         if (hover.opacity !== undefined) {
@@ -164,7 +184,7 @@ export abstract class MeshNode extends Node {
         if (hover.roughness !== undefined) gsap.to(mat, { roughness: hover.roughness, duration: t });
         if (hover.metalness !== undefined) gsap.to(mat, { metalness: hover.metalness, duration: t });
         if (hover.emissive !== undefined) {
-            const c = new THREE.Color(hover.emissive);
+            const c = new Color(hover.emissive);
             gsap.to(mat.emissive, { r: c.r, g: c.g, b: c.b, duration: t });
         }
         if (hover.emissiveIntensity !== undefined) gsap.to(mat, { emissiveIntensity: hover.emissiveIntensity, duration: t });
@@ -174,11 +194,11 @@ export abstract class MeshNode extends Node {
     }
 
     private restoreHover() {
-        const mesh = this.element.mesh as THREE.Mesh | null;
+        const mesh = this.element.mesh as Mesh | null;
         if (!mesh) return;
 
         const t = this.state.hover!.transition ?? 0.18;
-        const mat = this.material as THREE.MeshStandardMaterial;
+        const mat = this.material as MeshStandardMaterial;
         const hover = this.state.hover!;
         const base = this.baseProps;
 
@@ -189,7 +209,7 @@ export abstract class MeshNode extends Node {
         this.isHovered = false;
 
         if (hover.color !== undefined && base.color !== undefined) {
-            const c = new THREE.Color(base.color);
+            const c = new Color(base.color);
             gsap.to(mat.color, { r: c.r, g: c.g, b: c.b, duration: t });
         }
         if (hover.opacity !== undefined && base.opacity !== undefined) {
@@ -204,7 +224,7 @@ export abstract class MeshNode extends Node {
             gsap.to(mat, { metalness: base.metalness, duration: t });
         }
         if (hover.emissive !== undefined && base.emissive !== undefined) {
-            const c = new THREE.Color(base.emissive);
+            const c = new Color(base.emissive);
             gsap.to(mat.emissive, { r: c.r, g: c.g, b: c.b, duration: t });
         }
         if (hover.emissiveIntensity !== undefined && base.emissiveIntensity !== undefined) {

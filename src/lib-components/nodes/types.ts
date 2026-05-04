@@ -1,9 +1,11 @@
 import {VuetrexStage} from '@/lib-components/three/stage.js';
 import {Base} from '@/lib-components/nodes/Base.js';
+import {GroupNode} from '@/lib-components/nodes/GroupNode.js';
 import {Layer} from '@/lib-components/nodes/Layer.js';
 import {Row} from '@/lib-components/nodes/Row.js';
 import {Stack} from '@/lib-components/nodes/Stack.js';
 import {Ring} from '@/lib-components/nodes/Ring.js';
+import {ConnectorNode} from '@/lib-components/nodes/ConnectorNode.js';
 
 import {Box} from '@/lib-components/nodes/shapes/Box.js';
 import {Cylinder} from '@/lib-components/nodes/shapes/Cylinder.js';
@@ -24,16 +26,17 @@ export type ElementRegistry = Record<string, ClassComponent | FunctionalComponen
  * prop to <vuetrex> for per-instance registration.
  */
 const builtins: ElementRegistry = {
+    group: GroupNode,
     layer: Layer,
     //layout
     row: Row,
     stack: Stack,
     ring: Ring,
+    connector: ConnectorNode,
     //models
     box: Box,
     cylinder: Cylinder,
     wedge: Wedge,
-
 }
 
 /**

@@ -52,7 +52,7 @@ export abstract class Node extends Base {
 
     public _nodeEvents?: NodeEvents = undefined;
 
-    constructor(stage: VuetrexStage) {
+    protected constructor(stage: VuetrexStage) {
         super();
         this.element = new Element3d(stage, this);
         this.stage = stage;
@@ -75,6 +75,15 @@ export abstract class Node extends Base {
             result = result.parent.value as Node;
         }
         return result;
+    }
+
+    nearestAncestorObject(): THREE.Object3D {
+        let cur = this.parent.value as Node | null
+        while (cur) {
+            if ((cur as any).isGroupNode) return (cur as any).group
+            cur = cur.parent.value as Node | null
+        }
+        return this.stage.getScene()
     }
 
     getScale(): number {
@@ -116,16 +125,12 @@ export abstract class Node extends Base {
             rowIdx = 0; colIdx = 0; cols = 1; rows = 1;
         }
 
-        const layerPos = child.getLayer()?.element.pos ?? new THREE.Vector3();
-        const offX = layerPos.x;
-        const offZ = layerPos.z;
-
-        const rowPosX = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale + offX;
-        const rowPosZ = (-cols * (R + D)) / 2 / scale + (R + D) / 2 / scale + offZ;
+        const rowPosX = (-cols * (R + D)) / 2 / scale + (R + D) / 2 / scale;
+        const rowPosZ = (-rows * (R + D)) / 2 / scale + (R + D) / 2 / scale;
         return new THREE.Vector3(
-            rowPosX + (R + D) * rowIdx / scale,
+            rowPosX + (R + D) * colIdx / scale,
             child.getElevation(),
-            rowPosZ + (R + D) * colIdx / scale
+            rowPosZ + (R + D) * rowIdx / scale
         );
     }
 

@@ -5,10 +5,11 @@
 
    <vuetrex height="79vh" width="100%" :camera="camera" :stopped="paused" :settings="vsSettings" @ready="onStageReady">
       <row>
-        <box name="xx" :text="'['+counter+']'" @click="counter++"/>
+        <box name="xx" :text="'['+counter1+']'" @click="counter1++"/>
+        <box name="yy" :text="'('+counter2+')'" @click="counter2++"/>
       </row>
       <row>
-          <cylinder ref="cylinder" name="yy" text="click me" connection="abc" @click="cylClick" size="0.1"/>
+          <cylinder ref="centralC" name="cc" text="click me" connection="abc" @click="cylClick" size="0.1"/>
       </row>
       <row>
        <box text="singleton" connection="abc" />
@@ -44,8 +45,8 @@ export default {
     }
   },
   setup() {
-    const cylinder = ref(null)
-    const counter = ref(0)
+    const centralC = ref(null)
+    const counter1 = ref(0), counter2 = ref(0)
     const paused = ref(false)
     const camera = ref("scene")
     let thing = null
@@ -68,20 +69,17 @@ export default {
     };
 
     function cylClick(ev: VxMouseEvent) {
-      const pos = cylinder.value.element.mesh.position;
+      console.log("cul click ",ev)
+      const pos = ev.vxNode.element.mesh.position;
       if (camera.value === ev.vxNode.name) {
         camera.value = "scene"
-        // gsap.to(thing.position, {duration:1, x:0, z:-1});
-        //gsap.to(thing.position, {duration:1, x:0, y:-.5});
+        //jump the cylinder
         gsap.to(pos, {duration:0.1, x:0, y:-0.1});
         gsap.to(pos, {duration:0.1, x:0, y:0.2, delay: 0.1});
-        //gsap.to(pos, {duration:1, x:0, y:0.5});
-
       } else {
         camera.value = ev.vxNode.name;
-        //gsap.to(thing.position, {duration:1, x:0, y:-1.5});
         gsap.to(pos, {duration:0.1, x:0, y:-0.1});
-        gsap.to(pos, {duration:0.1, x:0, y:0.2, delay: 0.1});
+        gsap.to(pos, {duration:0.1, x:0, y:0.3, delay: 0.1});
       }
 
     }
@@ -222,9 +220,9 @@ export default {
     }
 
     return {
-      cylinder,
+      centralC,
       paused,
-      counter,
+      counter1, counter2,
       vsSettings,
       camera,
       onStageReady,

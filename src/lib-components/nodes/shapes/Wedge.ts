@@ -12,7 +12,7 @@ export class Wedge extends MeshNode {
     }
 
     private cylindricalSleeveSegment(height:number, size: number, segmentCount: number,
-                                     { r = 0.75, R = 0.85 } = {}): THREE.BufferGeometry {
+                                     { r = 0.55, R = 0.60 } = {}): THREE.BufferGeometry {
         const theta = Math.PI * 2 / segmentCount - Math.PI/12;
         const rr = size * r, RR = size * R;
         const shape = new THREE.Shape();

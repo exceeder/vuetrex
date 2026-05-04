@@ -164,7 +164,7 @@ describe('Stack.layoutPositionOf', () => {
 
 describe('Node.layoutPositionOf (default grid layout)', () => {
 
-    it('sibling boxes in a row are evenly spaced along the Z axis', () => {
+    it('sibling boxes in a row are evenly spaced along the X axis', () => {
         const outer = new Row(mockStage)
         const row   = new Row(mockStage)
         outer.appendChild(row)
@@ -172,12 +172,12 @@ describe('Node.layoutPositionOf (default grid layout)', () => {
         boxes.forEach(b => row.appendChild(b))
 
         const ps = boxes.map(b => row.layoutPositionOf(b))
-        const dz = ps[1].z - ps[0].z
-        expect(ps[2].z - ps[1].z).toBeCloseTo(dz, 5)
-        expect(dz).toBeCloseTo(mockStage.boxRadius + mockStage.boxDistance, 5)
+        const dx = ps[1].x - ps[0].x
+        expect(ps[2].x - ps[1].x).toBeCloseTo(dx, 5)
+        expect(dx).toBeCloseTo(mockStage.boxRadius + mockStage.boxDistance, 5)
     })
 
-    it('two rows share the same Z layout but are offset along X', () => {
+    it('two rows share the same X layout but are offset along Z', () => {
         const outer = new Row(mockStage)
         const row0  = new Row(mockStage)
         const row1  = new Row(mockStage)
@@ -191,9 +191,9 @@ describe('Node.layoutPositionOf (default grid layout)', () => {
         const p0 = row0.layoutPositionOf(b0)
         const p1 = row1.layoutPositionOf(b1)
         // Same Z (both are the only child in their row → colIdx 0)
-        expect(p0.z).toBeCloseTo(p1.z, 5)
+        expect(p0.x).toBeCloseTo(p1.x, 5)
         // Different X (rows are offset by boxRadius + boxDistance)
-        expect(Math.abs(p1.x - p0.x)).toBeCloseTo(mockStage.boxRadius + mockStage.boxDistance, 5)
+        expect(Math.abs(p1.z - p0.z)).toBeCloseTo(mockStage.boxRadius + mockStage.boxDistance, 5)
     })
 })
 
