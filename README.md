@@ -8,13 +8,13 @@ Note: the project is in alpha stage and there could be some changes to the inter
 
 ## For development:
 
-1.  `yarn serve` for development
+1.  `yarn dev` for development
 2.  `yarn build` to rebuild the library
 
 ## Usage Example
 
 ### ES Module Browser build
-For an example using in-browser ES6 modules, see the [tests](tests/iife).
+For an example using in-browser ES6 modules, see the [tests](test/iife).
 
 ### Using in Vue Project
 Use [Vue CLI](https://github.com/vuejs/vue-cli) to set up your project with Vue 3. 
@@ -30,7 +30,7 @@ npm install three @exceeder/vuetrex
 #### Usage
 In the script section of your .vue component:
 ```
-import {Vuetrex} from "@exceeder/vuetrex";
+import {Vuetrex} from '@exceeder/vuetrex.js';
 ...
 components: {
  Vuetrex
@@ -66,5 +66,5 @@ Examples and explanations are in [Documentation](docs/README.md).
 
 Rendering example:
 
-![image](docs/screenshot.png)
+![image](/screenshot.png)
 

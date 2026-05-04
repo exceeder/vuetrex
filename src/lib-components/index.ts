@@ -1,2 +1,11 @@
-export type { VxStage, VxSettings } from '@/lib-components/vuetrex';
-export {default as Vuetrex} from '@/lib-components/vuetrex';
+export type { VxStage, VxSettings, VxMouseEvent } from '@/lib-components/vuetrex.js';
+export type { VxAnimProps, VxAnimOptions } from '@/lib-components/three/stage.js';
+export type { VxMaterialProps, VxHoverProps } from '@/lib-components/nodes/material.js';
+export { default as Vuetrex } from '@/lib-components/vuetrex.js';
+
+export { registerElement } from '@/lib-components/nodes/types.js';
+export type { ClassComponent, FunctionalComponent, ElementRegistry } from '@/lib-components/nodes/types.js';
+
+export { Node } from '@/lib-components/nodes/Node.js';
+export { Base } from '@/lib-components/nodes/Base.js';
+export type { VuetrexStage } from '@/lib-components/three/stage.js';

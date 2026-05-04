@@ -16,7 +16,7 @@ Consider an example:
 
 it will render this 
 
-![EXAMPLE 1](screen1.png)
+![EXAMPLE 1](/screen1.png)
 
 The reactive properties of Vue are preserved, and you can use`v-if`, `v-for`, `@click` events etc., bind
 supported attributes, and build out your reactive 3D scene based on your data as you see fit. There is 
@@ -47,7 +47,7 @@ open `src/components/HelloWorld.vue` and add
 </template>
 <script>
 //...
-import { Vuetrex } from "@exceeder/vuetrex";
+import { Vuetrex } from '@exceeder/vuetrex.js';
 
 export default {
   components: {
@@ -58,7 +58,7 @@ export default {
 </script> 
 ```
 Run `npm run serve`, open your browser to the suggested url and that's it, you got your first 3d world running.
-For a full example, take a look at [this test component](../tests/esm-module/TestApp.vue).
+For a full example, take a look at [test/esm-module/TestApp.vue].
 
 ## Layouting
 
@@ -71,7 +71,7 @@ Multiple _rows_:
   </vuetrex>
 ```
 Rows orientation is from left to right, as if they were rows in the movie theater with the screen on the left side.
-![EXAMPLE 2](screen2.png)
+![EXAMPLE 2](/screen2.png)
 
 Nested _layers_:
 ```vue
@@ -99,7 +99,7 @@ Note, that you can use `v-for` to bind elements to your data.
   </vuetrex>
 ```
 
-![EXAMPLE 3](screen3.png)
+![EXAMPLE 3](/screen3.png)
 
 Connections are particle systems running along the connector lines. Both elements need to have a name 
 property to connect.
@@ -148,7 +148,7 @@ export default {
 }
 </script> 
 ```
-![Example](zoom.gif)
+![Example](/zoom.gif)
 ## Customization
 
 If you need to dive deeper, you have access to the ThreeJS scene like this:
@@ -161,7 +161,7 @@ If you need to dive deeper, you have access to the ThreeJS scene like this:
 </template>
 
 <script type="ts">
-import {VxStage} from "@exceeder/vuetrex"
+import {VxStage} from '@exceeder/vuetrex.js'
 
 export default {
   setup() {   
@@ -178,7 +178,7 @@ export default {
 }
 </script>
 ```
-Check [TabC](../dev/components/TabC.vue) example for advanced customization. This demo 
+Check [demo/components/TabC.vue] example for advanced customization. This demo 
 also extensively uses settings, that you can bind to the `settings` property: 
 ```
 <vuetrex :settings="settings">...</vuetrex> 

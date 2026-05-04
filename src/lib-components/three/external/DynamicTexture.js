@@ -6,7 +6,7 @@ import {
 
 class DynamicTexture {
     /**
-     * create a dynamic texture with a underlying canvas
+     * create a dynamic texture with an underlying canvas
      *
      * @param {Number} width  width of the canvas
      * @param {Number} height height of the canvas
@@ -18,13 +18,15 @@ class DynamicTexture {
         this.canvas = canvas
         this.context = canvas.getContext('2d')
         this.texture = new Texture(canvas)
+        this.texture.colorSpace = 'srgb';
+        this.globalAlpha = 1.0
     }
 
     /**
      * clear the canvas
      *
      * @param  {String?} fillStyle 		the fillStyle to clear with, if not provided, fallback on .clearRect
-     * @return {THREEx.DynamicTexture}      the object itself, for chained texture
+     * @return {DynamicTexture}      the object itself, for chained texture
      */
     clear(fillStyle){
         // depends on fillStyle
@@ -48,7 +50,7 @@ class DynamicTexture {
      * @param  {Number}		y	- the y where to draw the text
      * @param  {String?} 		fillStyle - the fillStyle to clear with, if not provided, fallback on .clearRect
      * @param  {String?} 		contextFont - the font to use
-     * @return {THREEx.DynamicTexture}	- the object itself, for chained texture
+     * @return {DynamicTexture}	- the object itself, for chained texture
      */
     drawText(text, x, y, fillStyle, contextFont){
         // set font if needed
@@ -142,6 +144,43 @@ class DynamicTexture {
         this.texture.needsUpdate	= true;
         // for chained API
         return this;
+    }
+
+    createLinearGradient(x0, y0, x1, y1) {
+        return this.context.createLinearGradient(x0,y0,x1,y1);
+    }
+
+    createConicGradient(startAngle, x, y) {
+        return this.context.createConicGradient(startAngle, x, y);
+    }
+
+    createPattern(image, repetition) {
+        return this.context.createPattern(image, repetition)
+    }
+
+    createRadialGradient(x0, y0, r0, x1, y1, r1) {
+        return this.context.createRadialGradient(x0, y0, r0, x1, y1, r1)
+    }
+
+    setGlobalAlpha(a) {
+        this.context.globalAlpha = a;
+    }
+
+    clearRect(x, y, w, h) {
+        this.context.clearRect(x,y,w,h);
+        this.texture.needsUpdate = true;
+    }
+
+    fillRect(x, y, w, h) {
+        this.context.fillStyle = this.fillStyle
+        this.context.fillRect(x,y,w,h);
+        this.texture.needsUpdate = true;
+    }
+
+    strokeRect(x, y, w, h) {
+        this.context.fillStyle = this.fillStyle
+        this.context.strokeRect(x,y,w,h);
+        this.texture.needsUpdate = true;
     }
 }
 

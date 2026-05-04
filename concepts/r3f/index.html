@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>r3f + GLB via CDN</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>html,body,#root{height:100%;margin:0} canvas{display:block}</style>
+</head>
+<body>
+<div id="root" style="width: 100vw; height: 100vh; margin: 0; padding: 0;"></div>
+
+<script type="importmap">
+  {
+      "imports": {
+          "react": "https://esm.sh/react@19?dev",
+          "react-dom/client": "https://esm.sh/react-dom@19/client?dev",
+          "three": "https://esm.sh/three@0.180.0",
+          "@react-three/fiber": "https://esm.sh/@react-three/fiber@9.3.0",
+          "@react-three/drei": "https://esm.sh/@react-three/drei@10.7.6",
+          "htm": "https://esm.sh/htm"
+      }
+  }
+</script>
+
+<script type="module">
+    import React, { Suspense } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { Canvas } from '@react-three/fiber.js';
+    import * as THREE from 'three';
+    import { useGLTF, OrbitControls } from '@react-three/drei.js';
+    //import htm  from 'htm';
+
+    //const html = htm.bind(React.createElement);
+
+    console.log(THREE.Vector3)
+
+    // Simple GLTF Model Component
+    function Model({ url }) {
+        const { scene } = useGLTF(url);
+        return React.createElement('primitive', { object: scene });
+    }
+
+    // Loading fallback
+    function Loading() {
+        return React.createElement('mesh', null,
+            React.createElement('boxGeometry', { args: [1, 1, 1] }),
+            React.createElement('meshStandardMaterial', { color: 'orange' })
+        );
+    }
+
+    // Main Scene
+    function Scene() {
+        return React.createElement('div', { style: { width: '100%', height: '100%' } },
+            React.createElement(Canvas, {
+                    camera: { position: [0, 0, 5], fov: 50 }
+                },
+                React.createElement('ambientLight', { intensity: 0.5 }),
+                React.createElement('directionalLight', {
+                    position: [10, 10, 5],
+                    intensity: 1
+                }),
+                React.createElement(Suspense, {
+                        fallback: React.createElement(Loading)
+                    },
+                    React.createElement(Model, {
+                        url: 'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf'
+                    })
+                ),
+                React.createElement(OrbitControls, {
+                    enablePan: true,
+                    enableZoom: true,
+                    enableRotate: true
+                })
+            )
+        );
+    }
+
+    // Initialize React
+    const root = createRoot(document.getElementById('root'));
+    const element = React.createElement(Scene);
+    root.render(element);
+</script>
+</body>
+</html>

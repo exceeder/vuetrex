@@ -1,84 +1,48 @@
-import Element3d from "./element3d";
-
-export interface Tween {
-    target?: object
-    duration: number
-    start?: { [key: string]: any }
-    end?: { [key: string]: any }
-    fn: (timer: number, ticks: number) => void
-}
+import gsap from 'gsap'
 
 export default class LifeCycle {
 
-    /**
-     * array of functions called on each animation frame
-     */
-    private tweens:Tween[]  =  []
+    private readonly animations: ((timer: number, tick: number) => void)[] = []
+    private readonly tickerFn: (time: number, deltaTime: number) => void
 
-    private _timeout: any  = 0
-
-    lifecycle = {
-        paused: false,
-        tick: 0, //ongoing counter of frames rendered excluding pauses
-        timer: {
-            current: 0, //total time in ms since animation started, excluding pauses
-            last: performance.now()
-        },
-
-    }
-
-    static tween(el: Element3d, key: string, targetValue: any) {
-
+    // Exposed so Scene can read timer.current for camera animation timing
+    readonly lifecycle = {
+        paused: true,
+        tick: 0,
+        timer: { current: 0 }
     }
 
     constructor() {
+        this.tickerFn = (_time, deltaTime) => {
+            if (this.lifecycle.paused) return
+            this.lifecycle.timer.current += deltaTime
+            this.lifecycle.tick++
+            this.animations.forEach(fn => fn(this.lifecycle.timer.current, this.lifecycle.tick))
+            this.render()
+        }
+        gsap.ticker.fps(25)
+        gsap.ticker.add(this.tickerFn)
     }
 
-    mount(scene: object) {
-        throw new Error("Abstract");
-    }
+    render() {}
 
-    render() {
-        throw new Error("Abstract");
+    start() {
+        this.lifecycle.paused = false
     }
 
     pause() {
-        this.lifecycle.paused = true;
+        this.lifecycle.paused = true
     }
 
     unpause() {
-        this.lifecycle.paused = false;
+        this.lifecycle.paused = false
     }
 
-    animate() {
-        clearTimeout(this._timeout);
-        this._timeout = setTimeout(() => {
-            requestAnimationFrame(() => this.animate());
-        }, 1000 / 30);
-
-        const timer = this.lifecycle.timer;
-        const t = performance.now();
-        if (this.lifecycle.paused) {
-            timer.last = t;
-        } else {
-            timer.current += t - timer.last;
-            timer.last = t;
-            this.lifecycle.tick++;
-            this.tweens.forEach(t =>
-                t.fn(timer.current, this.lifecycle.tick)
-            );
-            this.render();
-        }
+    registerAnimation(fn: (timer: number, tick: number) => void) {
+        this.animations.push(fn)
     }
 
-    onAnimate(fn: (timer: number, ticks: number) => void) {
-        this.tweens.push({
-            duration: -1,
-            fn: fn
-        });
-    }
-
-    stopAnimation() {
-        clearTimeout(this._timeout);
+    stopRenderLoop() {
+        gsap.ticker.remove(this.tickerFn)
     }
 }

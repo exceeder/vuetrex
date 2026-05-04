@@ -1,33 +1,41 @@
-import { Base } from "@/lib-components/nodes/Base";
-import { Comment, TextNode } from "@/lib-components/nodes/Root";
-import { RendererOptions } from "@vue/runtime-core";
-import { VuetrexStage } from "@/lib-components/three/stage";
-import {types} from "@/lib-components/nodes/types";
+import { Base } from '@/lib-components/nodes/Base.js';
+import { Comment, TextNode } from '@/lib-components/nodes/Root.js';
+import { ElementNamespace, RendererOptions, VNodeProps} from '@vue/runtime-core';
+import { VuetrexStage } from '@/lib-components/three/stage.js';
+import { types, ElementRegistry, FunctionalComponent, ClassComponent } from '@/lib-components/nodes/types.js';
 
-export const nodeOps = (stage: VuetrexStage): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
+export const nodeOps = (stage: VuetrexStage, extraTypes?: ElementRegistry): Omit<RendererOptions<Base, Base>, "patchProp"> => ({
 
   insert: (child, parent, anchor) => {
     if (anchor != null) {
-      parent._insertBefore(child, anchor);
+      parent.insertBefore(child, anchor);
     } else {
-      parent._appendChild(child);
+      parent.appendChild(child);
     }
   },
 
   remove: (child) => {
     const parent = child.parent.value;
     if (parent != null) {
-      parent._removeChild(child);
+      parent.removeChild(child);
     }
   },
 
-  createElement: (tag: keyof typeof types, isSVG, isCustomizedBuiltIn) => {
-     let type = types[tag];
-     if (!type) {
-       console.warn(`Unknown native tag: ${tag}`);
-       type = types["node"];
-     }
-     return new type(stage);
+  createElement: (tag: string, namespace?: ElementNamespace, isCustomizedBuiltIn?: string, vnodeProps?: (VNodeProps & { [key: string]: any }) | null) => {
+    if (namespace) {
+      console.warn(`Vuetrex: namespace '${namespace}' is not supported. Remove SVG/MathML from Vuetrex templates.`)
+      return new Comment(`unsupported namespace: ${namespace}`)
+    }
+    const type = extraTypes?.[tag] ?? types[tag];
+    if (!type) {
+      console.warn(`Vuetrex nodeOps: unknown tag: ${tag}`);
+      return new Comment("Unknown " + tag);
+    }
+    if (typeof (type as FunctionalComponent).setup === 'function') {
+      return (type as FunctionalComponent).setup(stage);
+    } else {
+      return new (type as ClassComponent)(stage);
+    }
   },
 
   createText: (text) => {

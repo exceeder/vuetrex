@@ -1,13 +1,19 @@
-import {ref, computed, queuePostFlushCb, ComputedRef, Ref, shallowRef} from "vue";
+import {ref, computed, queuePostFlushCb, ComputedRef, Ref, shallowRef} from 'vue';
 
 // defer synchronization until after rendering for all nodes to have complete data about parents and children
 const pendingSyncBase: Base[] = [];
 let pending = false;
 
 const flushChanges = () => {
-    pendingSyncBase.forEach(b => b.syncWithThree())
+    const afterFlushHooks = new Set<() => void>() //needed if multiple vuetrex scenes exist on one page
+    pendingSyncBase.forEach(base => {
+        base.applySync()
+        const hook = base.getAfterFlushHook()
+        if (hook) afterFlushHooks.add(hook)
+    })
     pendingSyncBase.length = 0
     pending = false
+    afterFlushHooks.forEach(hook => hook())
 };
 
 const registerUpdatedBase = (base: Base) => {
@@ -21,18 +27,23 @@ const registerUpdatedBase = (base: Base) => {
 /**
  * Base class of render elements of Vuetrex renderer. Handles tree hierarchy: children, siblings, etc.
  */
-export class Base {
+export abstract class Base {
 
     public parent: Ref<Base | null> = shallowRef(null);
     protected children: Ref<Base[]> = ref([]);
 
+    protected abstract get state():  { [id: string] : any };
+    protected abstract subscribeEvents(): void;
+
     private mustSync = false;
 
+    isRenderableNode(): boolean { return false; }
+
     readonly elements = computed(() => {
-        return this.children.value.filter(c => ((c as any).state !== undefined))
+        return this.children.value.filter(c => c.isRenderableNode())
     })
+
     public myIdx: ComputedRef<number> = computed(() => {
-        //if (this.parent.value == null) return -2;
         const res = this.parent.value?.elements.value.indexOf(this);
         return res === undefined ? -1 : res;
     })
@@ -47,6 +58,11 @@ export class Base {
         return res || 0
     });
 
+    getAfterFlushHook(): (() => void) | null {
+        //runner to the Root
+        return this.parent.value?.getAfterFlushHook() ?? null
+    }
+
     public numRows: ComputedRef<number> = computed(() => (this.parent.value?.parent.value?.renderSize.value || 1));
 
     public readonly nextSibling : ComputedRef<Base | null> = computed(() => {
@@ -54,7 +70,7 @@ export class Base {
                 return null;
             }
             const arr = this.parent.value.children.value;
-            const idx = arr.indexOf(this) || -1;
+            const idx = arr.indexOf(this);
             let result = null
             if (idx >= 0 && idx < arr.length-1) {
                 result = arr[idx + 1]
@@ -62,20 +78,32 @@ export class Base {
             return result
     })
 
-    _appendChild(child: Base) {
+    appendChild(child: Base) {
         child.parent.value = this;
         this.children.value.push(child);
         this.registerSync();
     }
 
-    _removeChild(child: Base) {
+    removeChild(child: Base) {
         child.parent.value = null;
-        this.children.value.splice(this.children.value.indexOf(child),1);
-        this.registerSync();
-        child.onRemoved()
+        const idx = this.children.value.indexOf(child);
+        if (idx >= 0) {
+            this.children.value.splice(idx, 1);
+            child.onRemoved();
+            if (child.isRenderableNode()) {
+                const node = child as any;
+                if (node.stage && node.element) {
+                    node.stage.connectors.remove(node.element);
+                }
+            }
+            const grandChildren = child.children.value;
+            while (grandChildren && grandChildren.length > 0)
+                child.removeChild(grandChildren[grandChildren.length - 1]);
+            this.registerSync();
+        }
     }
 
-    _insertBefore(child: Base, anchor: Base) {
+    insertBefore(child: Base, anchor: Base) {
         child.parent.value = this;
         const anchorIdx = this.children.value.indexOf(anchor);
         if (anchorIdx >= 0) {
@@ -88,17 +116,36 @@ export class Base {
 
     registerSync() {
         if (!this.mustSync) {
-            this.mustSync = true;
-            registerUpdatedBase(this);
+            this.mustSync = true
+            registerUpdatedBase(this)
         }
     }
 
+    applySync(): void {
+        this.children.value.forEach(b => {
+            b.syncWithThree()
+            if (b.subscribeEvents) b.subscribeEvents()
+        })
+        this.mustSync = false
+    }
+
     syncWithThree() {
-        this.mustSync = false;
     }
 
     setElementText(text: string) {
         // Default: ignore text.
+    }
+
+    public setStateValue(key: string, value:any): void {
+        if (this.state !== undefined && key in this.state) {
+            switch (typeof this.state[key]) {
+                case 'boolean': this.state[key] = "true" == value; break;
+                case 'number':  this.state[key] = Number.parseFloat(value); break;
+                default: this.state[key] = value;
+            }
+        } else {
+            (this as any)[key] = value
+        }
     }
 
     onRemoved() {}

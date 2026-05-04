@@ -1,105 +1,112 @@
-import { createRendererForStage } from "@/lib-components/renderer";
-import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, ref, PropType, watch } from "vue";
-import { Root } from "@/lib-components/nodes/Root";
-import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings } from "@/lib-components/three/stage";
+import { createRendererForStage } from '@/lib-components/renderer.js';
+import { defineComponent, Fragment, getCurrentInstance, nextTick, h, onMounted, onUnmounted, ref, PropType, watch } from 'vue';
+import { Root } from '@/lib-components/nodes/Root.js';
+import { VuetrexStage, VxStage as _VxStage, VxSettings as _VxSettings, VxMouseEvent as _VxMouseEvent } from '@/lib-components/three/stage.js';
+import { ElementRegistry } from '@/lib-components/nodes/types.js';
 
-export type VxStage = _VxStage;
-export type VxSettings = _VxSettings;
+export type VxStage = _VxStage;        // A ThreeJS scene rendered within a DOM element, supporting configurable camera and settings.
+export type VxSettings = _VxSettings;  // Configuration options such as color schemes and material opacity.
+export type VxMouseEvent = _VxMouseEvent; // Enables click translation into 3D space to identify affected elements.
 
 /**
- * Vuetrex is a container that wraps everything in 3D scene.
- * It uses Vue Custom Renderer to provide reactivity.
- * @vue-prop settings {VxSettings} - vuetrex settings (TBD)
- * @vue-prop position {String} - container div CSS position, static: absolute, relative
- * @vue-prop play {String} - whether to animate the scene from the start, "false" keeps it still until changed
+ * Vuetrex serves as a container that encapsulates a 3D scene.
+ * It leverages Vue's Custom Renderer to provide reactivity, seamlessly integrating Vue's reactivity model into
+ * a ThreeJS environment.
+ *
+ * @vue-prop settings {VxSettings} - Configuration settings for Vuetrex (TBD).
+ * @vue-prop position {String} - The CSS position of the container div (e.g., static, absolute, relative).
+ * @vue-prop play {String} - Determines if the scene animates on load ("false" keeps it static until changed).
  */
 export default defineComponent({
     name: "Vuetrex",
     props: {
-        settings: { type: Object as PropType<VxSettings>, default: {} },
+        settings: { type: Object as PropType<VxSettings>, default: () => ({}) },
         position: { type: String, default: "static" },
         height: { type: String, default: "50vh" },
         width: { type: String, default: "100%" },
         stopped: { type: Boolean, default: false },
         camera: {type: String, default: "scene"},
-        items: {
-            type: Array,
-            default: () => ([])
-        }
+        items: { type: Array, default: () => [] },
+        elements: { type: Object as PropType<ElementRegistry>, default: () => ({}) }
     },
-    emits: {
-        ready: null
-    },
+    emits: ["ready"],
     setup(props, {slots, emit}) {
-        const elRef = ref(undefined);
-
+        const elRef = ref(null);
         const maxWidth = ref(4096);
         const maxHeight = ref(4096);
-
+         let stageRoot: Root | null = null;
         const vuetrexComponent = getCurrentInstance();
-        if (vuetrexComponent == null) {
-            const err = "Vue's getCurrentInstance() returned null in Vuetrex setup(). It likely means" +
-            " your app is misconfigured";
-            console.error(err)
-            return () => h("div",err);
+
+        if (!vuetrexComponent) {
+            console.error("Vuetrex setup failed: getCurrentInstance() returned null.");
+            return () => h("div", "Component misconfiguration.");
         }
 
         /**
-         * Since Vuetrex uses its own renderer, Vue's `appContext`, `root` and `provides` would normally be lost in
-         * the Vuetrex components.
+         * Vuetrex utilizes its own renderer, which would typically result in the loss of Vue's `appContext`, `root`,
+         * and `provides` within Vuetrex components.
          *
-         * We can fix this by overriding the component's parent, root, appContext and provides before rendering the slot
-         * contents.
+         * To address this, we override the component's parent, `root`, `appContext`, and `provides` before rendering
+         * slot content.
          */
         const Connector = defineComponent({
-            setup(props, setupContext) {
+            setup(_, { slots }) {
                 const instance = getCurrentInstance();
-                if (instance != null) {
+                if (instance) {
                     // @see runtime-core createComponentInstance
-                    instance.parent = vuetrexComponent;
-                    instance.appContext = vuetrexComponent.appContext;
-                    instance.root = vuetrexComponent.root;
-                    (instance as any).provides = (vuetrexComponent as any).provides;
+                    Object.assign(instance, {
+                        parent: vuetrexComponent,
+                        appContext: vuetrexComponent.appContext,
+                        root: vuetrexComponent.root,
+                        provides: (vuetrexComponent as any).provides
+                    });
                 } else {
-                    console.error("Vue's getCurrentInstance() returned null in Connector component. It likely means" +
-                        " your app is misconfigured")
+                    console.error("Vue's getCurrentInstance() returned null in Connector component. It likely means your app is misconfigured")
                 }
-                const defaultSlot = setupContext.slots.default!;
-                return () => h(Fragment, defaultSlot());
+                return () => h(Fragment, slots.default?.());
             },
         });
 
         onMounted(() => {
-            const defaultSlot = slots.default;
-            if (defaultSlot && elRef.value) {
-                const stage = new VuetrexStage(elRef.value as any, { ...props.settings }) as VuetrexStage;
-                const vuetrexRenderer = createRendererForStage(stage);
-                const stageRoot = new Root(stage);
-                //create stage environment
-                stage.mount();
-                emit('ready', stage);
-                //start animation
-                if (!props.stopped) {
-                    stage?.start();
+            if (!slots.default || !elRef.value) {
+                console.warn("Vuetrex: No default slot defined.");
+                return;
+            }
+
+            const stage = new VuetrexStage(elRef.value, {...props.settings});
+            const vuetrexRenderer = createRendererForStage(stage, props.elements);
+            stageRoot = new Root(stage);
+
+            stage.mount();
+            emit("ready", stage);
+
+            if (!props.stopped) stage.start();
+
+            watch(
+                () => props.stopped,
+                (stopped) => (stopped ? stage.pause() : stage.unpause())
+            );
+
+            watch(
+                () => props.camera,
+                (camera) => stage.sendCameraTo(camera)
+            );
+
+            nextTick().then(() => {
+                if (stageRoot) {
+                    vuetrexRenderer(h(Connector, slots.default), stageRoot);
                 }
-                watch(() => props.stopped,
-                    (stopped) => {
-                        if (stopped) stage.pause(); else stage.unpause();
-                    })
+            });
+        });
 
-                watch(() => props.camera, (camera: string) => stage.sendCameraTo(camera))
-
-                // We must wait until nextTick to prevent interference in the effect queue.
-                nextTick().then(() => {
-                    const node = h(Connector, defaultSlot);
-                    vuetrexRenderer(node, stageRoot);
-                });
-            } else {
-                console.warn("No default slot is defined");
+        onUnmounted(() => {
+            if (stageRoot) {
+                stageRoot.destroy();
+                stageRoot = null;
             }
         });
 
-        // We need to use a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
+        // There needs to be a wrapper for flexible size layouting to work with pixelRatio canvas auto-resizing.
         return () =>
             h(
                 "div",

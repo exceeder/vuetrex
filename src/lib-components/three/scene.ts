@@ -1,23 +1,29 @@
-import * as THREE from "three";
-import * as THREEx from "@/lib-components/three/three.imports";
-import LifeCycle from "@/lib-components/three/lifecycle";
+import * as THREE from 'three';
+import * as THREEx from '@/lib-components/three/three.imports.js';
+import LifeCycle from '@/lib-components/three/lifecycle.js';
+import {Color} from 'three';
 
 interface MousePosition {
     x: number
     y: number
 }
 
+/**
+ * Scene is tying together renderer, composer, camera, animation frames and events. It is meant to be an
+ * abstract base for the particular 3D setup.
+ */
 export default class Scene extends LifeCycle {
 
     private domParent: HTMLElement
 
     public readonly width: number
     public readonly height: number
-    readonly cameraTarget: THREE.Vector3 = new THREE.Vector3(0.0, 0.0, 1.5);
+    readonly cameraTarget: THREE.Vector3 = new THREE.Vector3(0.0, 0.0, 1.0);
     readonly cameraBase: THREE.Vector3 = new THREE.Vector3(0.0, 12.0, 9.0);
     readonly cameraMotion: THREE.Vector3 = new THREE.Vector3(0.5, 0, 0.5);
 
     private readonly mouse: MousePosition
+    protected lastMouseEvent: MouseEvent | null = null;
 
     readonly camera: THREE.PerspectiveCamera
     readonly scene: THREE.Scene
@@ -25,11 +31,12 @@ export default class Scene extends LifeCycle {
     selectedObject: (THREE.Mesh | null) = null
 
     private composer: THREEx.EffectComposer;
-    private renderPass: THREEx.RenderPass;
+    private readonly renderPass: THREEx.RenderPass;
 
     public colorMain = new THREE.Color(0x555555);
     public colorHighlight = new THREE.Color(0x3377bb);
 
+    private removeEventListeners: Function = () => {};
 
 
     /**
@@ -46,12 +53,14 @@ export default class Scene extends LifeCycle {
             this.height,
             window.devicePixelRatio
         );
+
         this.domParent.appendChild(this.renderer.domElement);
         //camera
         this.camera = this.createCamera();
         this.camera.lookAt(this.cameraTarget);
         //scene
         this.scene = this.createScene();
+        this.scene.background = new Color('#808080');
 
         //composer for mirror and other effects
         this.composer = new THREEx.EffectComposer(this.renderer)
@@ -64,20 +73,48 @@ export default class Scene extends LifeCycle {
     }
 
     bindEvents(domParent: HTMLElement) {
-        window.addEventListener("resize", () => this.onWindowResize(), false);
-        domParent.addEventListener("mousemove", e =>
-            this.onCanvasMouseMove(e)
-        );
-        domParent.addEventListener("mousedown", e => this.onCanvasClick(e));
-        window.addEventListener('wheel', e => this.onMouseWheel(e), false);
+        const resizer = () => this.onWindowResize();
+        const wheeler = (e:WheelEvent) => this.onMouseWheel(e)
+        const mouseListener = (e:MouseEvent) => this.onCanvasMouseMove(e)
+        const clickListener = (e:MouseEvent) => this.onCanvasClick(e)
+        const dblclickListener = (e:MouseEvent) => this.onCanvasDblClick(e)
+
+        const resizeObserver = new ResizeObserver(entries => {
+            resizer();
+        });
+        resizeObserver.observe(domParent);
+        //window.addEventListener("resize", resizer, false)
+        window.addEventListener('wheel', wheeler, false)
+        domParent.addEventListener("mousemove", mouseListener)
+        domParent.addEventListener("mousedown", clickListener)
+        domParent.addEventListener("dblclick", dblclickListener)
+
+        this.removeEventListeners = ()  => {
+            window.removeEventListener("resize", resizer)
+            window.removeEventListener("wheel", wheeler)
+            domParent.removeEventListener("mousemove", mouseListener)
+            domParent.removeEventListener("mousedown", clickListener)
+            domParent.removeEventListener("dblclick", dblclickListener)
+        }
     }
 
     start() {
-        this.animate();
+        super.start();
     }
 
     stop() {
-        this.stopAnimation();
+        this.stopRenderLoop();
+    }
+
+    destroy() {
+        this.stopRenderLoop();
+        this.removeEventListeners();
+        this.scene.clear();
+        this.camera.clear();
+        while (this.domParent.lastChild) {
+            this.domParent.removeChild(this.domParent.lastChild);
+        }
+        this.renderer.forceContextLoss();
     }
 
     //--- overridable ---
@@ -85,23 +122,26 @@ export default class Scene extends LifeCycle {
     createRenderer(width:number, height:number, devicePixelRatio:number) {
         const renderer = new THREE.WebGLRenderer({
             antialias: true,
+            powerPreference: 'high-performance',
             precision: "highp",
             logarithmicDepthBuffer: false
         });
         renderer.setSize(width, height);
-        //renderer.physicallyCorrectLights = true;
-        renderer.sortObjects = false;
-        renderer.setClearColor(0xa0a0a0, 0.5);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.setPixelRatio(devicePixelRatio || 1);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.VSMShadowMap;
         return renderer;
     }
 
     createCamera() {
         const camera = new THREE.PerspectiveCamera(
-            45,
+            40,
             this.width / this.height,
-            1,
-            32
+            0.1,
+            64
         );
         camera.position.copy(this.cameraBase)
         return camera;
@@ -143,13 +183,43 @@ export default class Scene extends LifeCycle {
         // (such as the mouse's TrackballControls)
         // event.preventDefault();
 
+        if (event.metaKey && event.buttons === 1) {
+            this.orbitalRetarget(event);
+        }
+        this.lastMouseEvent = event;
         this.mouse.x = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
         this.mouse.y = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
+    }
+
+    private orbitalRetarget(event: MouseEvent) {
+        const mouseX = (event.offsetX / this.domParent.offsetWidth) * 2 - 1;
+        const mouseY = -(event.offsetY / this.domParent.offsetHeight) * 2 + 1;
+        const dx = mouseX - this.mouse.x;
+        const dy = mouseY - this.mouse.y;
+
+        const radius = this.cameraBase.distanceTo(this.cameraTarget);
+        const theta = Math.atan2(this.cameraBase.x - this.cameraTarget.x, this.cameraBase.z - this.cameraTarget.z);
+        const phi = Math.acos(THREE.MathUtils.clamp((this.cameraBase.y - this.cameraTarget.y) / radius, -1, 1));
+
+        const newTheta = theta - dx * 2;
+        const newPhi = THREE.MathUtils.clamp(phi - dy * 2, 0.1, Math.PI - 0.1);
+
+        this.cameraBase.x = this.cameraTarget.x + radius * Math.sin(newPhi) * Math.sin(newTheta);
+        this.cameraBase.y = this.cameraTarget.y + radius * Math.cos(newPhi);
+        this.cameraBase.z = this.cameraTarget.z + radius * Math.sin(newPhi) * Math.cos(newTheta);
     }
 
     onCanvasClick(event: MouseEvent) {
         //todo
     }
+
+    onCanvasDblClick(event: MouseEvent) {
+        //todo
+    }
+
+    protected onMouseOver(mesh: THREE.Mesh, event: MouseEvent) {}
+
+    protected onMouseOut(mesh: THREE.Mesh, event: MouseEvent) {}
 
     onMouseWheel(event: WheelEvent) {
         //event.preventDefault();
@@ -159,7 +229,7 @@ export default class Scene extends LifeCycle {
         const x = this.cameraBase.x + event.deltaY / 300 * dir.x;
         const y = this.cameraBase.y + event.deltaY / 300 * dir.y;
         const z = this.cameraBase.z + event.deltaY / 300 * dir.z;
-        if (y>0.9 && z>0.9 && y<14 && z<14) {
+        if (y>0.8 && z>0.8 && y<17. && z<17.) {
             this.cameraBase.x = x;
             this.cameraBase.y = y;
             this.cameraBase.z = z;
@@ -169,7 +239,7 @@ export default class Scene extends LifeCycle {
 
     //--- animations ---
 
-    animateMouse() {
+    mouseAnimationFn() {
         return (timer: number, tick:number) => {
             const mouse = this.mouse;
             if (mouse.x === 0 && mouse.y === 0) return;
@@ -190,16 +260,14 @@ export default class Scene extends LifeCycle {
                 const labelObject = <THREE.Mesh> (found && found.object);
                 if (labelObject && labelObject !== this.selectedObject) {
                     if (this.selectedObject) {
-                        const m = <THREE.MeshBasicMaterial>this.selectedObject.material;
-                        m.color.set(this.colorMain);
+                        if (this.lastMouseEvent) this.onMouseOut(this.selectedObject, this.lastMouseEvent);
                     }
                     this.selectedObject = labelObject;
-                    const m = <THREE.MeshBasicMaterial>labelObject.material;
-                    m.color.setHex(this.colorHighlight.getHex());
+                    if (this.lastMouseEvent) this.onMouseOver(labelObject, this.lastMouseEvent);
                 }
             }
             if (!found && this.selectedObject) {
-                (<THREE.MeshBasicMaterial>this.selectedObject.material).color.set(this.colorMain);
+                if (this.lastMouseEvent) this.onMouseOut(this.selectedObject, this.lastMouseEvent);
                 this.selectedObject = null;
             }
         };
@@ -231,10 +299,11 @@ export default class Scene extends LifeCycle {
     }
 
     easeInOut(x: number): number {
+        //S-curve flat at 0,0 and 1,1 and 45 deg at 0.5
         return x < 0.5 ? 2*x*x : 1 - (x*(4*x-8)+4) / 2;
     }
 
-    animateCamera() {
+    cameraAnimationFn() {
         return (timer:number, tick:number) => {
             if (this.startTime > 0 && timer < this.startTime + 1000) {
                 this.camera.position.lerpVectors(this.startCameraPos, this.endCameraPos, this.easeInOut((timer-this.startTime)/1000))
@@ -259,12 +328,12 @@ export default class Scene extends LifeCycle {
         const camera = this.camera;
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        //TODO parallax support
-        //camera.position.x = -window.pageYOffset / 500;
-        //camera.position.y = 11 + window.pageYOffset / 1000;
 
-        //camera.lookAt(new THREE.Vector3());
+        // parallax support possible here via
+        // camera.position.x = -window.pageYOffset / 500;
+        // camera.position.y = 11 + window.pageYOffset / 1000;
+
         this.renderer.setSize(width, height);
-        this.composer.setSize( width, height );
+        this.composer.setSize(width, height);
     }
 }

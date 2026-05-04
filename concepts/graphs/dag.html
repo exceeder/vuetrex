@@ -1,0 +1,296 @@
+<!doctype html>
+<html>
+<head>
+  <title>DAG - Directed Acyclic Graph Layouting</title>
+  <script type="module">
+      function layoutDAG(nodes, edges, options = {}) {
+          const spacingX = options.spacingX || 50;
+          const spacingY = options.spacingY || 70;
+          const nodeHeight = options.nodeHeight || 30;
+
+          // Map nodeId => node object with width
+          const nodeMap = Object.fromEntries(nodes.map(n => [n.id, { ...n, indegree: 0, layer: 0 }]));
+          edges.forEach(e => nodeMap[e.to].indegree++);
+
+          // Kahn's algorithm for topological sort and layer assignment
+          const queue = Object.values(nodeMap).filter(n => n.indegree === 0);
+          while (queue.length) {
+              const n = queue.shift();
+              for (const e of edges.filter(e => e.from === n.id)) {
+                  const tgt = nodeMap[e.to];
+                  tgt.layer = Math.max(tgt.layer, n.layer + 1);
+                  tgt.indegree--;
+                  if (tgt.indegree === 0) queue.push(tgt);
+              }
+          }
+
+          // Group nodes by layers
+          const layers = [];
+          Object.values(nodeMap).forEach(n => {
+              if (!layers[n.layer]) layers[n.layer] = [];
+              layers[n.layer].push(n);
+          });
+
+          let maxW = 0;
+          const layersW = [];
+
+          // Assign x, y positions
+          layers.forEach((layer, i) => {
+              let x = 0;
+              for (const node of layer) {
+                  node.x = x;
+                  node.y = i * (nodeHeight + spacingY);
+                  x += node.width + spacingX;
+              }
+              if (x > maxW) maxW = x;
+              layersW.push(x);
+          });
+
+          layers.forEach((layer, i) => {
+              for (const node of layer) {
+                  node.x = maxW / 2 - layersW[i] / 2 + node.x;
+              }
+          });
+
+
+          return Object.values(nodeMap); //nodes with x,y and id
+      }
+
+      function routeEdges(nodes, edges, nodeHeight = 30) {
+          const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+          return edges.map(({ from, to }) => {
+              const src = nodeMap[from];
+              const tgt = nodeMap[to];
+
+              const x1 = src.x + src.width / 2;
+              const y1 = src.y + nodeHeight;
+
+              const x2 = tgt.x + tgt.width / 2;
+              const y2 = tgt.y;
+
+              const midY = (y1 + y2) / 2;
+
+              return {
+                  from,
+                  to,
+                  points: [
+                      { x: x1, y: y1 },      // start at bottom-center of source
+                      { x: x1, y: midY },    // go down vertically
+                      { x: x2, y: midY },    // horizontal to target x
+                      { x: x2, y: y2 }       // down to top-center of target
+                  ]
+              };
+          });
+      }
+
+      function routeEdgesAvoidingBoxes1(nodes, edges, nodeHeight = 30, verticalMargin = 10) {
+          const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+          return edges.map(({ from, to }) => {
+              const src = nodeMap[from];
+              const tgt = nodeMap[to];
+
+              const srcX = src.x + src.width / 2;
+              const srcY = src.y + nodeHeight;
+
+              const tgtX = tgt.x + tgt.width / 2;
+              const tgtY = tgt.y;
+
+              const gapY = verticalMargin;
+              const y1 = srcY + gapY;
+              const y2 = tgtY - gapY;
+              const midY = (y1 + y2) / 2;
+
+              const points = [];
+
+              points.push({ x: srcX, y: srcY });      // exit bottom of source
+              if (Math.abs(srcX - tgtX) < 2) {
+                  // vertical edge
+                  points.push({ x: srcX, y: tgtY });
+              } else {
+                  points.push({ x: srcX, y: y1 });      // down past source margin
+                  points.push({ x: tgtX, y: y2 });      // horizontal near target
+                  points.push({ x: tgtX, y: tgtY });    // up to top of target
+              }
+
+              return { from, to, points };
+          });
+      }
+
+      // nodes: [{id, x, y, width}], fixed nodeHeight
+      // edges: [{from, to}]
+
+      function routeEdgesAvoidingBoxes(nodes, edges, {
+          nodeHeight = 30, vMargin = 20, pad = 6, step = 20, maxShift = 1000, layerGap
+      } = {}) {
+          const rects = nodes.map(n => ({
+              id: n.id, x1: n.x - pad, x2: n.x + n.width + pad,
+              y1: n.y - pad, y2: n.y + nodeHeight + pad
+          }));
+          const nmap = new Map(nodes.map(n => [n.id, n]));
+
+          const verticalHitsAny = (x, y1, y2, ignore) => {
+              const a = Math.min(y1, y2), b = Math.max(y1, y2);
+              for (const r of rects) {
+                  if (ignore && ignore.has(r.id)) continue;
+                  if (x > r.x1 && x < r.x2 && !(b <= r.y1 || a >= r.y2)) return true;
+              }
+              return false;
+          };
+          const findFreeColumn = (xPref, y1, y2, ignore) => {
+              if (!verticalHitsAny(xPref, y1, y2, ignore)) return xPref;
+              for (let k = 1; k * step <= maxShift; k++) {
+                  for (const s of [1, -1]) {
+                      const x = xPref + s * k * step;
+                      if (!verticalHitsAny(x, y1, y2, ignore)) return x;
+                  }
+              }
+              return xPref;
+          };
+          const isAdjacent = (s, t) => {
+              const gap = (t.y - (s.y + nodeHeight));
+              if (layerGap != null) return gap <= layerGap + 1e-6; // explicit gap from your layout
+              // heuristic if layerGap unknown:
+              return gap <= (nodeHeight + 2 * vMargin + 2 * pad);
+          };
+
+          const routed = [];
+          for (const { from, to } of edges) {
+              const s = nmap.get(from), t = nmap.get(to);
+              const srcX = s.x + s.width / 2, srcY = s.y + nodeHeight;
+              const tgtX = t.x + t.width / 2, tgtY = t.y;
+
+              const yTop = srcY + vMargin;   // below source layer
+              const yBot = tgtY - vMargin;   // above target layer
+              const ignore = new Set([from, to]);
+
+              if (isAdjacent(s, t)) {
+                  // 3 segments: down → across in the channel → down
+                  const yChan = (yTop + yBot) / 2;
+                  routed.push({
+                      from, to,
+                      points: [
+                          { x: srcX, y: srcY },
+                          { x: srcX, y: yChan },
+                          { x: tgtX, y: yChan },
+                          { x: tgtX, y: tgtY }
+                      ]
+                  });
+              } else {
+                  // general case (with a free vertical shaft)
+                  const xMidPref = (srcX + tgtX) / 2;
+                  const xMid = findFreeColumn(xMidPref, yTop, yBot, ignore);
+                  routed.push({
+                      from, to,
+                      points: [
+                          { x: srcX, y: srcY },
+                          { x: srcX, y: yTop },
+                          { x: xMid, y: yTop },
+                          { x: xMid, y: yBot },
+                          { x: tgtX, y: yBot },
+                          { x: tgtX, y: tgtY }
+                      ]
+                  });
+              }
+          }
+          return routed;
+      }
+
+      function generateRandomDAG(count = 10, maxEdges = 3) {
+          const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+          const nodeIds = alphabet.slice(0, count).split('');
+
+          const nodes = nodeIds.map(id => ({
+              id,
+              width: Math.floor(30 + Math.random() * 50), // width: 50–150
+          }));
+
+          const edges = [];
+          // Generate edges from earlier nodes to later ones to ensure acyclicity
+          for (let i = 0; i < nodeIds.length; i++) {
+              const from = nodeIds[i];
+              const numEdges = Math.floor(Math.random() * (maxEdges + 1));
+              const possibleTargets = nodeIds.slice(i + 1); // only allow forward connections
+              for (let j = 0; j < numEdges && possibleTargets.length > 0; j++) {
+                  const toIndex = Math.floor(Math.random() * possibleTargets.length);
+                  const to = possibleTargets.splice(toIndex, 1)[0];
+                  edges.push({ from, to });
+              }
+          }
+
+          return { nodes, edges };
+      }
+
+      function drawGraph(nodes, edges) {
+          nodes = layoutDAG(nodes, edges);
+          edges = routeEdgesAvoidingBoxes1(nodes, edges);
+
+          const canvas = document.getElementById("cc");
+          canvas.width = window.innerWidth - 100;
+          canvas.height = window.innerHeight - 100;
+          const ctx = canvas.getContext("2d");
+
+          ctx.strokeStyle = "gray";
+          ctx.font = "20pt Helvetica";
+
+          const nodesByName = {};
+          const ox = 10, oy = 10;
+          const H = 30;
+
+          for (const node of nodes) {
+              ctx.fillStyle = "lightgray";
+              ctx.fillRect(ox + node.x, oy + node.y, node.width, H);
+              ctx.fillStyle = "black";
+              ctx.fillText(node.id, ox + node.x + 5, oy + node.y + H - 5);
+              nodesByName[node.id] = node;
+          }
+          for (const edge of edges) {
+              const f = nodesByName[edge.from];
+              const t = nodesByName[edge.to];
+              ctx.beginPath();
+              let first = true;
+              edge.points.forEach(point => {
+                  if (first) {
+                      ctx.moveTo(point.x + ox, point.y + oy);
+                      first = false;
+                  } else {
+                      ctx.lineTo(point.x + ox, point.y + oy);
+                  }
+              })
+              //ctx.moveTo(f.x + ox + f.width/2, f.y + oy + H);
+              //ctx.lineTo(t.x + ox + t.width/2, t.y + oy);
+              ctx.stroke();
+          }
+      }
+
+      // Example:
+      let nodes = [
+          { id: 'A', width: 80 },
+          { id: 'B', width: 60 },
+          { id: 'C', width: 100 },
+          { id: 'D', width: 70 },
+          { id: 'E', width: 70 },
+      ];
+
+      let edges = [
+          { from: 'A', to: 'B' },
+          { from: 'A', to: 'C' },
+          { from: 'B', to: 'D' },
+          { from: 'C', to: 'D' },
+          { from: 'E', to: 'D' },
+      ];
+
+      document.body.onload = () => {
+          drawGraph(nodes, edges);
+          setInterval( () => {
+              ({nodes, edges} = generateRandomDAG(Math.floor(5 + Math.random() * 23), 3));
+              drawGraph(nodes, edges);
+          }, 2000)
+      };
+  </script>
+</head>
+<body>
+<canvas id="cc" width=1024 height=800 style="border: 1px solid gray;" />
+</body>
+</html>

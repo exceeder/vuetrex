@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+ MIT License
+ composed together by A.P. based on work of Nicolas Barradeau
+ ...see  hhttp://barradeau.com/blog/?p=621
+  -->
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <style>
+      html {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
+      }
+
+      body {
+          padding: 0;
+          background: #efefef;
+          text-align: center;
+      }
+
+      canvas {
+          border: 4px solid #fff;
+          margin: 1em;
+      }
+  </style>
+  <title> A demo </title>
+</head>
+
+<body>
+<h1>Shaders demo</h1>
+<pre id="error" style="text-align: left; font-size:0.5em"></pre>
+<script id="frag1" src="shaders/fragment.glsl" type="x-shader/x-fragment"></script>
+<script id="vert1" src="shaders/vertex.glsl" type="x-shader/x-vertex"></script>
+<script id="app1" src="app.js" type="module" defer crossorigin="anonymous"></script>
+</body>
+</html>
